@@ -421,4 +421,142 @@ class LoyverseService:
                 "success": False,
                 "product": product.nombre,
                 "error": str(e)
-            } 
+            }
+
+    def test_webhook(self, webhook):
+        """
+        Envía una solicitud de prueba a un webhook
+        """
+        try:
+            # Crear datos de prueba según el tipo de webhook
+            test_data = self._generate_test_data(webhook.type)
+            
+            # Enviar solicitud de prueba al webhook
+            response = requests.post(
+                webhook.url,
+                json=test_data,
+                headers={
+                    'Content-Type': 'application/json',
+                    'X-Loyverse-API-version': 'v1.0',
+                    # No incluimos firma para pruebas
+                }
+            )
+            
+            return {
+                'success': 200 <= response.status_code < 300,
+                'status_code': response.status_code,
+                'response': response.text,
+                'test_data': test_data
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _generate_test_data(self, webhook_type):
+        """
+        Genera datos de prueba según el tipo de webhook
+        """
+        import uuid
+        from datetime import datetime
+        
+        # ID de prueba
+        test_id = str(uuid.uuid4())
+        
+        # Timestamp actual
+        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        
+        # Datos comunes
+        common_data = {
+            'merchant_id': 'test-merchant-id',
+            'type': webhook_type,
+            'created_at': now
+        }
+        
+        # Generar datos específicos según el tipo
+        if webhook_type == 'inventory_levels.update':
+            return {
+                **common_data,
+                'inventory_levels': [
+                    {
+                        'variant_id': test_id,
+                        'store_id': test_id,
+                        'in_stock': 10,
+                        'updated_at': now
+                    }
+                ]
+            }
+        elif webhook_type == 'orders.update':
+            return {
+                **common_data,
+                'orders': [
+                    {
+                        'order_id': test_id,
+                        'store_id': test_id,
+                        'updated_at': now,
+                        'status': 'COMPLETED'
+                    }
+                ]
+            }
+        else:
+            # Para otros tipos, usar datos genéricos
+            return common_data
+    
+    def create_webhook(self, url, webhook_type):
+        """
+        Crea un nuevo webhook en Loyverse
+        """
+        webhook_url = f"{self.BASE_URL}/webhooks"
+        payload = {
+            'url': url,
+            'type': webhook_type
+        }
+        
+        response = requests.post(webhook_url, json=payload, headers=self.headers)
+        
+        if response.status_code == 200:
+            return {
+                'success': True,
+                'webhook': response.json()
+            }
+        
+        return {
+            'success': False,
+            'error': f'Error al crear webhook: {response.status_code}'
+        }
+    
+    def list_webhooks(self):
+        """
+        Lista todos los webhooks configurados en Loyverse
+        """
+        webhook_url = f"{self.BASE_URL}/webhooks"
+        response = requests.get(webhook_url, headers=self.headers)
+        
+        if response.status_code == 200:
+            return {
+                'success': True,
+                'webhooks': response.json().get('webhooks', [])
+            }
+        
+        return {
+            'success': False,
+            'error': f'Error al listar webhooks: {response.status_code}'
+        }
+    
+    def delete_webhook(self, webhook_id):
+        """
+        Elimina un webhook en Loyverse
+        """
+        webhook_url = f"{self.BASE_URL}/webhooks/{webhook_id}"
+        response = requests.delete(webhook_url, headers=self.headers)
+        
+        if response.status_code == 204:
+            return {
+                'success': True
+            }
+        
+        return {
+            'success': False,
+            'error': f'Error al eliminar webhook: {response.status_code}'
+        } 

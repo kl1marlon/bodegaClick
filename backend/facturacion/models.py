@@ -11,6 +11,8 @@ class Producto(models.Model):
     unidades_paquete = models.IntegerField(default=1)
     precio_venta_calculado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ultima_actualizacion_precio = models.DateTimeField(null=True, blank=True)
+    stock_actual = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    ultima_actualizacion_stock = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -59,4 +61,29 @@ class DetalleFactura(models.Model):
     unidades_paquete = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"{self.producto.nombre} - {self.cantidad} x {self.precio_unitario}" 
+        return f"{self.producto.nombre} - {self.cantidad} x {self.precio_unitario}"
+
+class Webhook(models.Model):
+    TYPE_CHOICES = [
+        ('inventory_levels.update', 'Actualización de niveles de inventario'),
+        ('items.update', 'Actualización de items'),
+        ('customers.update', 'Actualización de clientes'),
+        ('receipts.update', 'Actualización de recibos'),
+        ('shifts.create', 'Creación de turnos'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('ENABLED', 'Habilitado'),
+        ('DISABLED', 'Deshabilitado'),
+    ]
+    
+    id = models.CharField(primary_key=True, max_length=36)  # UUID
+    merchant_id = models.CharField(max_length=36)
+    url = models.URLField()
+    type = models.CharField(max_length=25, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ENABLED')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.type} - {self.url}" 

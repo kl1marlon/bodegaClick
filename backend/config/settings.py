@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'facturacion',
+    # 'channels',  # Comentado temporalmente
 ]
 
 MIDDLEWARE = [
@@ -105,6 +106,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Loyverse API Configuration
-LOYVERSE_API_TOKEN = os.environ.get('LOYVERSE_API_TOKEN')
+LOYVERSE_API_TOKEN = os.environ.get('LOYVERSE_API_TOKEN', '')
+LOYVERSE_MERCHANT_ID = os.environ.get('LOYVERSE_MERCHANT_ID', '')
+LOYVERSE_WEBHOOK_SECRET = os.environ.get('LOYVERSE_WEBHOOK_SECRET', '')
 if not LOYVERSE_API_TOKEN:
-    raise ValueError('LOYVERSE_API_TOKEN must be set in environment variables') 
+    raise ValueError('LOYVERSE_API_TOKEN must be set in environment variables')
+
+# Channels Configuration
+# ASGI_APPLICATION = 'config.asgi.application'
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# } 

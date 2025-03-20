@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Container } from '@mui/material';
 import NuevaFactura from './pages/NuevaFactura';
+import NotificacionInventario from './components/NotificacionInventario';
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
       <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
         <NuevaFactura />
       </Container>
+      <NotificacionInventario />
     </Box>
   );
 }

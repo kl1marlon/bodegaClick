@@ -1,15 +1,27 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from .models import Producto, TasaCambio, Factura
+from rest_framework.views import APIView
+from .models import Producto, TasaCambio, Factura, Webhook
 from .serializers import (
     ProductoSerializer,
     TasaCambioSerializer,
     FacturaSerializer,
     CrearFacturaSerializer,
-    ActualizarPreciosSerializer
+    ActualizarPreciosSerializer,
+    WebhookSerializer,
+    CreateWebhookSerializer
 )
 from .services import LoyverseService
+import json
+import hmac
+import hashlib
+import base64
+import uuid
+from django.conf import settings
+import datetime
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -128,4 +140,138 @@ class FacturaViewSet(viewsets.ModelViewSet):
         
         return Response({
             'error': result['error']
-        }, status=status.HTTP_400_BAD_REQUEST) 
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+class WebhookViewSet(viewsets.ModelViewSet):
+    queryset = Webhook.objects.all()
+    serializer_class = WebhookSerializer
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return CreateWebhookSerializer
+        return WebhookSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Generar UUID si no se proporciona
+            if not serializer.validated_data.get('id'):
+                serializer.validated_data['id'] = str(uuid.uuid4())
+            
+            # Agregar el merchant_id (asumiendo que está en configuración o se obtiene de alguna manera)
+            webhook = serializer.save(merchant_id=settings.LOYVERSE_MERCHANT_ID)
+            
+            return Response(
+                WebhookSerializer(webhook).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['post'])
+    def test(self, request, pk=None):
+        """
+        Envía una solicitud de prueba al webhook
+        """
+        webhook = self.get_object()
+        service = LoyverseService()
+        result = service.test_webhook(webhook)
+        
+        if result['success']:
+            return Response({
+                'message': 'Webhook probado correctamente',
+                'details': result
+            })
+        
+        return Response({
+            'error': result['error']
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+class WebhookReceiveView(APIView):
+    def post(self, request):
+        """
+        Endpoint para recibir notificaciones de webhook desde Loyverse
+        """
+        # Verificar firma del webhook para validar autenticidad
+        signature = request.headers.get('X-Loyverse-Signature')
+        if not self._verify_signature(request.body, signature):
+            return Response({'error': 'Firma inválida'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            data = json.loads(request.body)
+            event_type = data.get('type')
+            
+            # Manejar el evento según su tipo
+            if event_type == 'inventory_levels.update':
+                self._handle_inventory_update(data)
+            # Otros tipos se pueden manejar aquí
+            
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _verify_signature(self, payload, signature):
+        """
+        Verifica la firma del webhook usando HMAC con SHA-256
+        """
+        if not signature or not settings.LOYVERSE_WEBHOOK_SECRET:
+            return False
+        
+        # Calcular firma esperada
+        expected = base64.b64encode(
+            hmac.new(
+                settings.LOYVERSE_WEBHOOK_SECRET.encode('utf-8'),
+                payload,
+                hashlib.sha256
+            ).digest()
+        ).decode('utf-8')
+        
+        # Comparar con la firma recibida
+        return hmac.compare_digest(expected, signature)
+    
+    def _handle_inventory_update(self, data):
+        """
+        Maneja la actualización de inventario
+        """
+        channel_layer = get_channel_layer()
+        inventory_levels = data.get('inventory_levels', [])
+        service = LoyverseService()
+        
+        for level in inventory_levels:
+            variant_id = level.get('variant_id')
+            store_id = level.get('store_id')
+            in_stock = level.get('in_stock')
+            
+            # Buscar el producto correspondiente
+            try:
+                producto = Producto.objects.get(loyverse_id=variant_id)
+                
+                # Guardar el stock anterior para comparar
+                stock_anterior = producto.stock_actual
+                
+                # Actualizar el stock del producto
+                producto.stock_actual = in_stock
+                producto.ultima_actualizacion_stock = datetime.datetime.now()
+                producto.save()
+                
+                print(f"Inventario actualizado para {producto.nombre}: {in_stock} unidades")
+                
+                # Enviar notificación en tiempo real
+                async_to_sync(channel_layer.group_send)(
+                    "inventario_updates",
+                    {
+                        'type': 'inventory_update',
+                        'producto': {
+                            'id': producto.id,
+                            'nombre': producto.nombre,
+                            'loyverse_id': producto.loyverse_id
+                        },
+                        'stock_actual': float(in_stock),
+                        'stock_anterior': float(stock_anterior),
+                        'message': f"El inventario de {producto.nombre} ha cambiado de {stock_anterior} a {in_stock} unidades"
+                    }
+                )
+                
+            except Producto.DoesNotExist:
+                # Si el producto no existe, sincronizar desde Loyverse
+                print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
+                service.fetch_products() 

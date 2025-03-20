@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Producto, TasaCambio, Factura, DetalleFactura
+from .models import Producto, TasaCambio, Factura, DetalleFactura, Webhook
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -107,3 +107,18 @@ class ActualizarPreciosSerializer(serializers.Serializer):
                 "Debe proporcionar al menos un ID de factura o un ID de producto"
             )
         return data 
+
+class WebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ['id', 'merchant_id', 'url', 'type', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['merchant_id', 'created_at', 'updated_at']
+
+class CreateWebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ['id', 'url', 'type', 'status']
+        extra_kwargs = {
+            'id': {'required': False},  # Opcional para permitir actualizaciones
+            'status': {'required': False}  # Opcional para usar el valor por defecto
+        } 
