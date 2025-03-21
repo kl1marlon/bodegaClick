@@ -1,9 +1,9 @@
 [build]
 builder = "DOCKERFILE"
-dockerfile = "Dockerfile.health"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "python health.py"
+startCommand = "/bin/sh /app/docker-entrypoint.sh"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 healthcheckInterval = 15
