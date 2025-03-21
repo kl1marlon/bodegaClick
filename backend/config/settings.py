@@ -82,7 +82,11 @@ if 'DATABASE_URL' in os.environ:
     # Imprimir información de debug
     print(f"Usando DATABASE_URL: {os.environ.get('DATABASE_URL')}")
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True
+        )
     }
 # Si tenemos variables PGHOST, PGUSER, etc. de Railway, usarlas directamente
 elif all(env_var in os.environ for env_var in ['PGHOST', 'PGUSER', 'PGPASSWORD', 'PGDATABASE']):
@@ -107,7 +111,11 @@ elif 'DATABASE_PUBLIC_URL' in os.environ:
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     os.environ['DATABASE_URL'] = database_url
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True
+        )
     }
 else:
     # Configuración local
