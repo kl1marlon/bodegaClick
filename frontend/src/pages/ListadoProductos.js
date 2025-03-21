@@ -37,6 +37,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import InfoIcon from '@mui/icons-material/Info';
+import UpdateIcon from '@mui/icons-material/Update';
+import LoyaltyIcon from '@mui/icons-material/Loyalty';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import { fetchProductos } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 
@@ -165,6 +169,41 @@ const ListadoProductos = () => {
   // Cerrar el diálogo informativo
   const cerrarInfoDialog = () => {
     setInfoDialogOpen(false);
+  };
+  
+  // Obtener el ícono para la fuente de actualización
+  const getFuenteActualizacionIcon = (fuente) => {
+    switch (fuente) {
+      case 'loyverse':
+        return <LoyaltyIcon fontSize="small" sx={{ color: '#3b82f6' }} />;
+      case 'factura':
+        return <ReceiptIcon fontSize="small" sx={{ color: '#10b981' }} />;
+      case 'calculado':
+        return <CalculateIcon fontSize="small" sx={{ color: '#f59e0b' }} />;
+      default:
+        return <UpdateIcon fontSize="small" sx={{ color: '#6b7280' }} />;
+    }
+  };
+  
+  // Obtener el texto para la fuente de actualización
+  const getFuenteActualizacionText = (fuente) => {
+    switch (fuente) {
+      case 'loyverse':
+        return 'Loyverse API';
+      case 'factura':
+        return 'Factura';
+      case 'calculado':
+        return 'Cálculo automático';
+      default:
+        return 'Desconocida';
+    }
+  };
+  
+  // Formatear fecha
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No disponible';
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
   // Productos para la página actual
@@ -330,6 +369,7 @@ const ListadoProductos = () => {
                     <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Tasa</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Categoría</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Stock</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Actualización</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -431,11 +471,33 @@ const ListadoProductos = () => {
                           sx={{ fontWeight: 600 }}
                         />
                       </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
+                      >
+                        <Tooltip 
+                          title={
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                Fuente: {getFuenteActualizacionText(producto.fuente_actualizacion)}
+                              </Typography>
+                              <Typography variant="body2">
+                                Fecha: {formatDate(producto.ultima_actualizacion_precio)}
+                              </Typography>
+                            </Box>
+                          } 
+                          arrow
+                        >
+                          <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                            {getFuenteActualizacionIcon(producto.fuente_actualizacion)}
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {productosEnPagina.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 4, color: '#6b7280' }}>
+                      <TableCell colSpan={8} align="center" sx={{ py: 4, color: '#6b7280' }}>
                         {searchTerm 
                           ? 'No se encontraron productos con ese término de búsqueda' 
                           : 'No hay productos disponibles'}
@@ -515,6 +577,30 @@ const ListadoProductos = () => {
             <Typography variant="body1" gutterBottom>
               Puede cambiar la tasa utilizada para cada producto haciendo clic en los botones "BCV" o "Paralelo" en la columna "Tasa".
             </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+              Fuentes de actualización:
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LoyaltyIcon sx={{ color: '#3b82f6' }} />
+                <Typography variant="body1">
+                  <strong>Loyverse API:</strong> Productos actualizados directamente desde la API de Loyverse.
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ReceiptIcon sx={{ color: '#10b981' }} />
+                <Typography variant="body1">
+                  <strong>Factura:</strong> Productos actualizados a través de la creación de facturas.
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CalculateIcon sx={{ color: '#f59e0b' }} />
+                <Typography variant="body1">
+                  <strong>Cálculo automático:</strong> Precios calculados automáticamente basados en porcentajes de ganancia.
+                </Typography>
+              </Box>
+            </Box>
             <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary', fontStyle: 'italic' }}>
               Nota: Los cambios en la selección de tasa se utilizan solo para visualización y no afectan los datos guardados.
             </Typography>

@@ -30,6 +30,7 @@ class LoyverseService:
                 if item.get('variants'):
                     variant = item['variants'][0]
                     precio = variant.get('default_price', 0)
+                    categoria = item.get('category_id', '')
                 else:
                     precio = 0
                 
@@ -163,6 +164,7 @@ class LoyverseService:
                     # También actualizar el precio base para sincronizar con Loyverse
                     producto.precio_base = producto.precio_venta_calculado
                     producto.ultima_actualizacion_precio = datetime.datetime.now()
+                    producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
                     producto.save()
                 # Mantener la compatibilidad con el método anterior
                 elif producto.precio_compra > 0 and producto.unidades_compra > 0:
@@ -180,6 +182,7 @@ class LoyverseService:
                     # También actualizar el precio base para sincronizar con Loyverse
                     producto.precio_base = producto.precio_venta_calculado
                     producto.ultima_actualizacion_precio = datetime.datetime.now()
+                    producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
                     producto.save()
             
             return {
@@ -241,6 +244,7 @@ class LoyverseService:
                 producto.precio_base = precio_unitario
                 producto.precio_venta_calculado = precio_unitario
                 producto.ultima_actualizacion_precio = datetime.datetime.now()
+                producto.fuente_actualizacion = 'factura'  # Registrar que fue actualizado desde factura
                 producto.save()
                 
                 print(f"Precio actualizado para {producto.nombre}: Original: {producto.precio_base}, Nuevo: {precio_unitario}")

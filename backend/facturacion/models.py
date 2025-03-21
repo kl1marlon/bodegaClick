@@ -15,6 +15,8 @@ class Producto(models.Model):
     ultima_actualizacion_stock = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    categoria = models.CharField(max_length=255, null=True, blank=True)
+    fuente_actualizacion = models.CharField(max_length=50, default='loyverse', blank=True, help_text="Indica la fuente de la última actualización (loyverse, factura)")
 
     def __str__(self):
         return self.nombre
