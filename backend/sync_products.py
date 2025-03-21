@@ -107,7 +107,8 @@ def sync_products():
                                 'precio_base': precio,
                                 'categoria': categoria_nombre,  # Guardar el nombre de la categoría
                                 'ultima_actualizacion_precio': updated_at,  # Guardar la fecha de actualización
-                                'fuente_actualizacion': 'loyverse'  # Indicar que la fuente es Loyverse
+                                'fuente_actualizacion': 'loyverse',  # Indicar que la fuente es Loyverse
+                                'aplicar_iva': False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
                             }
                         )
                         

@@ -11,6 +11,14 @@ export const fetchFacturas = createAsyncThunk(
   }
 );
 
+export const fetchFacturaById = createAsyncThunk(
+  'facturas/fetchFacturaById',
+  async (id) => {
+    const response = await axios.get(`${API_URL}/facturas/${id}/`);
+    return response.data;
+  }
+);
+
 export const createFactura = createAsyncThunk(
   'facturas/createFactura',
   async (facturaData) => {
@@ -25,6 +33,7 @@ const facturasSlice = createSlice({
     items: [],
     currentFactura: null,
     status: 'idle',
+    detailStatus: 'idle',
     error: null,
   },
   reducers: {
@@ -51,6 +60,17 @@ const facturasSlice = createSlice({
       .addCase(createFactura.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
         state.currentFactura = null;
+      })
+      .addCase(fetchFacturaById.pending, (state) => {
+        state.detailStatus = 'loading';
+      })
+      .addCase(fetchFacturaById.fulfilled, (state, action) => {
+        state.detailStatus = 'succeeded';
+        state.currentFactura = action.payload;
+      })
+      .addCase(fetchFacturaById.rejected, (state, action) => {
+        state.detailStatus = 'failed';
+        state.error = action.error.message;
       });
   },
 });

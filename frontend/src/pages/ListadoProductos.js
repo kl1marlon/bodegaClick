@@ -31,7 +31,9 @@ import {
   DialogContentText,
   DialogActions,
   Snackbar,
-  Alert
+  Alert,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -41,7 +43,8 @@ import UpdateIcon from '@mui/icons-material/Update';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { fetchProductos } from '../store/productosSlice';
+import SyncIcon from '@mui/icons-material/Sync';
+import { fetchProductos, syncFromLoyverse } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 
 const ListadoProductos = () => {
@@ -64,6 +67,10 @@ const ListadoProductos = () => {
   
   // Estado para diálogo informativo
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  
+  // Estado para sincronización
+  const [sincronizando, setSincronizando] = useState(false);
+  const [actualizarPrecios, setActualizarPrecios] = useState(true);
   
   // Estado para feedback
   const [snackbar, setSnackbar] = useState({
@@ -161,6 +168,73 @@ const ListadoProductos = () => {
     return 'N/A';
   };
   
+  // Función para sincronizar productos desde Loyverse
+  const handleSyncFromLoyverse = () => {
+    setSincronizando(true);
+    console.log("Iniciando sincronización desde la interfaz. Actualizar precios:", actualizarPrecios);
+    dispatch(syncFromLoyverse(actualizarPrecios))
+      .then((result) => {
+        if (result.error) {
+          console.error("Error en la sincronización:", result.error.message);
+          setSnackbar({
+            open: true,
+            message: `Error al sincronizar: ${result.error.message}`,
+            severity: 'error'
+          });
+        } else {
+          console.log("Sincronización completada exitosamente:", result.payload);
+          let mensajeDetallado = `Productos sincronizados correctamente. `;
+          
+          if (result.payload) {
+            // Añadir detalles sobre los productos procesados
+            if (result.payload.created !== undefined) {
+              mensajeDetallado += `Creados: ${result.payload.created}, `;
+            }
+            
+            if (result.payload.updated !== undefined) {
+              mensajeDetallado += `Actualizados: ${result.payload.updated}, `;
+            }
+            
+            if (result.payload.prices_unchanged !== undefined) {
+              mensajeDetallado += `Precios no modificados: ${result.payload.prices_unchanged}. `;
+            }
+            
+            // Detalles sobre páginas y total procesado
+            if (result.payload.total_pages !== undefined) {
+              mensajeDetallado += `Páginas procesadas: ${result.payload.total_pages}. `;
+            }
+            
+            if (result.payload.total_processed !== undefined) {
+              mensajeDetallado += `Total productos procesados: ${result.payload.total_processed}. `;
+            }
+            
+            // Información sobre facturas recientes
+            if (result.payload.facturas_recientes) {
+              mensajeDetallado += `No se actualizaron precios debido a facturas recientes en los últimos 2 días. `;
+            }
+            
+            // Información sobre aplicar_iva
+            mensajeDetallado += "Todos los productos tienen aplicar_iva=false por defecto.";
+          } else if (result.payload && result.payload.message) {
+            mensajeDetallado += result.payload.message;
+          } else {
+            mensajeDetallado += `${actualizarPrecios ? 'Precios actualizados.' : 'Precios no modificados.'}`;
+          }
+          
+          setSnackbar({
+            open: true,
+            message: mensajeDetallado,
+            severity: 'success'
+          });
+          
+          dispatch(fetchProductos()); // Refrescar la lista de productos
+        }
+      })
+      .finally(() => {
+        setSincronizando(false);
+      });
+  };
+  
   // Abrir el diálogo informativo
   const abrirInfoDialog = () => {
     setInfoDialogOpen(true);
@@ -224,33 +298,68 @@ const ListadoProductos = () => {
       padding: 3, 
       backgroundColor: '#f8f9fa'
     }}>
-      <Typography 
-        variant="h4" 
-        gutterBottom 
-        sx={{ 
-          fontSize: '2rem', 
-          fontWeight: 600, 
-          color: '#1e293b',
-          mb: 4,
-          borderBottom: '2px solid #e2e8f0',
-          paddingBottom: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2
-        }}
-      >
-        <InventoryIcon fontSize="large" />
-        Inventario de Productos
-        <Tooltip title="Información sobre tasas de cambio">
-          <IconButton 
-            onClick={abrirInfoDialog}
-            size="small"
-            sx={{ ml: 2 }}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 4,
+        borderBottom: '2px solid #e2e8f0',
+        paddingBottom: 2,
+      }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontSize: '2rem', 
+            fontWeight: 600, 
+            color: '#1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
+          }}
+        >
+          <InventoryIcon fontSize="large" />
+          Inventario de Productos
+          <Tooltip title="Información sobre tasas de cambio">
+            <IconButton 
+              onClick={abrirInfoDialog}
+              size="small"
+              sx={{ ml: 2 }}
+            >
+              <InfoIcon />
+            </IconButton>
+          </Tooltip>
+        </Typography>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={actualizarPrecios}
+                onChange={(e) => setActualizarPrecios(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Actualizar precios"
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SyncIcon />}
+            onClick={handleSyncFromLoyverse}
+            disabled={sincronizando}
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              textTransform: 'none',
+              fontWeight: 600
+            }}
           >
-            <InfoIcon />
-          </IconButton>
-        </Tooltip>
-      </Typography>
+            {sincronizando ? 'Sincronizando...' : 'Sincronizar con Loyverse'}
+            {sincronizando && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
+          </Button>
+        </Box>
+      </Box>
       
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -352,9 +461,14 @@ const ListadoProductos = () => {
           overflow: 'hidden'
         }}
       >
-        {status === 'loading' ? (
+        {status === 'loading' || sincronizando ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
             <CircularProgress />
+            {sincronizando && (
+              <Typography variant="h6" sx={{ ml: 2, color: '#475569' }}>
+                Sincronizando productos desde Loyverse...
+              </Typography>
+            )}
           </Box>
         ) : (
           <>
@@ -482,7 +596,7 @@ const ListadoProductos = () => {
                                 Fuente: {getFuenteActualizacionText(producto.fuente_actualizacion)}
                               </Typography>
                               <Typography variant="body2">
-                                Fecha: {formatDate(producto.ultima_actualizacion_precio)}
+                                Actualización precio: {formatDate(producto.ultima_actualizacion_precio)}
                               </Typography>
                             </Box>
                           } 
@@ -601,6 +715,17 @@ const ListadoProductos = () => {
                 </Typography>
               </Box>
             </Box>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+              Sincronización con Loyverse:
+            </Typography>
+            <Typography variant="body1">
+              Puede sincronizar manualmente los productos desde Loyverse haciendo clic en el botón "Sincronizar con Loyverse" en la parte superior de la página.
+              Esto traerá la información más actualizada de productos, incluyendo nombres, precios y categorías.
+            </Typography>
+            <Typography variant="body1" sx={{ mt: 1 }}>
+              La opción "Actualizar precios" permite decidir si desea actualizar los precios con los valores de Loyverse. El sistema verificará si hay facturas creadas en los últimos 2 días y, en caso afirmativo, no actualizará los precios para mantener los ajustes recientes.
+            </Typography>
             <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary', fontStyle: 'italic' }}>
               Nota: Los cambios en la selección de tasa se utilizan solo para visualización y no afectan los datos guardados.
             </Typography>
@@ -620,7 +745,14 @@ const ListadoProductos = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ 
+            width: '100%',
+            maxWidth: '600px'
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

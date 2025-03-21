@@ -13,50 +13,182 @@ class LoyverseService:
             'Content-Type': 'application/json'
         }
     
-    def fetch_products(self):
+    def fetch_products(self, actualizar_precios=True):
         """
         Obtiene todos los productos de Loyverse y los almacena en la base de datos local
-        """
-        url = f"{self.BASE_URL}/items"
-        response = requests.get(url, headers=self.headers)
         
-        if response.status_code == 200:
-            items = response.json().get('items', [])
-            products_created = 0
-            products_updated = 0
+        Args:
+            actualizar_precios (bool): Si es True, actualiza los precios de los productos.
+                                      Si hay facturas recientes (2 días), no actualiza los precios.
+        """
+        # Verificar si hay facturas recientes (últimos 2 días) en caso de solicitar actualización de precios
+        facturas_recientes = False
+        if actualizar_precios:
+            from .models import Factura
+            import datetime
+            fecha_limite = datetime.datetime.now() - datetime.timedelta(days=2)
+            facturas_recientes = Factura.objects.filter(fecha__gte=fecha_limite).exists()
+            
+            # Si hay facturas recientes, no actualizar precios
+            if facturas_recientes:
+                print(f"Se encontraron facturas recientes desde {fecha_limite}. No se actualizarán los precios.")
+                actualizar_precios = False
+        
+        # Obtener las categorías para mapear IDs a nombres
+        categories_dict = {}
+        try:
+            print("Obteniendo categorías desde Loyverse...")
+            categories_response = requests.get(f"{self.BASE_URL}/categories", headers=self.headers)
+            if categories_response.status_code == 200:
+                categories_data = categories_response.json()
+                categories = categories_data.get('categories', [])
+                
+                for category in categories:
+                    category_id = category.get('id')
+                    category_name = category.get('name')
+                    if category_id and category_name:
+                        categories_dict[category_id] = category_name
+                print(f"Se encontraron {len(categories_dict)} categorías en Loyverse")
+            else:
+                print(f"Error al obtener categorías: {categories_response.status_code} - {categories_response.text}")
+        except Exception as e:
+            print(f"Error obteniendo categorías: {str(e)}")
+        
+        # Inicializar contadores
+        products_created = 0
+        products_updated = 0
+        prices_unchanged = 0
+        total_items_processed = 0
+        
+        # Inicializar cursor para paginación
+        cursor = None
+        page = 1
+        
+        print(f"Iniciando sincronización de productos con paginación. Actualizar precios: {actualizar_precios}")
+        
+        while True:
+            # Construir URL con cursor si existe
+            url = f"{self.BASE_URL}/items"
+            if cursor:
+                url += f"?cursor={cursor}"
+            
+            print(f"Procesando página {page}, URL: {url}")
+            response = requests.get(url, headers=self.headers)
+            
+            if response.status_code != 200:
+                print(f"Error en la API de Loyverse: {response.status_code} - {response.text}")
+                if page == 1:  # Si falla en la primera página, devolver error
+                    return {
+                        'success': False,
+                        'error': f'Error al obtener productos: {response.status_code} - {response.text}'
+                    }
+                else:  # Si falla después de la primera página, devolver los resultados parciales
+                    break
+            
+            data = response.json()
+            items = data.get('items', [])
+            
+            if not items:
+                print(f"No hay más productos para procesar. Total procesados: {total_items_processed}")
+                break
+            
+            print(f"Procesando {len(items)} productos en la página {page}")
+            total_items_processed += len(items)
             
             for item in items:
-                # Tomamos el primer variante como precio base
-                if item.get('variants'):
-                    variant = item['variants'][0]
-                    precio = variant.get('default_price', 0)
-                    categoria = item.get('category_id', '')
-                else:
-                    precio = 0
+                try:
+                    # Tomamos el primer variante como precio base
+                    precio = Decimal('0')
+                    if item.get('variants'):
+                        variant = item['variants'][0]
+                        precio_str = str(variant.get('default_price', '0'))
+                        # Asegurarse de que el precio sea un número válido
+                        try:
+                            precio = Decimal(precio_str)
+                        except:
+                            print(f"Precio inválido para {item['item_name']}: {precio_str}")
+                            precio = Decimal('0')
+                    
+                    # Obtener el ID de categoría y mapear al nombre
+                    categoria_id = item.get('category_id', '')
+                    categoria_nombre = categories_dict.get(categoria_id, '')
+                    
+                    # Convertir la fecha de actualización de Loyverse a formato datetime
+                    updated_at = None
+                    if item.get('updated_at'):
+                        try:
+                            updated_at = datetime.datetime.fromisoformat(item['updated_at'].replace('Z', '+00:00'))
+                        except Exception as e:
+                            print(f"Error al convertir fecha: {str(e)}")
+                    
+                    # Buscar si el producto ya existe para decidir si actualizar el precio
+                    try:
+                        producto_existente = Producto.objects.get(loyverse_id=item['id'])
+                        defaults = {
+                            'nombre': item['item_name'],
+                            'descripcion': item.get('description', ''),
+                            'categoria': categoria_nombre,
+                            'aplicar_iva': False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
+                        }
+                        
+                        # Solo actualizar el precio si está habilitado y no hay facturas recientes
+                        if actualizar_precios:
+                            defaults.update({
+                                'precio_base': precio,
+                                'ultima_actualizacion_precio': updated_at,
+                                'fuente_actualizacion': 'loyverse'
+                            })
+                        else:
+                            prices_unchanged += 1
+                        
+                        # Actualizar el producto con los valores correspondientes
+                        for key, value in defaults.items():
+                            setattr(producto_existente, key, value)
+                        
+                        # Asegurar que aplicar_iva siempre sea False para productos sincronizados
+                        producto_existente.aplicar_iva = False
+                        
+                        producto_existente.save()
+                        print(f"Producto actualizado: {producto_existente.nombre} (ID: {producto_existente.id}) - aplicar_iva={producto_existente.aplicar_iva}")
+                        products_updated += 1
+                        
+                    except Producto.DoesNotExist:
+                        # Para productos nuevos, siempre establecer todos los valores
+                        nuevo_producto = Producto.objects.create(
+                            loyverse_id=item['id'],
+                            nombre=item['item_name'],
+                            descripcion=item.get('description', ''),
+                            precio_base=precio,
+                            categoria=categoria_nombre,
+                            ultima_actualizacion_precio=updated_at,
+                            fuente_actualizacion='loyverse',
+                            aplicar_iva=False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
+                        )
+                        print(f"Nuevo producto creado: {nuevo_producto.nombre} (ID: {nuevo_producto.id}) - aplicar_iva={nuevo_producto.aplicar_iva}")
+                        products_created += 1
                 
-                producto, created = Producto.objects.update_or_create(
-                    loyverse_id=item['id'],
-                    defaults={
-                        'nombre': item['item_name'],
-                        'descripcion': item.get('description', ''),
-                        'precio_base': precio
-                    }
-                )
-                
-                if created:
-                    products_created += 1
-                else:
-                    products_updated += 1
+                except Exception as e:
+                    print(f"Error procesando producto {item.get('item_name', 'desconocido')}: {str(e)}")
+                    continue
             
-            return {
-                'success': True,
-                'created': products_created,
-                'updated': products_updated
-            }
+            # Obtener el cursor para la siguiente página
+            cursor = data.get('cursor')
+            if not cursor:
+                print("No hay más páginas para procesar (cursor es None)")
+                break
+            
+            page += 1
+            print(f"Pasando a la página {page} con cursor: {cursor}")
         
+        print(f"Sincronización completada. Creados: {products_created}, Actualizados: {products_updated}, Precios no modificados: {prices_unchanged}")
         return {
-            'success': False,
-            'error': f'Error al obtener productos: {response.status_code}'
+            'success': True,
+            'created': products_created,
+            'updated': products_updated,
+            'prices_unchanged': prices_unchanged,
+            'facturas_recientes': facturas_recientes,
+            'total_pages': page,
+            'total_processed': total_items_processed
         }
 
     def sync_prices(self, products):

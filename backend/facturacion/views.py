@@ -29,13 +29,43 @@ class ProductoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def sync_from_loyverse(self, request):
+        # Obtener el parámetro de actualización de precios, por defecto True
+        actualizar_precios = request.data.get('actualizar_precios', True)
+        
+        print(f"Iniciando sync_from_loyverse desde API. Actualizar precios: {actualizar_precios}")
         service = LoyverseService()
-        result = service.fetch_products()
+        result = service.fetch_products(actualizar_precios)
         
         if result['success']:
+            mensaje = f"Productos sincronizados. Creados: {result['created']}, Actualizados: {result['updated']}"
+            if 'prices_unchanged' in result and result['prices_unchanged'] > 0:
+                mensaje += f", Precios no modificados: {result['prices_unchanged']}"
+            if result.get('facturas_recientes'):
+                mensaje += ". No se actualizaron precios debido a facturas recientes (últimos 2 días)."
+                
+            print(f"Sincronización exitosa: {mensaje}")
+            
+            # Añadir información sobre el campo aplicar_iva
+            mensaje += ". Todos los productos tienen aplicar_iva=false por defecto."
+            
+            # Añadir información sobre páginas procesadas y total
+            if 'total_pages' in result:
+                mensaje += f" Páginas procesadas: {result['total_pages']}."
+            if 'total_processed' in result:
+                mensaje += f" Total productos procesados: {result['total_processed']}."
+                
             return Response({
-                'message': f"Productos sincronizados. Creados: {result['created']}, Actualizados: {result['updated']}"
+                'message': mensaje,
+                'created': result['created'], 
+                'updated': result['updated'],
+                'prices_unchanged': result.get('prices_unchanged', 0),
+                'facturas_recientes': result.get('facturas_recientes', False),
+                'total_pages': result.get('total_pages', 1),
+                'total_processed': result.get('total_processed', result['created'] + result['updated']),
+                'total': result['created'] + result['updated']
             })
+        
+        print(f"Error en sincronización: {result['error']}")
         return Response({
             'error': result['error']
         }, status=status.HTTP_400_BAD_REQUEST)
