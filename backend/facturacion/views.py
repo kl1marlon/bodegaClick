@@ -22,6 +22,7 @@ from django.conf import settings
 import datetime
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.db import connection
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -312,4 +313,17 @@ def health_check(request):
     Endpoint para comprobar que la API está funcionando correctamente.
     Utilizado por Railway para health checks.
     """
-    return Response({"status": "healthy"}, status=200) 
+    try:
+        # Verificar conexión a la base de datos
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        
+        # Si llegamos aquí, la conexión a la BD está bien
+        return Response({"status": "healthy", "database": "connected"}, status=200)
+    except Exception as e:
+        # Si hay algún error, reportar estado degradado
+        return Response(
+            {"status": "degraded", "error": str(e)}, 
+            status=200  # Aún devolvemos 200 para que Railway no reinicie el servicio
+        ) 

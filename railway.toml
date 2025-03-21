@@ -4,8 +4,9 @@ dockerfile = "Dockerfile"
 
 [deploy]
 startCommand = "sh docker-entrypoint.sh"
-healthcheckPath = "/api/health"
+healthcheckPath = "/health"
 healthcheckTimeout = 300
+healthcheckInterval = 15
 restartPolicyType = "ON_FAILURE"
 
 [nixpacks]
