@@ -24,12 +24,14 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn whitenoise dj-databa
 # Copiar el código del proyecto
 COPY . .
 
-# Puerto expuesto
+# Puerto a exponer (Railway sobreescribirá esto con su variable PORT)
 EXPOSE 8000
 
 # Verificar salud
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f http://localhost:8000/api/health/ || exit 1
+  CMD curl -f http://localhost:$PORT/api/health/ || exit 1
 
-# Comando por defecto (puede ser sobrescrito en docker-compose)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi"] 
+# Comando para Railway que ejecuta migraciones y luego inicia el servidor
+CMD python manage.py migrate && \
+    python manage.py collectstatic --noinput && \
+    gunicorn --workers=2 --threads=4 --timeout=120 --bind 0.0.0.0:$PORT config.wsgi:application 

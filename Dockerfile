@@ -25,11 +25,13 @@ RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY . .
 
 # Hacer que los scripts sean ejecutables
-RUN chmod +x /app/docker-entrypoint.sh
 RUN chmod +x /app/backend/health.py
 
 # Exponer puerto
-EXPOSE ${PORT:-8000}
+EXPOSE 8000
 
-# Comando por defecto
-CMD ["/bin/sh", "/app/docker-entrypoint.sh"] 
+# Comando simple para iniciar la aplicación directamente
+CMD cd /app/backend && \
+    python manage.py migrate && \
+    python manage.py collectstatic --noinput && \
+    gunicorn --workers=2 --threads=4 --timeout=120 --bind 0.0.0.0:$PORT config.wsgi:application 

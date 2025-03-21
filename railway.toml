@@ -3,8 +3,7 @@ builder = "DOCKERFILE"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "export DATABASE_URL=$DATABASE_PUBLIC_URL && /bin/sh /app/docker-entrypoint.sh"
-healthcheckPath = "/health"
+healthcheckPath = "/api/health/"
 healthcheckTimeout = 300
 healthcheckInterval = 15
 restartPolicyType = "ON_FAILURE" 
