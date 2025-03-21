@@ -18,15 +18,32 @@ import {
   Grid,
   Chip,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Button,
+  ButtonGroup,
+  Menu,
+  MenuItem,
+  Tooltip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import InfoIcon from '@mui/icons-material/Info';
 import { fetchProductos } from '../store/productosSlice';
+import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 
 const ListadoProductos = () => {
   const dispatch = useDispatch();
   const { items: productos, status } = useSelector((state) => state.productos);
+  const { items: tasasCambio } = useSelector((state) => state.tasasCambio);
   
   // Estados para paginación
   const [page, setPage] = useState(0);
@@ -36,12 +53,49 @@ const ListadoProductos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   
-  // Cargar productos al montar el componente
+  // Estado para tasas de cambio
+  const [tasaBCV, setTasaBCV] = useState(null);
+  const [tasaParalelo, setTasaParalelo] = useState(null);
+  const [tasaSeleccionadaProducto, setTasaSeleccionadaProducto] = useState({});
+  
+  // Estado para diálogo informativo
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  
+  // Estado para feedback
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+  
+  // Cargar productos y tasas al montar el componente
   useEffect(() => {
     if (status !== 'succeeded') {
       dispatch(fetchProductos());
     }
+    dispatch(fetchTasasCambio());
+    dispatch(fetchLatestTasa('BCV')).then(action => {
+      if (action.payload) {
+        setTasaBCV(action.payload);
+      }
+    });
+    dispatch(fetchLatestTasa('PARALELO')).then(action => {
+      if (action.payload) {
+        setTasaParalelo(action.payload);
+      }
+    });
   }, [dispatch, status]);
+  
+  // Inicializar tasas seleccionadas para cada producto
+  useEffect(() => {
+    if (productos.length > 0 && tasaParalelo) {
+      const initialTasas = {};
+      productos.forEach(producto => {
+        initialTasas[producto.id] = 'PARALELO';
+      });
+      setTasaSeleccionadaProducto(initialTasas);
+    }
+  }, [productos, tasaParalelo]);
   
   // Filtrar productos cuando cambia el término de búsqueda o la lista de productos
   useEffect(() => {
@@ -68,11 +122,61 @@ const ListadoProductos = () => {
     setPage(0);
   };
   
+  // Función para cambiar la tasa de un producto
+  const cambiarTasaProducto = (productoId, tipoTasa) => {
+    setTasaSeleccionadaProducto({
+      ...tasaSeleccionadaProducto,
+      [productoId]: tipoTasa
+    });
+  };
+  
+  // Función para calcular el precio en USD desde BS
+  const calcularPrecioUSD = (precioBs, productoId) => {
+    if (!precioBs) return 0;
+    
+    // Convertir a número
+    precioBs = Number(precioBs);
+    
+    // Obtener la tasa seleccionada para este producto
+    const tipoTasa = tasaSeleccionadaProducto[productoId] || 'PARALELO';
+    const tasa = tipoTasa === 'BCV' ? tasaBCV : tasaParalelo;
+    
+    if (!tasa || tasa.valor <= 0) return 0;
+    
+    // Calcular y devolver con 2 decimales
+    return Number((precioBs / tasa.valor).toFixed(2));
+  };
+  
+  // Obtener el valor actual de la tasa según el tipo
+  const obtenerValorTasa = (tipo) => {
+    if (tipo === 'BCV' && tasaBCV) {
+      return tasaBCV.valor;
+    } else if (tipo === 'PARALELO' && tasaParalelo) {
+      return tasaParalelo.valor;
+    }
+    return 'N/A';
+  };
+  
+  // Abrir el diálogo informativo
+  const abrirInfoDialog = () => {
+    setInfoDialogOpen(true);
+  };
+  
+  // Cerrar el diálogo informativo
+  const cerrarInfoDialog = () => {
+    setInfoDialogOpen(false);
+  };
+  
   // Productos para la página actual
   const productosEnPagina = productosFiltrados.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+  
+  // Cerrar snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
   
   return (
     <Box sx={{ 
@@ -98,11 +202,20 @@ const ListadoProductos = () => {
       >
         <InventoryIcon fontSize="large" />
         Inventario de Productos
+        <Tooltip title="Información sobre tasas de cambio">
+          <IconButton 
+            onClick={abrirInfoDialog}
+            size="small"
+            sx={{ ml: 2 }}
+          >
+            <InfoIcon />
+          </IconButton>
+        </Tooltip>
       </Typography>
       
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -114,26 +227,38 @@ const ListadoProductos = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Resultados de búsqueda
+                Tasa BCV Actual
               </Typography>
-              <Typography variant="h3" component="div" color={searchTerm ? 'secondary' : 'primary'}>
-                {productosFiltrados.length}
+              <Typography variant="h3" component="div" color="primary">
+                {tasaBCV ? tasaBCV.valor : 'N/A'} Bs
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Página actual
+                Tasa Paralelo Actual
               </Typography>
-              <Typography variant="h3" component="div" color="primary">
-                {page + 1} / {Math.max(1, Math.ceil(productosFiltrados.length / rowsPerPage))}
+              <Typography variant="h3" component="div" color="secondary">
+                {tasaParalelo ? tasaParalelo.valor : 'N/A'} Bs
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Resultados búsqueda
+              </Typography>
+              <Typography variant="h3" component="div" color={searchTerm ? 'secondary' : 'primary'}>
+                {productosFiltrados.length}
               </Typography>
             </CardContent>
           </Card>
@@ -202,6 +327,7 @@ const ListadoProductos = () => {
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Código</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Precio USD</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Precio BS</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Tasa</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Categoría</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Stock</TableCell>
                   </TableRow>
@@ -241,13 +367,42 @@ const ListadoProductos = () => {
                         align="right"
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
                       >
-                        ${Number(producto.precio_base).toFixed(2)}
+                        ${calcularPrecioUSD(producto.precio_base, producto.id)}
                       </TableCell>
                       <TableCell 
                         align="right"
-                        sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
+                        sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9', fontWeight: 500 }}
                       >
-                        {producto.precio_bs ? producto.precio_bs.toFixed(2) : 'N/A'}
+                        {Number(producto.precio_base).toFixed(2)} Bs
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ borderBottom: '1px solid #f1f5f9' }}
+                      >
+                        <ButtonGroup size="small" variant="outlined">
+                          <Button 
+                            color={tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'primary' : 'inherit'}
+                            onClick={() => cambiarTasaProducto(producto.id, 'BCV')}
+                            sx={{ 
+                              borderRadius: '4px 0 0 4px',
+                              fontWeight: tasaSeleccionadaProducto[producto.id] === 'BCV' ? 700 : 400,
+                              backgroundColor: tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'rgba(25, 118, 210, 0.1)' : 'transparent'
+                            }}
+                          >
+                            BCV
+                          </Button>
+                          <Button 
+                            color={tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 'secondary' : 'inherit'}
+                            onClick={() => cambiarTasaProducto(producto.id, 'PARALELO')}
+                            sx={{ 
+                              borderRadius: '0 4px 4px 0',
+                              fontWeight: tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 700 : 400,
+                              backgroundColor: tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 'rgba(220, 0, 78, 0.1)' : 'transparent'
+                            }}
+                          >
+                            Paralelo
+                          </Button>
+                        </ButtonGroup>
                       </TableCell>
                       <TableCell
                         align="right"
@@ -270,9 +425,9 @@ const ListadoProductos = () => {
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
                       >
                         <Chip 
-                          label={producto.stock || '0'} 
+                          label={producto.stock_actual || '0'} 
                           size="small"
-                          color={producto.stock > 10 ? 'success' : producto.stock > 0 ? 'warning' : 'error'}
+                          color={producto.stock_actual > 10 ? 'success' : producto.stock_actual > 0 ? 'warning' : 'error'}
                           sx={{ fontWeight: 600 }}
                         />
                       </TableCell>
@@ -280,7 +435,7 @@ const ListadoProductos = () => {
                   ))}
                   {productosEnPagina.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#6b7280' }}>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4, color: '#6b7280' }}>
                         {searchTerm 
                           ? 'No se encontraron productos con ese término de búsqueda' 
                           : 'No hay productos disponibles'}
@@ -317,6 +472,72 @@ const ListadoProductos = () => {
           </>
         )}
       </Paper>
+      
+      {/* Diálogo informativo */}
+      <Dialog
+        open={infoDialogOpen}
+        onClose={cerrarInfoDialog}
+        maxWidth="md"
+      >
+        <DialogTitle sx={{ bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CurrencyExchangeIcon color="primary" />
+            <Typography variant="h6">Información sobre Tasas de Cambio</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <DialogContentText component="div">
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+              Tasas de cambio actuales:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
+              <Box>
+                <Typography variant="body1" color="primary" sx={{ fontWeight: 500 }}>
+                  BCV: {tasaBCV ? tasaBCV.valor : 'No disponible'} Bs/USD
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Última actualización: {tasaBCV ? new Date(tasaBCV.fecha).toLocaleDateString() : 'N/A'}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="body1" color="secondary" sx={{ fontWeight: 500 }}>
+                  Paralelo: {tasaParalelo ? tasaParalelo.valor : 'No disponible'} Bs/USD
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Última actualización: {tasaParalelo ? new Date(tasaParalelo.fecha).toLocaleDateString() : 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body1" gutterBottom>
+              Los precios en USD son calculados a partir de los precios en Bolívares usando la tasa seleccionada para cada producto.
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              Puede cambiar la tasa utilizada para cada producto haciendo clic en los botones "BCV" o "Paralelo" en la columna "Tasa".
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary', fontStyle: 'italic' }}>
+              Nota: Los cambios en la selección de tasa se utilizan solo para visualización y no afectan los datos guardados.
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={cerrarInfoDialog} color="primary" variant="contained">
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
