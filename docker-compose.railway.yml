@@ -1,12 +1,27 @@
 version: '3.8'
 
 services:
+  # Servicio de gateway para recibir todo el tráfico de Railway
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - ./railway-nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      - PORT=${PORT:-8000}
+    command: /bin/sh -c "envsubst '$$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
   backend:
     build: 
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "${PORT}:8000"
+      - "8000:8000"
     environment:
       - RAILWAY_ENVIRONMENT=true
       - DATABASE_URL=${DATABASE_URL}
@@ -14,15 +29,22 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
       - ALLOWED_HOSTS=*.up.railway.app,${RAILWAY_STATIC_URL}
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+      - PORT=8000
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "80:80"
     environment:
       - REACT_APP_API_URL=/api
       - NODE_ENV=production

@@ -1,9 +1,12 @@
 [build]
 builder = "DOCKERFILE"
-dockerfile = "Dockerfile.railway"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "docker-compose -f docker-compose.railway.yml up"
+startCommand = "sh docker-entrypoint.sh"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE" 
+restartPolicyType = "ON_FAILURE"
+
+[nixpacks]
+start-command = "cd backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT" 

@@ -7,4 +7,6 @@ django-cors-headers==4.1.0
 dj-database-url==2.0.0
 channels==4.0.0
 daphne==4.0.0
-channels-redis==4.1.0 
+channels-redis==4.1.0
+whitenoise==6.4.0
+gunicorn==21.2.0 

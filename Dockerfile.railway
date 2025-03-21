@@ -1,9 +1,15 @@
 FROM docker:20.10.16-dind
 
-RUN apk add --no-cache docker-compose python3 py3-pip
+# Instalar dependencias necesarias para Docker Compose y herramientas de red
+RUN apk add --no-cache docker-compose python3 py3-pip netcat-openbsd
 
 WORKDIR /app
 
+# Copiar todos los archivos del proyecto
 COPY . .
 
-CMD ["docker-compose", "up"] 
+# Hacer ejecutable el script de entrada
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Comando a ejecutar al iniciar el contenedor
+ENTRYPOINT ["/app/docker-entrypoint.sh"] 

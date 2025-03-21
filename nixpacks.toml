@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["postgresql"]
+
+[phases.install]
+cmds = ["cd backend && pip install -r requirements.txt"]
+
+[start]
+cmd = "cd backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT" 

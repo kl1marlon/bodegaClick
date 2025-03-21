@@ -1,0 +1,35 @@
+# Directorio de node_modules del frontend
+frontend/node_modules/
+
+# Archivos Git
+.git/
+.gitignore
+.gitattributes
+
+# Archivos de Docker que no necesitamos para Nixpacks
+Dockerfile
+Dockerfile.railway
+docker-compose.yml
+docker-compose.railway.yml
+docker-compose.dev.yml
+docker-entrypoint.sh
+
+# Archivos de caché y compilados de Python
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+backend/.env/
+backend/venv/
+backend/env/
+
+# Archivos de React compilados (se reconstruirán)
+frontend/build/
+frontend/dist/
+
+# Archivos de configuración del IDE
+.idea/
+.vscode/
+*.swp
+*.swo 
