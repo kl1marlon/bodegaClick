@@ -7,6 +7,14 @@ if [ -n "$PORT" ]; then
   echo "Detectado entorno Railway"
   export RAILWAY_ENVIRONMENT=true
   
+  # Mostrar información relevante para debug
+  echo "Información de conexión a la base de datos:"
+  echo "DATABASE_URL: $DATABASE_URL"
+  echo "PGHOST: $PGHOST"
+  echo "PGPORT: $PGPORT"
+  echo "PGUSER: $PGUSER"
+  echo "PGDATABASE: $PGDATABASE"
+  
   # Crear un archivo .env para la aplicación
   echo "PORT=$PORT" > .env
   echo "DATABASE_URL=$DATABASE_URL" >> .env
@@ -18,34 +26,42 @@ fi
 # Función para esperar a que Postgres esté disponible
 wait_for_postgres() {
   echo "Esperando que PostgreSQL esté disponible..."
-  # Extraer las variables de conexión de DATABASE_URL
-  if [ -n "$DATABASE_URL" ]; then
-    # Usamos sed para extraer host y puerto
+  
+  # Priorizar PGHOST y PGPORT si están disponibles
+  if [ -n "$PGHOST" ] && [ -n "$PGPORT" ]; then
+    DB_HOST=$PGHOST
+    DB_PORT=$PGPORT
+    echo "Usando variables PGHOST=$DB_HOST y PGPORT=$DB_PORT para conexión"
+  elif [ -n "$DATABASE_URL" ]; then
+    # Extraer host y puerto de DATABASE_URL si PGHOST no está disponible
     DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\).*/\1/p')
     DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
     
     if [ -z "$DB_PORT" ]; then
       DB_PORT=5432
     fi
-    
-    echo "Verificando conexión a base de datos en $DB_HOST:$DB_PORT"
-    
-    # Esperar a que el puerto esté disponible
-    for i in $(seq 1 30); do
-      if nc -z $DB_HOST $DB_PORT; then
-        echo "PostgreSQL está disponible!"
-        return 0
-      fi
-      echo "PostgreSQL no está disponible todavía - intento $i/30"
-      sleep 2
-    done
-    
-    echo "ERROR: No se pudo conectar a PostgreSQL después de 30 intentos"
-    return 1
+    echo "Extrayendo host=$DB_HOST y puerto=$DB_PORT de DATABASE_URL"
   else
-    echo "DATABASE_URL no está definido, saltando verificación de PostgreSQL"
-    return 0
+    echo "No se encontraron variables de conexión a la base de datos"
+    return 1
   fi
+  
+  echo "Verificando conexión a base de datos en $DB_HOST:$DB_PORT"
+  
+  # Intentar conectarse directamente a postgres
+  for i in $(seq 1 30); do
+    if nc -z $DB_HOST $DB_PORT; then
+      echo "PostgreSQL está disponible!"
+      return 0
+    fi
+    echo "PostgreSQL no está disponible todavía - intento $i/30"
+    sleep 2
+  done
+  
+  echo "ERROR: No se pudo conectar a PostgreSQL después de 30 intentos"
+  # Continuar de todos modos si no podemos verificar la conexión a postgres
+  echo "Intentando continuar de todos modos..."
+  return 0
 }
 
 # Ejecutar aplicación en Railway sin usar Docker
@@ -75,13 +91,10 @@ if [ "$RAILWAY_ENVIRONMENT" = "true" ]; then
   echo "Iniciando en entorno Railway..."
   
   # Asegurarnos de que Postgres esté disponible
-  if wait_for_postgres; then
-    # Iniciar la aplicación sin Docker
-    start_railway_app
-  else
-    echo "Error: No se pudo conectar a la base de datos"
-    exit 1
-  fi
+  wait_for_postgres
+  
+  # Iniciar la aplicación sin Docker
+  start_railway_app
 else
   echo "Iniciando en entorno de desarrollo..."
   if command -v docker-compose >/dev/null 2>&1; then
