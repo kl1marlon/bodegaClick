@@ -5,6 +5,12 @@ from dotenv import load_dotenv
 # Cargar variables de entorno desde .env
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent.parent, '.env'))
 
+# Cargar configuración específica de Railway
+try:
+    from ..railway_settings import *
+except ImportError:
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-your-secret-key-here'

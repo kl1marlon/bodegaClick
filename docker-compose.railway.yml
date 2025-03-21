@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT}:8000"
+    environment:
+      - RAILWAY_ENVIRONMENT=true
+      - DATABASE_URL=${DATABASE_URL}
+      - LOYVERSE_API_TOKEN=${LOYVERSE_API_TOKEN}
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - ALLOWED_HOSTS=*.up.railway.app,${RAILWAY_STATIC_URL}
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=/api
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    restart: unless-stopped 

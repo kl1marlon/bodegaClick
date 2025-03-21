@@ -1,0 +1,9 @@
+[build]
+builder = "DOCKERFILE"
+dockerfile = "Dockerfile.railway"
+
+[deploy]
+startCommand = "docker-compose -f docker-compose.railway.yml up"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE" 

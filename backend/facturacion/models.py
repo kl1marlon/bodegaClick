@@ -17,6 +17,7 @@ class Producto(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     categoria = models.CharField(max_length=255, null=True, blank=True)
     fuente_actualizacion = models.CharField(max_length=50, default='loyverse', blank=True, help_text="Indica la fuente de la última actualización (loyverse, factura)")
+    aplicar_iva = models.BooleanField(default=False, help_text="Indica si se debe aplicar IVA al producto")
 
     def __str__(self):
         return self.nombre

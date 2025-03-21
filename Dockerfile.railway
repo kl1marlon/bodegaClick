@@ -1,0 +1,9 @@
+FROM docker:20.10.16-dind
+
+RUN apk add --no-cache docker-compose python3 py3-pip
+
+WORKDIR /app
+
+COPY . .
+
+CMD ["docker-compose", "up"] 

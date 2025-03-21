@@ -121,51 +121,36 @@ class LoyverseService:
                         except Exception as e:
                             print(f"Error al convertir fecha: {str(e)}")
                     
-                    # Buscar si el producto ya existe para decidir si actualizar el precio
-                    try:
-                        producto_existente = Producto.objects.get(loyverse_id=item['id'])
-                        defaults = {
-                            'nombre': item['item_name'],
-                            'descripcion': item.get('description', ''),
-                            'categoria': categoria_nombre,
-                            'aplicar_iva': False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
-                        }
-                        
-                        # Solo actualizar el precio si está habilitado y no hay facturas recientes
-                        if actualizar_precios:
-                            defaults.update({
-                                'precio_base': precio,
-                                'ultima_actualizacion_precio': updated_at,
-                                'fuente_actualizacion': 'loyverse'
-                            })
-                        else:
-                            prices_unchanged += 1
-                        
-                        # Actualizar el producto con los valores correspondientes
-                        for key, value in defaults.items():
-                            setattr(producto_existente, key, value)
-                        
-                        # Asegurar que aplicar_iva siempre sea False para productos sincronizados
-                        producto_existente.aplicar_iva = False
-                        
-                        producto_existente.save()
-                        print(f"Producto actualizado: {producto_existente.nombre} (ID: {producto_existente.id}) - aplicar_iva={producto_existente.aplicar_iva}")
-                        products_updated += 1
-                        
-                    except Producto.DoesNotExist:
-                        # Para productos nuevos, siempre establecer todos los valores
-                        nuevo_producto = Producto.objects.create(
-                            loyverse_id=item['id'],
-                            nombre=item['item_name'],
-                            descripcion=item.get('description', ''),
-                            precio_base=precio,
-                            categoria=categoria_nombre,
-                            ultima_actualizacion_precio=updated_at,
-                            fuente_actualizacion='loyverse',
-                            aplicar_iva=False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
-                        )
-                        print(f"Nuevo producto creado: {nuevo_producto.nombre} (ID: {nuevo_producto.id}) - aplicar_iva={nuevo_producto.aplicar_iva}")
+                    # Valores por defecto para todos los productos
+                    defaults = {
+                        'nombre': item['item_name'],
+                        'descripcion': item.get('description', ''),
+                        'categoria': categoria_nombre,
+                        'aplicar_iva': False  # Siempre establecer aplicar_iva como False
+                    }
+                    
+                    # Solo actualizar el precio si está habilitado y no hay facturas recientes
+                    if actualizar_precios:
+                        defaults.update({
+                            'precio_base': precio,
+                            'ultima_actualizacion_precio': updated_at,
+                            'fuente_actualizacion': 'loyverse'
+                        })
+                    
+                    # Crear o actualizar el producto
+                    producto, created = Producto.objects.update_or_create(
+                        loyverse_id=item['id'],
+                        defaults=defaults
+                    )
+                    
+                    if created:
                         products_created += 1
+                        print(f"Nuevo producto creado: {producto.nombre} (ID: {producto.id}) - aplicar_iva=False")
+                    else:
+                        if not actualizar_precios:
+                            prices_unchanged += 1
+                        products_updated += 1
+                        print(f"Producto actualizado: {producto.nombre} (ID: {producto.id}) - aplicar_iva=False")
                 
                 except Exception as e:
                     print(f"Error procesando producto {item.get('item_name', 'desconocido')}: {str(e)}")
@@ -211,29 +196,70 @@ class LoyverseService:
                     
                     # Verificar que existan variantes
                     if 'variants' in data and len(data['variants']) > 0:
-                        # Obtener todos los datos del producto para mantener la información existente
-                        update_payload = data.copy()
+                        # Crear un payload más completo pero solo modificando los precios
+                        update_payload = {
+                            'id': data['id'],
+                            'item_name': data['item_name'],
+                            'description': data.get('description', ''),
+                            'reference_id': data.get('reference_id'),
+                            'category_id': data.get('category_id'),
+                            'track_stock': data.get('track_stock', False),
+                            'sold_by_weight': data.get('sold_by_weight', False),
+                            'is_composite': data.get('is_composite', False),
+                            'use_production': data.get('use_production', False),
+                            'primary_supplier_id': data.get('primary_supplier_id'),
+                            'tax_ids': data.get('tax_ids', []),
+                            'form': data.get('form', 'SQUARE'),
+                            'color': data.get('color', 'GREY'),
+                            'option1_name': data.get('option1_name'),
+                            'option2_name': data.get('option2_name'),
+                            'option3_name': data.get('option3_name'),
+                            'variants': []
+                        }
                         
-                        # Actualizar el precio en todas las variantes
-                        for variant in update_payload['variants']:
-                            variant['default_price'] = float(product.precio_base)
+                        # Actualizar solo el precio en las variantes
+                        for variant in data['variants']:
+                            variant_update = {
+                                'variant_id': variant['variant_id'],
+                                'item_id': variant['item_id'],
+                                'sku': variant.get('sku', ''),
+                                'reference_variant_id': variant.get('reference_variant_id'),
+                                'option1_value': variant.get('option1_value'),
+                                'option2_value': variant.get('option2_value'),
+                                'option3_value': variant.get('option3_value'),
+                                'barcode': variant.get('barcode'),
+                                'cost': variant.get('cost', 0),
+                                'purchase_cost': variant.get('purchase_cost'),
+                                'default_pricing_type': variant.get('default_pricing_type', 'VARIABLE'),
+                                'default_price': float(product.precio_base),
+                                'stores': []
+                            }
                             
                             # Actualizar también el precio en cada tienda
                             if 'stores' in variant:
                                 for store in variant['stores']:
-                                    store['price'] = float(product.precio_base)
+                                    store_update = {
+                                        'store_id': store['store_id'],
+                                        'pricing_type': store.get('pricing_type', 'VARIABLE'),
+                                        'price': float(product.precio_base),
+                                        'available_for_sale': store.get('available_for_sale', True),
+                                        'optimal_stock': store.get('optimal_stock'),
+                                        'low_stock': store.get('low_stock')
+                                    }
+                                    variant_update['stores'].append(store_update)
+                            
+                            update_payload['variants'].append(variant_update)
                         
-                        print("Payload para actualización:")
-                        print(update_payload)
+                        print(f"Actualizando precio de {product.nombre} a {float(product.precio_base)}")
                         
-                        # Realizar la actualización usando POST en el endpoint de items
-                        update_url = f"{self.BASE_URL}/items"
+                        # Realizar la actualización usando PUT en lugar de POST
+                        update_url = f"{self.BASE_URL}/items/{data['id']}"
                         print(f"Actualizando precio en: {update_url}")
                         
                         update_headers = self.headers.copy()
                         update_headers['Content-Type'] = 'application/json'
                         
-                        update_response = requests.post(
+                        update_response = requests.put(
                             update_url, 
                             headers=update_headers,
                             json=update_payload
@@ -241,7 +267,7 @@ class LoyverseService:
                         
                         print(f"Status Code: {update_response.status_code}")
                         
-                        if update_response.status_code == 200:
+                        if update_response.status_code in [200, 201, 204]:
                             updated_count += 1
                             print(f"Producto actualizado exitosamente: {product.nombre}")
                         else:
@@ -394,32 +420,70 @@ class LoyverseService:
                         
                         # Verificar que existan variantes
                         if 'variants' in data and len(data['variants']) > 0:
-                            # Crear una copia para mantener toda la información
-                            update_payload = data.copy()
+                            # Crear un payload más completo pero solo modificando los precios
+                            update_payload = {
+                                'id': data['id'],
+                                'item_name': data['item_name'],
+                                'description': data.get('description', ''),
+                                'reference_id': data.get('reference_id'),
+                                'category_id': data.get('category_id'),
+                                'track_stock': data.get('track_stock', False),
+                                'sold_by_weight': data.get('sold_by_weight', False),
+                                'is_composite': data.get('is_composite', False),
+                                'use_production': data.get('use_production', False),
+                                'primary_supplier_id': data.get('primary_supplier_id'),
+                                'tax_ids': data.get('tax_ids', []),
+                                'form': data.get('form', 'SQUARE'),
+                                'color': data.get('color', 'GREY'),
+                                'option1_name': data.get('option1_name'),
+                                'option2_name': data.get('option2_name'),
+                                'option3_name': data.get('option3_name'),
+                                'variants': []
+                            }
                             
-                            # Actualizar SOLO el precio en todas las variantes con el precio_unitario
-                            for variant in update_payload['variants']:
-                                print(f"Actualizando precio de {producto.nombre} de {variant['default_price']} a {float(precio_unitario)}")
+                            # Actualizar solo el precio en las variantes
+                            for variant in data['variants']:
+                                variant_update = {
+                                    'variant_id': variant['variant_id'],
+                                    'item_id': variant['item_id'],
+                                    'sku': variant.get('sku', ''),
+                                    'reference_variant_id': variant.get('reference_variant_id'),
+                                    'option1_value': variant.get('option1_value'),
+                                    'option2_value': variant.get('option2_value'),
+                                    'option3_value': variant.get('option3_value'),
+                                    'barcode': variant.get('barcode'),
+                                    'cost': variant.get('cost', 0),
+                                    'purchase_cost': variant.get('purchase_cost'),
+                                    'default_pricing_type': variant.get('default_pricing_type', 'VARIABLE'),
+                                    'default_price': float(precio_unitario),
+                                    'stores': []
+                                }
                                 
-                                # Usar directamente el precio_unitario de la factura
-                                variant['default_price'] = float(precio_unitario)
-                                
-                                # Actualizar también en las tiendas
+                                # Actualizar también el precio en cada tienda
                                 if 'stores' in variant:
                                     for store in variant['stores']:
-                                        store['price'] = float(precio_unitario)
+                                        store_update = {
+                                            'store_id': store['store_id'],
+                                            'pricing_type': store.get('pricing_type', 'VARIABLE'),
+                                            'price': float(precio_unitario),
+                                            'available_for_sale': store.get('available_for_sale', True),
+                                            'optimal_stock': store.get('optimal_stock'),
+                                            'low_stock': store.get('low_stock')
+                                        }
+                                        variant_update['stores'].append(store_update)
+                                
+                                update_payload['variants'].append(variant_update)
                             
-                            print("Payload para actualización:")
-                            print(update_payload)
+                            print(f"Actualizando precio de {producto.nombre} de {float(data['variants'][0].get('default_price', 0))} a {float(precio_unitario)}")
                             
-                            # Enviar la actualización a Loyverse
-                            update_url = f"{self.BASE_URL}/items"
+                            # Enviar la actualización a Loyverse usando PUT
+                            update_url = f"{self.BASE_URL}/items/{data['id']}"
                             print(f"Actualizando precio en: {update_url}")
                             
                             update_headers = self.headers.copy()
                             update_headers['Content-Type'] = 'application/json'
                             
-                            update_response = requests.post(
+                            update_response = requests.put(
                                 update_url, 
                                 headers=update_headers,
                                 json=update_payload
@@ -427,7 +491,7 @@ class LoyverseService:
                             
                             print(f"Status Code: {update_response.status_code}")
                             
-                            if update_response.status_code == 200:
+                            if update_response.status_code in [200, 201, 204]:
                                 productos_actualizados += 1
                                 sync_results.append({
                                     "success": True,
@@ -496,30 +560,70 @@ class LoyverseService:
                 
                 # Verificar que existan variantes
                 if 'variants' in data and len(data['variants']) > 0:
-                    # Obtener todos los datos del producto para mantener la información existente
-                    update_payload = data.copy()
+                    # Crear un payload más completo pero solo modificando los precios
+                    update_payload = {
+                        'id': data['id'],
+                        'item_name': data['item_name'],
+                        'description': data.get('description', ''),
+                        'reference_id': data.get('reference_id'),
+                        'category_id': data.get('category_id'),
+                        'track_stock': data.get('track_stock', False),
+                        'sold_by_weight': data.get('sold_by_weight', False),
+                        'is_composite': data.get('is_composite', False),
+                        'use_production': data.get('use_production', False),
+                        'primary_supplier_id': data.get('primary_supplier_id'),
+                        'tax_ids': data.get('tax_ids', []),
+                        'form': data.get('form', 'SQUARE'),
+                        'color': data.get('color', 'GREY'),
+                        'option1_name': data.get('option1_name'),
+                        'option2_name': data.get('option2_name'),
+                        'option3_name': data.get('option3_name'),
+                        'variants': []
+                    }
                     
-                    # Actualizar el precio en todas las variantes
-                    for variant in update_payload['variants']:
-                        print(f"Actualizando precio de {product.nombre} de {variant['default_price']} a {float(product.precio_base)}")
-                        variant['default_price'] = float(product.precio_base)
+                    # Actualizar solo el precio en las variantes
+                    for variant in data['variants']:
+                        variant_update = {
+                            'variant_id': variant['variant_id'],
+                            'item_id': variant['item_id'],
+                            'sku': variant.get('sku', ''),
+                            'reference_variant_id': variant.get('reference_variant_id'),
+                            'option1_value': variant.get('option1_value'),
+                            'option2_value': variant.get('option2_value'),
+                            'option3_value': variant.get('option3_value'),
+                            'barcode': variant.get('barcode'),
+                            'cost': variant.get('cost', 0),
+                            'purchase_cost': variant.get('purchase_cost'),
+                            'default_pricing_type': variant.get('default_pricing_type', 'VARIABLE'),
+                            'default_price': float(product.precio_base),
+                            'stores': []
+                        }
                         
                         # Actualizar también el precio en cada tienda
                         if 'stores' in variant:
                             for store in variant['stores']:
-                                store['price'] = float(product.precio_base)
+                                store_update = {
+                                    'store_id': store['store_id'],
+                                    'pricing_type': store.get('pricing_type', 'VARIABLE'),
+                                    'price': float(product.precio_base),
+                                    'available_for_sale': store.get('available_for_sale', True),
+                                    'optimal_stock': store.get('optimal_stock'),
+                                    'low_stock': store.get('low_stock')
+                                }
+                                variant_update['stores'].append(store_update)
+                        
+                        update_payload['variants'].append(variant_update)
                     
-                    print("Payload para actualización:")
-                    print(update_payload)
+                    print(f"Actualizando precio de {product.nombre} de {float(data['variants'][0].get('default_price', 0))} a {float(product.precio_base)}")
                     
-                    # Realizar la actualización usando POST en el endpoint de items
-                    update_url = f"{self.BASE_URL}/items"
+                    # Realizar la actualización usando PUT en lugar de POST
+                    update_url = f"{self.BASE_URL}/items/{data['id']}"
                     print(f"Actualizando precio en: {update_url}")
                     
                     update_headers = self.headers.copy()
                     update_headers['Content-Type'] = 'application/json'
                     
-                    update_response = requests.post(
+                    update_response = requests.put(
                         update_url, 
                         headers=update_headers,
                         json=update_payload
@@ -527,7 +631,7 @@ class LoyverseService:
                     
                     print(f"Status Code: {update_response.status_code}")
                     
-                    if update_response.status_code == 200:
+                    if update_response.status_code in [200, 201, 204]:
                         return {
                             "success": True,
                             "product": product.nombre,

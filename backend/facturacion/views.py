@@ -304,4 +304,12 @@ class WebhookReceiveView(APIView):
             except Producto.DoesNotExist:
                 # Si el producto no existe, sincronizar desde Loyverse
                 print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
-                service.fetch_products() 
+                service.fetch_products()
+
+@api_view(['GET'])
+def health_check(request):
+    """
+    Endpoint para comprobar que la API está funcionando correctamente.
+    Utilizado por Railway para health checks.
+    """
+    return Response({"status": "healthy"}, status=200) 
