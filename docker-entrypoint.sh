@@ -7,6 +7,19 @@ if [ -n "$PORT" ]; then
   echo "Detectado entorno Railway"
   export RAILWAY_ENVIRONMENT=true
   
+  # Priorizar DATABASE_PUBLIC_URL sobre DATABASE_URL
+  if [ -n "$DATABASE_PUBLIC_URL" ]; then
+    echo "Usando DATABASE_PUBLIC_URL para conexiones externas"
+    # Convertir postgres:// a postgresql:// si es necesario
+    if echo "$DATABASE_PUBLIC_URL" | grep -q "^postgres://"; then
+      DATABASE_PUBLIC_URL=$(echo "$DATABASE_PUBLIC_URL" | sed 's/^postgres:\/\//postgresql:\/\//')
+      echo "URL convertida a formato postgresql://"
+    fi
+    export DATABASE_URL="$DATABASE_PUBLIC_URL"
+  else
+    echo "DATABASE_PUBLIC_URL no encontrada, usando DATABASE_URL"
+  fi
+  
   # Mostrar información relevante para debug
   echo "Información de conexión a la base de datos:"
   echo "DATABASE_URL: $DATABASE_URL"
@@ -18,6 +31,9 @@ if [ -n "$PORT" ]; then
   # Crear un archivo .env para la aplicación
   echo "PORT=$PORT" > .env
   echo "DATABASE_URL=$DATABASE_URL" >> .env
+  if [ -n "$DATABASE_PUBLIC_URL" ]; then
+    echo "DATABASE_PUBLIC_URL=$DATABASE_PUBLIC_URL" >> .env
+  fi
   echo "LOYVERSE_API_TOKEN=$LOYVERSE_API_TOKEN" >> .env
   echo "RAILWAY_STATIC_URL=$RAILWAY_STATIC_URL" >> .env
   echo "RAILWAY_ENVIRONMENT=true" >> .env

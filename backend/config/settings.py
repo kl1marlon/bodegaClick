@@ -76,8 +76,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Configuración de base de datos
+# Priorizar DATABASE_PUBLIC_URL sobre DATABASE_URL
+if 'DATABASE_PUBLIC_URL' in os.environ:
+    import dj_database_url
+    print(f"Usando DATABASE_PUBLIC_URL: {os.environ.get('DATABASE_PUBLIC_URL')}")
+    # Configurar la URL de la base de datos pública
+    database_url = os.environ.get('DATABASE_PUBLIC_URL')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    os.environ['DATABASE_URL'] = database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True
+        )
+    }
 # Si DATABASE_URL está presente (Railway), usar dj-database-url
-if 'DATABASE_URL' in os.environ:
+elif 'DATABASE_URL' in os.environ:
     import dj_database_url
     # Imprimir información de debug
     print(f"Usando DATABASE_URL: {os.environ.get('DATABASE_URL')}")
@@ -99,23 +115,10 @@ elif all(env_var in os.environ for env_var in ['PGHOST', 'PGUSER', 'PGPASSWORD',
             'PASSWORD': os.environ.get('PGPASSWORD'),
             'HOST': os.environ.get('PGHOST'),
             'PORT': os.environ.get('PGPORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'require',
+            }
         }
-    }
-# Si DATABASE_PUBLIC_URL está presente, usarla
-elif 'DATABASE_PUBLIC_URL' in os.environ:
-    import dj_database_url
-    print(f"Usando DATABASE_PUBLIC_URL: {os.environ.get('DATABASE_PUBLIC_URL')}")
-    # Configurar la URL de la base de datos pública
-    database_url = os.environ.get('DATABASE_PUBLIC_URL')
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    os.environ['DATABASE_URL'] = database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True
-        )
     }
 else:
     # Configuración local
