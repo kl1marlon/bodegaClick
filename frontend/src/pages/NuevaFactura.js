@@ -118,8 +118,8 @@ const NuevaFactura = () => {
     setProductoEditando({
       producto: producto,
       cantidad: cantidad,
-      precio_compra_usd: producto.precio_compra_usd || 0,
-      unidades_paquete: producto.unidades_paquete || 1,
+      precio_compra_usd: producto.precio_compra_usd ? Number(producto.precio_compra_usd) : 0,
+      unidades_paquete: producto.unidades_paquete ? Number(producto.unidades_paquete) : 1,
       porcentajeGanancia: porcentajeGanancia,
       aplicarIva: false
     });
@@ -133,6 +133,8 @@ const NuevaFactura = () => {
     const producto = productosSeleccionados[index];
     setProductoEditando({
       ...producto,
+      precio_compra_usd: producto.precio_compra_usd ? Number(producto.precio_compra_usd) : 0,
+      unidades_paquete: producto.unidades_paquete ? Number(producto.unidades_paquete) : 1,
       porcentajeGanancia: producto.porcentajeGanancia || porcentajeGanancia,
     });
     setEditingProductIndex(index);
@@ -194,17 +196,23 @@ const NuevaFactura = () => {
       aplicarIva 
     });
     
-    if (!precio_compra_usd || precio_compra_usd === 0) {
+    // Convertir a números para evitar errores
+    precio_compra_usd = Number(precio_compra_usd) || 0;
+    unidades_paquete = Number(unidades_paquete) || 1;
+    tasa_cambio_valor = Number(tasa_cambio_valor) || 1;
+    porcentaje = Number(porcentaje) || 0;
+    
+    if (precio_compra_usd === 0) {
       console.log('Precio de compra USD no válido');
       return 0;
     }
     
-    if (!unidades_paquete || unidades_paquete === 0) {
+    if (unidades_paquete === 0) {
       console.log('Unidades por paquete no válidas');
       return 0;
     }
     
-    if (!tasa_cambio_valor || tasa_cambio_valor === 0) {
+    if (tasa_cambio_valor === 0) {
       console.log('Tasa de cambio no válida');
       return 0;
     }
@@ -224,6 +232,9 @@ const NuevaFactura = () => {
 
   // Función para aplicar reglas de redondeo especiales a precios en bolívares
   const aplicarRedondeoEspecial = (precioBs) => {
+    // Asegurarse de que sea un número
+    precioBs = Number(precioBs) || 0;
+    
     // Primero redondeamos a 2 decimales para evitar problemas de precisión
     precioBs = Math.round(precioBs * 100) / 100;
     
@@ -272,14 +283,24 @@ const NuevaFactura = () => {
 
   // Función auxiliar para calcular el precio en bolívares cuando el precio está en USD
   const calcularPrecioBs = (precio_usd) => {
-    if (!tasaCambio || !precio_usd) return 0;
-    const precioBs = precio_usd * tasaCambio.valor;
+    precio_usd = Number(precio_usd) || 0;
+    if (!tasaCambio || precio_usd === 0) return 0;
+    
+    const tasa_valor = Number(tasaCambio.valor) || 1;
+    const precioBs = precio_usd * tasa_valor;
     return aplicarRedondeoEspecial(precioBs);
   };
 
   // Función para calcular el precio directamente en bolívares según corresponda
   const calcularPrecioDirectoEnBs = (precio_compra_usd, unidades_paquete, porcentaje, aplicarIva) => {
-    if (!precio_compra_usd || !unidades_paquete || !tasaCambio) return 0;
+    // Convertir a números para evitar errores
+    precio_compra_usd = Number(precio_compra_usd) || 0;
+    unidades_paquete = Number(unidades_paquete) || 1;
+    porcentaje = Number(porcentaje) || 0;
+    
+    if (precio_compra_usd === 0 || unidades_paquete === 0 || !tasaCambio) return 0;
+    
+    const tasa_valor = Number(tasaCambio.valor) || 1;
     
     // Aplicar la fórmula: (precio_compra / unidades) × (1 + porcentaje_ganancia/100)
     const precio_base = precio_compra_usd / unidades_paquete;
@@ -289,7 +310,7 @@ const NuevaFactura = () => {
     const precio_final = aplicarIva ? precio_con_ganancia * 1.16 : precio_con_ganancia;
     
     // Multiplicar por la tasa para obtener el precio en bolívares
-    const precio_en_bs = precio_final * tasaCambio.valor;
+    const precio_en_bs = precio_final * tasa_valor;
     
     // Aplicar reglas de redondeo especiales
     return aplicarRedondeoEspecial(precio_en_bs);
@@ -310,7 +331,13 @@ const NuevaFactura = () => {
   };
 
   const handleSaveProductEdit = () => {
-    if (!productoEditando.precio_compra_usd || !productoEditando.unidades_paquete) {
+    // Asegurarnos de que los valores sean numéricos
+    const precio_compra = Number(productoEditando.precio_compra_usd) || 0;
+    const unidades = Number(productoEditando.unidades_paquete) || 1;
+    const porcentaje = Number(productoEditando.porcentajeGanancia) || Number(porcentajeGanancia) || 0;
+    const cantidad = Number(productoEditando.cantidad) || 1;
+    
+    if (precio_compra === 0 || unidades === 0) {
       setSnackbarMessage('Por favor ingrese el precio de compra y las unidades por paquete');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -318,10 +345,10 @@ const NuevaFactura = () => {
     }
 
     let precio_venta = calcularPrecioVenta(
-      productoEditando.precio_compra_usd,
-      productoEditando.unidades_paquete,
+      precio_compra,
+      unidades,
       tasaCambio?.valor || 1,
-      productoEditando.porcentajeGanancia,
+      porcentaje,
       productoEditando.aplicarIva
     );
 
@@ -332,12 +359,12 @@ const NuevaFactura = () => {
 
     const nuevoProducto = {
       producto: productoEditando.producto,
-      cantidad: productoEditando.cantidad,
-      precio_compra_usd: productoEditando.precio_compra_usd,
-      unidades_paquete: productoEditando.unidades_paquete,
+      cantidad: cantidad,
+      precio_compra_usd: precio_compra,
+      unidades_paquete: unidades,
       precio_unitario: precio_venta,
-      total: precio_venta * productoEditando.cantidad,
-      porcentajeGanancia: productoEditando.porcentajeGanancia,
+      total: precio_venta * cantidad,
+      porcentajeGanancia: porcentaje,
       aplicarIva: productoEditando.aplicarIva
     };
 
@@ -378,7 +405,7 @@ const NuevaFactura = () => {
           cantidad: item.cantidad,
           precio_unitario: precio_unitario,
           porcentaje_ganancia: item.porcentajeGanancia || porcentajeGanancia,
-          precio_compra_usd: parseFloat(item.precio_compra_usd.toFixed(2)),
+          precio_compra_usd: item.precio_compra_usd ? parseFloat(Number(item.precio_compra_usd).toFixed(2)) : 0,
           unidades_paquete: item.unidades_paquete,
           total: total,
           aplicarIva: item.aplicarIva || false
