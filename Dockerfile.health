@@ -1,0 +1,23 @@
+FROM python:3.9-slim
+
+# Establecer entorno para que Python no cree archivos .pyc
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Instalar dependencias necesarias
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl netcat \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip
+
+# Copiar solo el script de health check
+COPY backend/health.py .
+
+# Puerto expuesto (será reemplazado por $PORT en Railway)
+EXPOSE 8001
+
+# Comando por defecto
+CMD ["python", "health.py"] 

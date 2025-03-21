@@ -46,32 +46,68 @@ wait_for_postgres() {
   fi
 }
 
+# Iniciar servicios en Railway
+start_railway_services() {
+  echo "Iniciando servicios con docker-compose..."
+  
+  # Iniciar servicios backend y frontend primero
+  docker-compose -f docker-compose.railway.yml up -d backend frontend
+  
+  # Iniciar gateway después de que backend esté disponible
+  echo "Esperando a que el backend esté listo..."
+  for i in $(seq 1 30); do
+    if curl -s -f http://localhost:8000/api/health/ > /dev/null; then
+      echo "Backend está disponible! Iniciando gateway..."
+      docker-compose -f docker-compose.railway.yml up -d gateway
+      break
+    fi
+    if [ $i -eq 30 ]; then
+      echo "ADVERTENCIA: No se pudo contactar con el backend después de 30 intentos, pero continuando con el despliegue..."
+      docker-compose -f docker-compose.railway.yml up -d gateway
+    fi
+    echo "Esperando a que el backend esté disponible - intento $i/30"
+    sleep 2
+  done
+  
+  echo "Todos los servicios están iniciados!"
+}
+
 # Iniciar aplicación dependiendo del entorno
 if [ "$RAILWAY_ENVIRONMENT" = "true" ]; then
   echo "Iniciando en entorno Railway..."
   
-  # Primero iniciar el servicio de health check independiente
-  echo "Iniciando servicio de health check independiente..."
-  docker-compose -f docker-compose.railway.yml up -d health
-  
-  # Verificar si el servicio de health check está funcionando
-  echo "Verificando servicio de health check..."
-  for i in $(seq 1 10); do
-    if curl -s -f http://localhost:8001/health > /dev/null; then
-      echo "Servicio de health check está funcionando!"
-      break
-    fi
-    echo "Esperando que el servicio de health check esté disponible - intento $i/10"
-    sleep 2
-  done
-  
-  # Continuar con el resto de los servicios
+  # Asegurarnos de que Postgres esté disponible
   if wait_for_postgres; then
-    echo "Iniciando servicios con docker-compose..."
-    # Iniciar servicios
-    docker-compose -f docker-compose.railway.yml up -d backend frontend gateway
+    # En Railway, primero iniciamos el health check independiente que escucha en el puerto principal
+    echo "Iniciando servicio de health check como punto de entrada principal..."
+    docker-compose -f docker-compose.railway.yml up -d health
     
-    # Seguir los logs de todos los contenedores
+    # Verificar que el health check esté funcionando
+    echo "Verificando servicio de health check..."
+    for i in $(seq 1 10); do
+      if curl -s -f http://localhost:$PORT/health > /dev/null; then
+        echo "Servicio de health check está funcionando!"
+        
+        # Iniciar el resto de los servicios en segundo plano
+        start_railway_services &
+        
+        # Seguir los logs del health check (que es el servicio principal)
+        docker-compose -f docker-compose.railway.yml logs -f health
+        
+        exit 0
+      fi
+      echo "Esperando que el servicio de health check esté disponible - intento $i/10"
+      sleep 2
+    done
+    
+    echo "ERROR: El servicio de health check no está respondiendo. Verificando logs..."
+    docker-compose -f docker-compose.railway.yml logs health
+    
+    # Intentar iniciar el resto de los servicios de todos modos
+    echo "Iniciando servicios a pesar del error..."
+    start_railway_services
+    
+    # Seguir todos los logs para diagnóstico
     docker-compose -f docker-compose.railway.yml logs -f
   else
     echo "Error: No se pudo conectar a la base de datos"
