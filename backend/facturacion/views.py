@@ -22,6 +22,11 @@ from django.conf import settings
 import datetime
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+# Importar la función sync_products
+import sys
+import os
+sys.path.append(os.path.join(settings.BASE_DIR))
+from sync_products import sync_products
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -33,42 +38,40 @@ class ProductoViewSet(viewsets.ModelViewSet):
         actualizar_precios = request.data.get('actualizar_precios', True)
         
         print(f"Iniciando sync_from_loyverse desde API. Actualizar precios: {actualizar_precios}")
-        service = LoyverseService()
-        result = service.fetch_products(actualizar_precios)
         
-        if result['success']:
-            mensaje = f"Productos sincronizados. Creados: {result['created']}, Actualizados: {result['updated']}"
-            if 'prices_unchanged' in result and result['prices_unchanged'] > 0:
-                mensaje += f", Precios no modificados: {result['prices_unchanged']}"
-            if result.get('facturas_recientes'):
-                mensaje += ". No se actualizaron precios debido a facturas recientes (últimos 2 días)."
-                
-            print(f"Sincronización exitosa: {mensaje}")
+        try:
+            # Usar sync_products con el parámetro actualizar_precios
+            result = sync_products(actualizar_precios)
             
-            # Añadir información sobre el campo aplicar_iva
-            mensaje += ". Todos los productos tienen aplicar_iva=false por defecto."
+            # Preparar mensaje de respuesta
+            mensaje = f"Productos sincronizados correctamente usando sync_products.py"
+            mensaje += f" Creados: {result['created']}, Actualizados: {result['updated']}"
             
-            # Añadir información sobre páginas procesadas y total
-            if 'total_pages' in result:
-                mensaje += f" Páginas procesadas: {result['total_pages']}."
-            if 'total_processed' in result:
-                mensaje += f" Total productos procesados: {result['total_processed']}."
-                
+            if result['prices_updated'] > 0:
+                mensaje += f", Precios actualizados: {result['prices_updated']}"
+            
+            # Solo informar si los precios no se actualizaron por configuración
+            if not result['actualizar_precios']:
+                mensaje += ". Actualización de precios desactivada por configuración del usuario."
+            
+            mensaje += " Todos los productos tienen aplicar_iva=false por defecto."
+            
             return Response({
                 'message': mensaje,
                 'created': result['created'], 
                 'updated': result['updated'],
-                'prices_unchanged': result.get('prices_unchanged', 0),
-                'facturas_recientes': result.get('facturas_recientes', False),
-                'total_pages': result.get('total_pages', 1),
-                'total_processed': result.get('total_processed', result['created'] + result['updated']),
+                'prices_unchanged': result['updated'] - result['prices_updated'],
+                'actualizar_precios': result['actualizar_precios'],
+                'total_pages': 1,  # No aplica para sync_products.py pero mantenemos para compatibilidad
+                'total_processed': result['total_loyverse'],
                 'total': result['created'] + result['updated']
             })
-        
-        print(f"Error en sincronización: {result['error']}")
-        return Response({
-            'error': result['error']
-        }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            print(f"Error en sincronización: {str(e)}")
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'])
     def sync_to_loyverse(self, request):
