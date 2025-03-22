@@ -33,7 +33,10 @@ import {
   Snackbar,
   Alert,
   FormControlLabel,
-  Switch
+  Switch,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -44,6 +47,7 @@ import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import SyncIcon from '@mui/icons-material/Sync';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { fetchProductos, syncFromLoyverse } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 
@@ -60,6 +64,10 @@ const ListadoProductos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   
+  // Estado para filtro de categoría
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [categorias, setCategorias] = useState([]);
+  
   // Estado para tasas de cambio
   const [tasaBCV, setTasaBCV] = useState(null);
   const [tasaParalelo, setTasaParalelo] = useState(null);
@@ -67,6 +75,9 @@ const ListadoProductos = () => {
   
   // Estado para diálogo informativo
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  
+  // Estado para diálogo de estadísticas por categoría
+  const [statsDialogOpen, setStatsDialogOpen] = useState(false);
   
   // Estado para sincronización
   const [sincronizando, setSincronizando] = useState(false);
@@ -97,6 +108,14 @@ const ListadoProductos = () => {
     });
   }, [dispatch, status]);
   
+  // Extraer categorías únicas de los productos
+  useEffect(() => {
+    if (productos.length > 0) {
+      const uniqueCategorias = ['', ...new Set(productos.map(producto => producto.categoria).filter(Boolean))];
+      setCategorias(uniqueCategorias);
+    }
+  }, [productos]);
+  
   // Inicializar tasas seleccionadas para cada producto
   useEffect(() => {
     if (productos.length > 0 && tasaParalelo) {
@@ -108,20 +127,29 @@ const ListadoProductos = () => {
     }
   }, [productos, tasaParalelo]);
   
-  // Filtrar productos cuando cambia el término de búsqueda o la lista de productos
+  // Filtrar productos cuando cambia el término de búsqueda, la categoría o la lista de productos
   useEffect(() => {
     if (productos.length > 0) {
-      if (searchTerm.trim() === '') {
-        setProductosFiltrados(productos);
-      } else {
-        const filtered = productos.filter(producto => 
+      let filtered = [...productos];
+      
+      // Filtrar por término de búsqueda
+      if (searchTerm.trim() !== '') {
+        filtered = filtered.filter(producto => 
           producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        setProductosFiltrados(filtered);
       }
+      
+      // Filtrar por categoría
+      if (categoriaSeleccionada !== '') {
+        filtered = filtered.filter(producto => 
+          producto.categoria === categoriaSeleccionada
+        );
+      }
+      
+      setProductosFiltrados(filtered);
       setPage(0); // Resetear a la primera página cuando cambia el filtro
     }
-  }, [searchTerm, productos]);
+  }, [searchTerm, categoriaSeleccionada, productos]);
   
   // Manejadores para la paginación
   const handleChangePage = (event, newPage) => {
@@ -139,6 +167,17 @@ const ListadoProductos = () => {
       ...tasaSeleccionadaProducto,
       [productoId]: tipoTasa
     });
+  };
+  
+  // Manejar cambio de categoría
+  const handleCategoriaChange = (event) => {
+    setCategoriaSeleccionada(event.target.value);
+  };
+  
+  // Resetear filtros
+  const resetearFiltros = () => {
+    setSearchTerm('');
+    setCategoriaSeleccionada('');
   };
   
   // Función para calcular el precio en USD desde BS
@@ -245,6 +284,16 @@ const ListadoProductos = () => {
     setInfoDialogOpen(false);
   };
   
+  // Abrir el diálogo de estadísticas por categoría
+  const abrirStatsDialog = () => {
+    setStatsDialogOpen(true);
+  };
+  
+  // Cerrar el diálogo de estadísticas por categoría
+  const cerrarStatsDialog = () => {
+    setStatsDialogOpen(false);
+  };
+  
   // Obtener el ícono para la fuente de actualización
   const getFuenteActualizacionIcon = (fuente) => {
     switch (fuente) {
@@ -328,6 +377,14 @@ const ListadoProductos = () => {
               <InfoIcon />
             </IconButton>
           </Tooltip>
+          <Tooltip title="Estadísticas por categoría">
+            <IconButton 
+              onClick={abrirStatsDialog}
+              size="small"
+            >
+              <FilterListIcon />
+            </IconButton>
+          </Tooltip>
         </Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -405,7 +462,7 @@ const ListadoProductos = () => {
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 Resultados búsqueda
               </Typography>
-              <Typography variant="h3" component="div" color={searchTerm ? 'secondary' : 'primary'}>
+              <Typography variant="h3" component="div" color={searchTerm || categoriaSeleccionada ? 'secondary' : 'primary'}>
                 {productosFiltrados.length}
               </Typography>
             </CardContent>
@@ -413,7 +470,7 @@ const ListadoProductos = () => {
         </Grid>
       </Grid>
       
-      {/* Buscador */}
+      {/* Buscador y Filtros */}
       <Paper 
         elevation={3} 
         sx={{ 
@@ -423,34 +480,87 @@ const ListadoProductos = () => {
           backgroundColor: '#fff'
         }}
       >
-        <TextField
-          fullWidth
-          label="Buscar Productos"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Escribe el nombre del producto..."
-          variant="outlined"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: {
-              borderRadius: 1
-            }
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#cbd5e1',
-              },
-              '&:hover fieldset': {
-                borderColor: '#94a3b8',
-              }
-            }
-          }}
-        />
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              label="Buscar Productos"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Escribe el nombre del producto..."
+              variant="outlined"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: 1
+                }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#cbd5e1',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#94a3b8',
+                  }
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="categoria-select-label">Filtrar por Categoría</InputLabel>
+              <Select
+                labelId="categoria-select-label"
+                id="categoria-select"
+                value={categoriaSeleccionada}
+                onChange={handleCategoriaChange}
+                label="Filtrar por Categoría"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <FilterListIcon />
+                  </InputAdornment>
+                }
+                sx={{
+                  borderRadius: 1,
+                  '& fieldset': {
+                    borderColor: '#cbd5e1',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#94a3b8',
+                  }
+                }}
+              >
+                <MenuItem value="">Todas las categorías</MenuItem>
+                {categorias.filter(cat => cat !== '').map((categoria) => (
+                  <MenuItem key={categoria} value={categoria}>
+                    {categoria}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <Button
+              fullWidth
+              variant="outlined"
+              color="secondary"
+              onClick={resetearFiltros}
+              sx={{
+                borderRadius: 1,
+                height: '56px',
+                textTransform: 'none',
+                fontWeight: 600
+              }}
+            >
+              Limpiar filtros
+            </Button>
+          </Grid>
+        </Grid>
       </Paper>
       
       {/* Tabla de productos */}
@@ -472,6 +582,36 @@ const ListadoProductos = () => {
           </Box>
         ) : (
           <>
+            {categoriaSeleccionada && (
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: '#e0f2fe', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #bae6fd'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterListIcon color="primary" />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
+                    Filtrando por categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setCategoriaSeleccionada('')}
+                  sx={{ 
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    fontWeight: 500
+                  }}
+                >
+                  Quitar filtro
+                </Button>
+              </Box>
+            )}
             <TableContainer sx={{ maxHeight: 'calc(100vh - 350px)' }}>
               <Table stickyHeader>
                 <TableHead>
@@ -566,10 +706,15 @@ const ListadoProductos = () => {
                           <Chip 
                             label={producto.categoria} 
                             size="small" 
+                            onClick={() => setCategoriaSeleccionada(producto.categoria)}
                             sx={{ 
                               backgroundColor: '#e0f2fe',
                               color: '#0369a1',
-                              fontWeight: 500
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: '#bae6fd',
+                              }
                             }} 
                           />
                         ) : 'Sin categoría'}
@@ -734,6 +879,84 @@ const ListadoProductos = () => {
         <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
           <Button onClick={cerrarInfoDialog} color="primary" variant="contained">
             Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Diálogo de estadísticas por categoría */}
+      <Dialog
+        open={statsDialogOpen}
+        onClose={cerrarStatsDialog}
+        maxWidth="md"
+      >
+        <DialogTitle sx={{ bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FilterListIcon color="primary" />
+            <Typography variant="h6">Estadísticas por Categoría</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <DialogContentText component="div">
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+              Distribución de productos por categoría:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+              {[
+                { categoria: 'Bebidas', cantidad: 23 },
+                { categoria: 'Charcuteria', cantidad: 14 },
+                { categoria: 'Chucheria', cantidad: 115 },
+                { categoria: 'Cigarros', cantidad: 24 },
+                { categoria: 'Coche', cantidad: 16 },
+                { categoria: 'Comida', cantidad: 134 },
+                { categoria: 'Farmacia', cantidad: 12 },
+                { categoria: 'Helado', cantidad: 5 },
+                { categoria: 'Higiene', cantidad: 62 },
+                { categoria: 'Impresiones', cantidad: 4 },
+                { categoria: 'Panaderia', cantidad: 10 },
+                { categoria: 'Papeleria', cantidad: 23 },
+                { categoria: 'Papelería', cantidad: 2 },
+                { categoria: 'Varios', cantidad: 49 },
+                { categoria: 'Vicio', cantidad: 4 }
+              ].map((item) => (
+                <Card 
+                  key={item.categoria} 
+                  sx={{ 
+                    minWidth: 180, 
+                    flexGrow: 1, 
+                    bgcolor: '#f8fafc', 
+                    border: '1px solid #e2e8f0',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: '#f1f5f9',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }
+                  }}
+                  onClick={() => {
+                    setCategoriaSeleccionada(item.categoria);
+                    cerrarStatsDialog();
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" fontWeight={500} color="#0369a1">
+                      {item.categoria}
+                    </Typography>
+                    <Typography variant="h5" fontWeight={600} color="#1e293b">
+                      {item.cantidad} productos
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+            <Typography variant="body2" sx={{ mt: 3, color: 'text.secondary', fontStyle: 'italic' }}>
+              Haz clic en una categoría para filtrar los productos por esa categoría.
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={cerrarStatsDialog} color="primary" variant="contained">
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>
