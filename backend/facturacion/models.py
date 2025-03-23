@@ -8,6 +8,7 @@ class Producto(models.Model):
     precio_compra = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unidades_compra = models.IntegerField(default=1)
     precio_compra_usd = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    precio_base_usd = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unidades_paquete = models.IntegerField(default=1)
     precio_venta_calculado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ultima_actualizacion_precio = models.DateTimeField(null=True, blank=True)

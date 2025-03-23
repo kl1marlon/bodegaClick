@@ -1,0 +1,177 @@
+/**
+ * Utilidades para el cálculo de precios
+ */
+
+/**
+ * Calcula el precio de venta basado en los parámetros dados
+ * @param {number} precio_compra_usd - Precio de compra en USD
+ * @param {number} unidades_paquete - Unidades por paquete
+ * @param {number} tasa_cambio_valor - Valor de la tasa de cambio
+ * @param {number} porcentaje - Porcentaje de ganancia
+ * @param {boolean} aplicarIva - Si se debe aplicar IVA
+ * @returns {number} - Precio de venta calculado
+ */
+export const calcularPrecioVenta = (precio_compra_usd, unidades_paquete, tasa_cambio_valor, porcentaje, aplicarIva = false) => {
+  console.log('Calculando precio venta con:', { 
+    precio_compra_usd, 
+    unidades_paquete, 
+    tasa_cambio_valor, 
+    porcentaje, 
+    aplicarIva 
+  });
+  
+  // Convertir a números para evitar errores
+  precio_compra_usd = Number(precio_compra_usd) || 0;
+  unidades_paquete = Number(unidades_paquete) || 1;
+  tasa_cambio_valor = Number(tasa_cambio_valor) || 1;
+  porcentaje = Number(porcentaje) || 0;
+  
+  if (precio_compra_usd === 0) {
+    console.log('Precio de compra USD no válido');
+    return 0;
+  }
+  
+  if (unidades_paquete === 0) {
+    console.log('Unidades por paquete no válidas');
+    return 0;
+  }
+  
+  if (tasa_cambio_valor === 0) {
+    console.log('Tasa de cambio no válida');
+    return 0;
+  }
+  
+  // Aplicar la fórmula: (precio_compra × tasa_dolar_paralelo / unidades) × (1 + porcentaje_ganancia/100)
+  const precio_base = precio_compra_usd / unidades_paquete;
+  const precio_con_ganancia = precio_base * (1 + (porcentaje / 100));
+  
+  // Aplicar IVA si está activado
+  const precio_final = aplicarIva ? precio_con_ganancia * 1.16 : precio_con_ganancia;
+  
+  // Redondear a 2 decimales para evitar problemas de precisión
+  const precio_redondeado = parseFloat(precio_final.toFixed(2));
+  console.log('Precio final calculado:', precio_redondeado);
+  return precio_redondeado;
+};
+
+/**
+ * Calcula el precio base USD dividiendo el precio de compra por las unidades por paquete
+ * @param {number} precio_compra_usd - Precio de compra en USD
+ * @param {number} unidades_paquete - Unidades por paquete
+ * @returns {number} - Precio base en USD por unidad
+ */
+export const calcularPrecioBaseUSD = (precio_compra_usd, unidades_paquete) => {
+  precio_compra_usd = Number(precio_compra_usd) || 0;
+  unidades_paquete = Number(unidades_paquete) || 1;
+  
+  if (precio_compra_usd === 0 || unidades_paquete === 0) {
+    return 0;
+  }
+  
+  // Precio base por unidad = precio de compra / unidades por paquete
+  const precio_base = precio_compra_usd / unidades_paquete;
+  return parseFloat(precio_base.toFixed(2));
+};
+
+/**
+ * Aplica reglas de redondeo especiales a precios en bolívares
+ * @param {number} precioBs - Precio en bolívares
+ * @returns {number} - Precio redondeado según reglas especiales
+ */
+export const aplicarRedondeoEspecial = (precioBs) => {
+  // Asegurarse de que sea un número
+  precioBs = Number(precioBs) || 0;
+  
+  // Primero redondeamos a 2 decimales para evitar problemas de precisión
+  precioBs = Math.round(precioBs * 100) / 100;
+  
+  if (precioBs < 10) {
+    // Para precios menores a 10, revisar la última cifra
+    const ultimaCifra = Math.floor(precioBs) % 10;
+    if (ultimaCifra === 4 || ultimaCifra === 6 || ultimaCifra === 9) {
+      // Redondear hacia arriba al siguiente entero
+      return Math.ceil(precioBs);
+    }
+    // Si no es terminación prohibida, solo dejamos el valor como está
+    return precioBs;
+  } else {
+    // Para precios mayores o iguales a 10
+    const entero = Math.floor(precioBs);
+    const ultimaCifra = entero % 10;
+    const decimal = precioBs - entero;
+    
+    // Si tiene algún decimal, necesitamos aplicar reglas de redondeo
+    if (decimal > 0) {
+      // Si termina en 0-4, redondear al 5 más cercano
+      if (ultimaCifra < 5) {
+        return entero - ultimaCifra + 5;
+      } 
+      // Si termina en 5-9, redondear al próximo múltiplo de 10
+      else {
+        return entero - ultimaCifra + 10;
+      }
+    }
+    
+    // Si no tiene decimales:
+    // Para terminaciones 1, 2, 3, 4, redondear al 5
+    if (ultimaCifra >= 1 && ultimaCifra <= 4) {
+      return entero - ultimaCifra + 5;
+    }
+    
+    // Para terminaciones 6, 7, 8, 9, redondear al próximo 0
+    if (ultimaCifra >= 6 && ultimaCifra <= 9) {
+      return entero - ultimaCifra + 10;
+    }
+    
+    // Si llegamos aquí, el valor ya termina en 0 o 5 sin decimales
+    return entero;
+  }
+};
+
+/**
+ * Calcula el precio en bolívares cuando el precio está en USD
+ * @param {number} precio_usd - Precio en dólares
+ * @param {number} tasa_valor - Valor de la tasa de cambio
+ * @returns {number} - Precio en bolívares redondeado
+ */
+export const calcularPrecioBs = (precio_usd, tasa_valor) => {
+  precio_usd = Number(precio_usd) || 0;
+  tasa_valor = Number(tasa_valor) || 1;
+  
+  if (precio_usd === 0) return 0;
+  
+  const precioBs = precio_usd * tasa_valor;
+  return aplicarRedondeoEspecial(precioBs);
+};
+
+/**
+ * Calcula el precio directamente en bolívares
+ * @param {number} precio_compra_usd - Precio de compra en USD
+ * @param {number} unidades_paquete - Unidades por paquete
+ * @param {number} tasa_valor - Valor de la tasa de cambio
+ * @param {number} porcentaje - Porcentaje de ganancia
+ * @param {boolean} aplicarIva - Si se debe aplicar IVA
+ * @returns {number} - Precio en bolívares con reglas de redondeo aplicadas
+ */
+export const calcularPrecioDirectoEnBs = (precio_compra_usd, unidades_paquete, tasa_valor, porcentaje, aplicarIva) => {
+  // Convertir a números para evitar errores
+  precio_compra_usd = Number(precio_compra_usd) || 0;
+  unidades_paquete = Number(unidades_paquete) || 1;
+  tasa_valor = Number(tasa_valor) || 1;
+  porcentaje = Number(porcentaje) || 0;
+  
+  if (precio_compra_usd === 0 || unidades_paquete === 0) return 0;
+  
+  // Aplicar la fórmula: (precio_compra / unidades) × (1 + porcentaje_ganancia/100)
+  const precio_base = precio_compra_usd / unidades_paquete;
+  const precio_con_ganancia = precio_base * (1 + (porcentaje / 100));
+  
+  // Aplicar IVA si está activado
+  const precio_final = aplicarIva ? precio_con_ganancia * 1.16 : precio_con_ganancia;
+  
+  // Multiplicar por la tasa para obtener el precio en bolívares
+  const precio_en_bs = precio_final * tasa_valor;
+  
+  // Aplicar reglas de redondeo especiales
+  return aplicarRedondeoEspecial(precio_en_bs);
+}; 
