@@ -13,7 +13,14 @@ import {
   Paper,
   Box
 } from '@mui/material';
-import { calcularPrecioVenta, calcularPrecioBaseUSD, calcularPrecioDirectoEnBs } from '../../utils/calculosPrecios';
+import { 
+  calcularPrecioVenta, 
+  calcularPrecioBaseUSD, 
+  calcularPrecioDirectoEnBs,
+  calcularPrecioVentaBs, 
+  calcularPrecioBaseUSDDesdeBS,
+  aplicarRedondeoEspecial
+} from '../../utils/calculosPrecios';
 
 /**
  * Componente de diálogo para editar detalles de un producto
@@ -48,6 +55,16 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
     if (precio_compra === 0 || unidades === 0 || !tasaCambio) return 0;
     
     if (moneda === 'BS') {
+      // Para BS, calcular el precio de venta directamente en bolívares
+      const precioVentaBs = calcularPrecioVentaBs(
+        precio_compra, // Aquí precio_compra en realidad es el precio en bolívares
+        unidades,
+        porcentaje,
+        productoEditando.aplicarIva
+      );
+      return precioVentaBs;
+    } else {
+      // Para USD, mantener la lógica existente
       return calcularPrecioVenta(
         precio_compra,
         unidades,
@@ -55,16 +72,41 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
         porcentaje,
         productoEditando.aplicarIva
       );
-    } else {
-      // Para USD
-      const precioDirectoBs = calcularPrecioDirectoEnBs(
-        precio_compra,
+    }
+  };
+
+  // Calcular el precio base USD dependiendo de la moneda
+  const calcularPrecioBaseUSDMostrado = () => {
+    if (!productoEditando) return 0;
+    
+    const precio_compra = Number(productoEditando.precio_compra_usd) || 0;
+    const unidades = Number(productoEditando.unidades_paquete) || 1;
+    const porcentaje = Number(productoEditando.porcentajeGanancia) || 0;
+    
+    if (precio_compra === 0 || unidades === 0) return 0;
+    
+    if (moneda === 'BS' && tasaCambio) {
+      // Para BS, calcular primero el precio de venta en bolívares y luego dividir por la tasa
+      const precioVentaBs = calcularPrecioVentaBs(
+        precio_compra, // Precio en bolívares
         unidades,
-        tasaCambio.valor,
         porcentaje,
         productoEditando.aplicarIva
       );
-      return precioDirectoBs;
+      return calcularPrecioBaseUSDDesdeBS(precioVentaBs, tasaCambio.valor);
+    } else {
+      // Para USD, mantener la lógica existente
+      return calcularPrecioBaseUSD(precio_compra, unidades);
+    }
+  };
+
+  // Calcular el precio final con redondeo
+  const calcularPrecioFinal = () => {
+    const precioCalculado = calcularPrecioMostrado();
+    if (moneda === 'BS') {
+      return aplicarRedondeoEspecial(precioCalculado);
+    } else {
+      return precioCalculado;
     }
   };
 
@@ -98,7 +140,7 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Precio de Compra (USD)"
+              label={moneda === 'BS' ? "Precio de Compra (BS)" : "Precio de Compra (USD)"}
               type="number"
               value={productoEditando?.precio_compra_usd || ''}
               onChange={(e) => handleChange('precio_compra_usd', Number(e.target.value))}
@@ -192,22 +234,27 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
                   <Typography sx={{ fontSize: '0.875rem', color: '#334155', mt: 1 }}>
                     Precio base USD: 
                     <Box component="span" sx={{ fontWeight: 600, color: '#0f766e', ml: 1 }}>
-                      ${calcularPrecioBaseUSD(
-                        productoEditando.precio_compra_usd,
-                        productoEditando.unidades_paquete
-                      ).toFixed(2)}
+                      ${calcularPrecioBaseUSDMostrado().toFixed(2)}
                     </Box>
                   </Typography>
                   <Typography sx={{ fontSize: '0.875rem', color: '#334155', mt: 1 }}>
-                    Precio de venta calculado: 
+                    Precio de venta calculado (sin redondeo): 
                     <Box component="span" sx={{ fontWeight: 600, color: '#0f766e', ml: 1 }}>
                       {moneda === 'BS' ? 
                         `${calcularPrecioMostrado().toFixed(2)} Bs` : 
-                        `${calcularPrecioMostrado().toFixed(2)} Bs`
+                        `$${calcularPrecioMostrado().toFixed(2)}`
                       }
                       {productoEditando.aplicarIva && ' (incluye IVA 16%)'}
                     </Box>
                   </Typography>
+                  {moneda === 'BS' && (
+                    <Typography sx={{ fontSize: '0.875rem', color: '#334155', mt: 1 }}>
+                      Precio de venta final (con redondeo): 
+                      <Box component="span" sx={{ fontWeight: 600, color: '#0f766e', ml: 1 }}>
+                        {`${calcularPrecioFinal().toFixed(2)} Bs`}
+                      </Box>
+                    </Typography>
+                  )}
                 </Box>
               </Paper>
             </Grid>

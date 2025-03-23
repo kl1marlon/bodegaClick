@@ -174,4 +174,67 @@ export const calcularPrecioDirectoEnBs = (precio_compra_usd, unidades_paquete, t
   
   // Aplicar reglas de redondeo especiales
   return aplicarRedondeoEspecial(precio_en_bs);
+};
+
+/**
+ * Calcula el precio de venta cuando se trabaja directamente en bolívares
+ * @param {number} precio_compra_bs - Precio de compra en Bolívares
+ * @param {number} unidades_paquete - Unidades por paquete
+ * @param {number} porcentaje - Porcentaje de ganancia
+ * @param {boolean} aplicarIva - Si se debe aplicar IVA
+ * @returns {number} - Precio de venta en bolívares antes del redondeo
+ */
+export const calcularPrecioVentaBs = (precio_compra_bs, unidades_paquete, porcentaje, aplicarIva = false) => {
+  console.log('Calculando precio venta en Bs con:', { 
+    precio_compra_bs, 
+    unidades_paquete, 
+    porcentaje, 
+    aplicarIva 
+  });
+  
+  // Convertir a números para evitar errores
+  precio_compra_bs = Number(precio_compra_bs) || 0;
+  unidades_paquete = Number(unidades_paquete) || 1;
+  porcentaje = Number(porcentaje) || 0;
+  
+  if (precio_compra_bs === 0) {
+    console.log('Precio de compra BS no válido');
+    return 0;
+  }
+  
+  if (unidades_paquete === 0) {
+    console.log('Unidades por paquete no válidas');
+    return 0;
+  }
+  
+  // Aplicar la fórmula: (precio_compra_bs / unidades) × (1 + porcentaje_ganancia/100)
+  const precio_base_bs = precio_compra_bs / unidades_paquete;
+  const precio_con_ganancia = precio_base_bs * (1 + (porcentaje / 100));
+  
+  // Aplicar IVA si está activado
+  const precio_final = aplicarIva ? precio_con_ganancia * 1.16 : precio_con_ganancia;
+  
+  // Redondear a 2 decimales para evitar problemas de precisión
+  const precio_redondeado = parseFloat(precio_final.toFixed(2));
+  console.log('Precio final calculado en Bs:', precio_redondeado);
+  return precio_redondeado;
+};
+
+/**
+ * Calcula el precio base USD a partir del precio de venta en bolívares y la tasa
+ * @param {number} precio_venta_bs - Precio de venta en bolívares (antes del redondeo)
+ * @param {number} tasa_valor - Valor de la tasa de cambio
+ * @returns {number} - Precio base en USD
+ */
+export const calcularPrecioBaseUSDDesdeBS = (precio_venta_bs, tasa_valor) => {
+  precio_venta_bs = Number(precio_venta_bs) || 0;
+  tasa_valor = Number(tasa_valor) || 1;
+  
+  if (precio_venta_bs === 0 || tasa_valor === 0) {
+    return 0;
+  }
+  
+  // Precio base USD = precio venta BS / tasa
+  const precio_base_usd = precio_venta_bs / tasa_valor;
+  return parseFloat(precio_base_usd.toFixed(2));
 }; 

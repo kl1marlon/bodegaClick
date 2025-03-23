@@ -26,7 +26,14 @@ import TablaProductos from '../components/factura/TablaProductos';
 import DialogoEditarProducto from '../components/factura/DialogoEditarProducto';
 
 // Utilidades
-import { calcularPrecioVenta, calcularPrecioBaseUSD, aplicarRedondeoEspecial, calcularPrecioBs } from '../utils/calculosPrecios';
+import { 
+  calcularPrecioVenta, 
+  calcularPrecioBaseUSD, 
+  aplicarRedondeoEspecial, 
+  calcularPrecioBs,
+  calcularPrecioVentaBs,
+  calcularPrecioBaseUSDDesdeBS 
+} from '../utils/calculosPrecios';
 
 // Usar la misma URL base que en el resto de la aplicación
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
@@ -149,20 +156,41 @@ const NuevaFactura = () => {
       return;
     }
 
-    let precio_venta = calcularPrecioVenta(
-      precio_compra,
-      unidades,
-      tasaCambio?.valor || 1,
-      porcentaje,
-      productoEditando.aplicarIva
-    );
+    let precio_venta;
+    let precio_base_usd;
 
-    // Calcular precio_base_usd para almacenar en el producto
-    const precio_base_usd = calcularPrecioBaseUSD(precio_compra, unidades);
+    if (moneda === 'BS') {
+      // Para BS: El precio_compra_usd realmente contiene el precio en bolívares
+      // Calcular precio de venta en bolívares sin redondeo
+      const precio_venta_bs_sin_redondeo = calcularPrecioVentaBs(
+        precio_compra, // Precio en bolívares
+        unidades,
+        porcentaje,
+        productoEditando.aplicarIva
+      );
+      
+      // Calcular precio_base_usd dividiendo el precio de venta en BS por la tasa
+      precio_base_usd = calcularPrecioBaseUSDDesdeBS(precio_venta_bs_sin_redondeo, tasaCambio?.valor || 1);
+      
+      // Aplicar redondeo especial al precio en BS
+      precio_venta = aplicarRedondeoEspecial(precio_venta_bs_sin_redondeo);
+    } else {
+      // Para USD: Mantener la lógica existente
+      precio_venta = calcularPrecioVenta(
+        precio_compra,
+        unidades,
+        tasaCambio?.valor || 1,
+        porcentaje,
+        productoEditando.aplicarIva
+      );
 
-    // Aplicar redondeo especial si la moneda es BS
-    if (moneda === 'BS' && tasaCambio) {
-      precio_venta = aplicarRedondeoEspecial(precio_venta);
+      // Calcular precio_base_usd para almacenar en el producto
+      precio_base_usd = calcularPrecioBaseUSD(precio_compra, unidades);
+
+      // Aplicar redondeo especial si la moneda es BS (esta condición nunca se cumplirá aquí, pero mantengo el código para claridad)
+      if (moneda === 'BS' && tasaCambio) {
+        precio_venta = aplicarRedondeoEspecial(precio_venta);
+      }
     }
 
     const nuevoProducto = {

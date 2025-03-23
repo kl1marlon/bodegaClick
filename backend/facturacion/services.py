@@ -377,6 +377,17 @@ class LoyverseService:
                 producto.precio_venta_calculado = precio_unitario
                 producto.ultima_actualizacion_precio = datetime.datetime.now()
                 producto.fuente_actualizacion = 'factura'  # Registrar que fue actualizado desde factura
+                
+                # Actualizar precio_base_usd y tipo_tasa si están disponibles en el detalle
+                if hasattr(detalle, 'precio_base_usd') and detalle.precio_base_usd:
+                    producto.precio_base_usd = detalle.precio_base_usd
+                    print(f"Precio base USD actualizado para {producto.nombre}: {detalle.precio_base_usd}")
+                
+                if hasattr(detalle, 'tipo_tasa') and detalle.tipo_tasa:
+                    producto.tipo_tasa = detalle.tipo_tasa
+                    print(f"Tipo de tasa actualizado para {producto.nombre}: {detalle.tipo_tasa}")
+                
+                # Guardar el producto actualizado
                 producto.save()
                 
                 print(f"Precio actualizado para {producto.nombre}: Original: {producto.precio_base}, Nuevo: {precio_unitario}")

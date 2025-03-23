@@ -65,6 +65,9 @@ class DetalleFactura(models.Model):
     porcentaje_ganancia = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     precio_compra_usd = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     unidades_paquete = models.IntegerField(default=1)
+    aplicarIva = models.BooleanField(default=False)
+    precio_base_usd = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tipo_tasa = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
         return f"{self.producto.nombre} - {self.cantidad} x {self.precio_unitario}"

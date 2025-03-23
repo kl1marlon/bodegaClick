@@ -17,11 +17,15 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
     precio_unitario = serializers.DecimalField(max_digits=10, decimal_places=2)
     cantidad = serializers.DecimalField(max_digits=10, decimal_places=2)
     precio_compra_usd = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    aplicarIva = serializers.BooleanField(required=False, default=False)
+    precio_base_usd = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    tipo_tasa = serializers.CharField(max_length=10, required=False)
     
     class Meta:
         model = DetalleFactura
         fields = ['id', 'producto', 'producto_nombre', 'cantidad', 'precio_unitario', 
-                 'precio_compra_usd', 'unidades_paquete', 'total', 'porcentaje_ganancia']
+                 'precio_compra_usd', 'unidades_paquete', 'total', 'porcentaje_ganancia',
+                 'aplicarIva', 'precio_base_usd', 'tipo_tasa']
     
     def validate(self, data):
         # Calcular el total automáticamente
