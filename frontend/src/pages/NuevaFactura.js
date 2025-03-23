@@ -32,7 +32,8 @@ import {
   aplicarRedondeoEspecial, 
   calcularPrecioBs,
   calcularPrecioVentaBs,
-  calcularPrecioBaseUSDDesdeBS 
+  calcularPrecioBaseUSDDesdeBS,
+  calcularPrecioBaseUSDConGanancia
 } from '../utils/calculosPrecios';
 
 // Usar la misma URL base que en el resto de la aplicación
@@ -184,8 +185,13 @@ const NuevaFactura = () => {
         productoEditando.aplicarIva
       );
 
-      // Calcular precio_base_usd para almacenar en el producto
-      precio_base_usd = calcularPrecioBaseUSD(precio_compra, unidades);
+      // Calcular precio_base_usd para almacenar en el producto, incluyendo ganancia e IVA
+      precio_base_usd = calcularPrecioBaseUSDConGanancia(
+        precio_compra, 
+        unidades, 
+        porcentaje,
+        productoEditando.aplicarIva
+      );
 
       // Aplicar redondeo especial si la moneda es BS (esta condición nunca se cumplirá aquí, pero mantengo el código para claridad)
       if (moneda === 'BS' && tasaCambio) {

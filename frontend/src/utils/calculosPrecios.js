@@ -74,6 +74,37 @@ export const calcularPrecioBaseUSD = (precio_compra_usd, unidades_paquete) => {
 };
 
 /**
+ * Calcula el precio base USD incluyendo el porcentaje de ganancia y el IVA si aplica
+ * @param {number} precio_compra_usd - Precio de compra en USD
+ * @param {number} unidades_paquete - Unidades por paquete
+ * @param {number} porcentaje - Porcentaje de ganancia
+ * @param {boolean} aplicarIva - Si se debe aplicar IVA
+ * @returns {number} - Precio base en USD por unidad con ganancia e IVA
+ */
+export const calcularPrecioBaseUSDConGanancia = (precio_compra_usd, unidades_paquete, porcentaje, aplicarIva = false) => {
+  // Convertir a números para evitar errores
+  precio_compra_usd = Number(precio_compra_usd) || 0;
+  unidades_paquete = Number(unidades_paquete) || 1;
+  porcentaje = Number(porcentaje) || 0;
+  
+  if (precio_compra_usd === 0 || unidades_paquete === 0) {
+    return 0;
+  }
+  
+  // Calcular el precio base por unidad
+  const precio_base = precio_compra_usd / unidades_paquete;
+  
+  // Aplicar el porcentaje de ganancia
+  const precio_con_ganancia = precio_base * (1 + (porcentaje / 100));
+  
+  // Aplicar IVA si está activado
+  const precio_final = aplicarIva ? precio_con_ganancia * 1.16 : precio_con_ganancia;
+  
+  // Redondear a 2 decimales para evitar problemas de precisión
+  return parseFloat(precio_final.toFixed(2));
+};
+
+/**
  * Aplica reglas de redondeo especiales a precios en bolívares
  * @param {number} precioBs - Precio en bolívares
  * @returns {number} - Precio redondeado según reglas especiales

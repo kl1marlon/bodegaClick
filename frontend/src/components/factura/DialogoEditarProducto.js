@@ -19,7 +19,8 @@ import {
   calcularPrecioDirectoEnBs,
   calcularPrecioVentaBs, 
   calcularPrecioBaseUSDDesdeBS,
-  aplicarRedondeoEspecial
+  aplicarRedondeoEspecial,
+  calcularPrecioBaseUSDConGanancia
 } from '../../utils/calculosPrecios';
 
 /**
@@ -95,8 +96,13 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
       );
       return calcularPrecioBaseUSDDesdeBS(precioVentaBs, tasaCambio.valor);
     } else {
-      // Para USD, mantener la lógica existente
-      return calcularPrecioBaseUSD(precio_compra, unidades);
+      // Para USD, usar la nueva función que incluye ganancia e IVA
+      return calcularPrecioBaseUSDConGanancia(
+        precio_compra,
+        unidades,
+        porcentaje,
+        productoEditando.aplicarIva
+      );
     }
   };
 
