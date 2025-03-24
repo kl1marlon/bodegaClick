@@ -48,8 +48,9 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import SyncIcon from '@mui/icons-material/Sync';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { fetchProductos, syncFromLoyverse } from '../store/productosSlice';
+import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
+import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
 
 const ListadoProductos = () => {
   const dispatch = useDispatch();
@@ -121,7 +122,7 @@ const ListadoProductos = () => {
     if (productos.length > 0 && tasaParalelo) {
       const initialTasas = {};
       productos.forEach(producto => {
-        initialTasas[producto.id] = 'PARALELO';
+        initialTasas[producto.id] = producto.tipo_tasa || 'PARALELO';
       });
       setTasaSeleccionadaProducto(initialTasas);
     }
@@ -163,10 +164,35 @@ const ListadoProductos = () => {
   
   // Función para cambiar la tasa de un producto
   const cambiarTasaProducto = (productoId, tipoTasa) => {
+    // Actualizar el estado local inmediatamente para una respuesta UI rápida
     setTasaSeleccionadaProducto({
       ...tasaSeleccionadaProducto,
       [productoId]: tipoTasa
     });
+    
+    // Enviar la actualización al backend
+    dispatch(updateProductoTipoTasa({ productoId, tipoTasa }))
+      .unwrap()
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: `Tipo de tasa actualizado a ${tipoTasa} correctamente`,
+          severity: 'success'
+        });
+      })
+      .catch((error) => {
+        console.error("Error al actualizar el tipo de tasa:", error);
+        setSnackbar({
+          open: true,
+          message: `Error al actualizar tipo de tasa: ${error.message}`,
+          severity: 'error'
+        });
+        // Revertir el cambio en la UI si hay error
+        setTasaSeleccionadaProducto({
+          ...tasaSeleccionadaProducto,
+          [productoId]: tasaSeleccionadaProducto[productoId] === 'BCV' ? 'PARALELO' : 'BCV'
+        });
+      });
   };
   
   // Manejar cambio de categoría
@@ -195,6 +221,26 @@ const ListadoProductos = () => {
     
     // Calcular y devolver con 2 decimales
     return Number((precioBs / tasa.valor).toFixed(2));
+  };
+  
+  // Función para calcular el precio BS a partir del precio_base_usd y la tasa
+  const calcularPrecioBS = (precioBaseUSD, productoId) => {
+    if (!precioBaseUSD) return 0;
+    
+    // Convertir a número
+    precioBaseUSD = Number(precioBaseUSD);
+    
+    // Obtener la tasa seleccionada para este producto
+    const tipoTasa = tasaSeleccionadaProducto[productoId] || 'PARALELO';
+    const tasa = tipoTasa === 'BCV' ? tasaBCV : tasaParalelo;
+    
+    if (!tasa || tasa.valor <= 0) return 0;
+    
+    // Calcular precio en bolívares
+    const precioBs = precioBaseUSD * tasa.valor;
+    
+    // Aplicar el redondeo especial que se usa en las facturas
+    return aplicarRedondeoEspecial(precioBs);
   };
   
   // Obtener el valor actual de la tasa según el tipo
@@ -661,42 +707,44 @@ const ListadoProductos = () => {
                         align="right"
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
                       >
-                        ${calcularPrecioUSD(producto.precio_base, producto.id)}
+                        ${producto.precio_base_usd ? Number(producto.precio_base_usd).toFixed(2) : '0.00'}
                       </TableCell>
                       <TableCell 
                         align="right"
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9', fontWeight: 500 }}
                       >
-                        {Number(producto.precio_base).toFixed(2)} Bs
+                        {calcularPrecioBS(producto.precio_base_usd, producto.id)} Bs
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ borderBottom: '1px solid #f1f5f9' }}
                       >
-                        <ButtonGroup size="small" variant="outlined">
+                        <Tooltip 
+                          title="Esta tasa está guardada en el producto. Al cambiarla se actualizará en la base de datos."
+                          arrow
+                        >
                           <Button 
-                            color={tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'primary' : 'inherit'}
-                            onClick={() => cambiarTasaProducto(producto.id, 'BCV')}
+                            variant="outlined"
+                            size="small"
+                            color={tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'primary' : 'secondary'}
+                            onClick={() => cambiarTasaProducto(
+                              producto.id, 
+                              tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'PARALELO' : 'BCV'
+                            )}
+                            startIcon={<CurrencyExchangeIcon />}
                             sx={{ 
-                              borderRadius: '4px 0 0 4px',
-                              fontWeight: tasaSeleccionadaProducto[producto.id] === 'BCV' ? 700 : 400,
-                              backgroundColor: tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'rgba(25, 118, 210, 0.1)' : 'transparent'
+                              borderRadius: '4px',
+                              fontWeight: 500,
+                              textTransform: 'none'
                             }}
                           >
-                            BCV
+                            {tasaSeleccionadaProducto[producto.id] === 'BCV' ? 'BCV' : 'Paralelo'} {
+                              tasaSeleccionadaProducto[producto.id] === 'BCV' 
+                                ? (tasaBCV ? tasaBCV.valor : 'N/A') 
+                                : (tasaParalelo ? tasaParalelo.valor : 'N/A')
+                            } Bs
                           </Button>
-                          <Button 
-                            color={tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 'secondary' : 'inherit'}
-                            onClick={() => cambiarTasaProducto(producto.id, 'PARALELO')}
-                            sx={{ 
-                              borderRadius: '0 4px 4px 0',
-                              fontWeight: tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 700 : 400,
-                              backgroundColor: tasaSeleccionadaProducto[producto.id] === 'PARALELO' ? 'rgba(220, 0, 78, 0.1)' : 'transparent'
-                            }}
-                          >
-                            Paralelo
-                          </Button>
-                        </ButtonGroup>
+                        </Tooltip>
                       </TableCell>
                       <TableCell
                         align="right"
@@ -836,6 +884,10 @@ const ListadoProductos = () => {
             <Typography variant="body1" gutterBottom>
               Puede cambiar la tasa utilizada para cada producto haciendo clic en los botones "BCV" o "Paralelo" en la columna "Tasa".
             </Typography>
+            <Typography variant="body1" gutterBottom sx={{ fontWeight: 500, color: '#0284c7' }}>
+              ¡Importante! La tasa mostrada en cada producto ahora refleja el valor almacenado en la base de datos (tipo_tasa).
+              Al cambiarla, se actualizará permanentemente para ese producto.
+            </Typography>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
               Fuentes de actualización:
@@ -872,7 +924,7 @@ const ListadoProductos = () => {
               La opción "Actualizar precios" permite decidir si desea actualizar los precios con los valores de Loyverse. El sistema verificará si hay facturas creadas en los últimos 2 días y, en caso afirmativo, no actualizará los precios para mantener los ajustes recientes.
             </Typography>
             <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary', fontStyle: 'italic' }}>
-              Nota: Los cambios en la selección de tasa se utilizan solo para visualización y no afectan los datos guardados.
+              Nota: Al cambiar el tipo de tasa de un producto (BCV o Paralelo), este cambio se guardará en la base de datos y afectará los cálculos de precios en futuras facturas.
             </Typography>
           </DialogContentText>
         </DialogContent>

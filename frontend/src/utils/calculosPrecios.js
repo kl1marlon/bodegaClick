@@ -116,46 +116,79 @@ export const aplicarRedondeoEspecial = (precioBs) => {
   // Primero redondeamos a 2 decimales para evitar problemas de precisión
   precioBs = Math.round(precioBs * 100) / 100;
   
-  if (precioBs < 10) {
-    // Para precios menores a 10, revisar la última cifra
-    const ultimaCifra = Math.floor(precioBs) % 10;
-    if (ultimaCifra === 4 || ultimaCifra === 6 || ultimaCifra === 9) {
-      // Redondear hacia arriba al siguiente entero
-      return Math.ceil(precioBs);
-    }
-    // Si no es terminación prohibida, solo dejamos el valor como está
-    return precioBs;
-  } else {
-    // Para precios mayores o iguales a 10
-    const entero = Math.floor(precioBs);
-    const ultimaCifra = entero % 10;
-    const decimal = precioBs - entero;
-    
-    // Si tiene algún decimal, necesitamos aplicar reglas de redondeo
-    if (decimal > 0) {
-      // Si termina en 0-4, redondear al 5 más cercano
-      if (ultimaCifra < 5) {
-        return entero - ultimaCifra + 5;
-      } 
-      // Si termina en 5-9, redondear al próximo múltiplo de 10
-      else {
-        return entero - ultimaCifra + 10;
+  // Convertir a entero para trabajar con la parte entera
+  const entero = Math.floor(precioBs);
+  const decimal = precioBs - entero;
+  
+  // Verificar si el número ya termina en 0 o 5
+  const residuo = entero % 10;
+  const terminaEn5o0 = residuo === 0 || residuo === 5;
+  
+  // Si ya termina en 0 o 5 y no tiene decimales, mantenerlo igual
+  if (terminaEn5o0 && decimal === 0) {
+    return entero;
+  }
+  
+  // Para precios menores a 20
+  if (entero < 20) {
+    if (entero < 5) {
+      // Números menores a 5
+      if (entero <= 2) {
+        // 1 y 2 se mantienen igual
+        return entero;
+      } else {
+        // 3 y 4 se redondean a 5
+        return 5;
+      }
+    } else if (entero < 10) {
+      // Números entre 5 y 9
+      if (entero == 5) {
+        return 5;
+      } else if (entero == 6) {
+        return 5;
+      } else {
+        // 7, 8, 9 se redondean a 10
+        return 10;
+      }
+    } else if (entero < 15) {
+      // Números entre 10 y 14
+      if (entero == 10) {
+        return 10;
+      } else if (entero == 11) {
+        return 10;
+      } else {
+        // 12, 13, 14 se redondean a 15
+        return 15;
+      }
+    } else {
+      // Números entre 15 y 19
+      if (entero == 15) {
+        return 15;
+      } else if (entero == 16) {
+        return 15;
+      } else {
+        // 17, 18, 19 se redondean a 20
+        return 20;
       }
     }
-    
-    // Si no tiene decimales:
-    // Para terminaciones 1, 2, 3, 4, redondear al 5
-    if (ultimaCifra >= 1 && ultimaCifra <= 4) {
-      return entero - ultimaCifra + 5;
+  } else {
+    // Para precios mayores o iguales a 20
+    // Redondear al 5 o 0 más cercano
+    if (residuo < 5) {
+      // Números terminados en 0, 1, 2, 3, 4 se redondean al siguiente 5
+      // Si ya termina en 0, se mantiene igual
+      if (residuo === 0) {
+        return entero;
+      }
+      return entero - residuo + 5;
+    } else {
+      // Números terminados en 5, 6, 7, 8, 9 se redondean al siguiente 0
+      // Si ya termina en 5, se mantiene igual
+      if (residuo === 5) {
+        return entero;
+      }
+      return entero - residuo + 10;
     }
-    
-    // Para terminaciones 6, 7, 8, 9, redondear al próximo 0
-    if (ultimaCifra >= 6 && ultimaCifra <= 9) {
-      return entero - ultimaCifra + 10;
-    }
-    
-    // Si llegamos aquí, el valor ya termina en 0 o 5 sin decimales
-    return entero;
   }
 };
 

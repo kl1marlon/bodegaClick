@@ -28,6 +28,21 @@ export const syncFromLoyverse = createAsyncThunk(
   }
 );
 
+export const updateProductoTipoTasa = createAsyncThunk(
+  'productos/updateProductoTipoTasa',
+  async ({ productoId, tipoTasa }) => {
+    try {
+      const response = await axios.patch(`${API_URL}/productos/${productoId}/`, {
+        tipo_tasa: tipoTasa
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar tipo_tasa:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+);
+
 const productosSlice = createSlice({
   name: 'productos',
   initialState: {
@@ -58,6 +73,12 @@ const productosSlice = createSlice({
       .addCase(syncFromLoyverse.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(updateProductoTipoTasa.fulfilled, (state, action) => {
+        const index = state.items.findIndex(producto => producto.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   },
 });
