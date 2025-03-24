@@ -38,7 +38,9 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  Slider
+  Slider,
+  RadioGroup,
+  Radio
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -50,6 +52,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import SyncIcon from '@mui/icons-material/Sync';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import EditAttributesIcon from '@mui/icons-material/EditAttributes';
 import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
@@ -71,15 +74,15 @@ const ListadoProductos = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [categorias, setCategorias] = useState([]);
   
-  // INICIO: FILTRO TEMPORAL PARA MIGRACIÓN - PRODUCTOS SIN PRECIO BASE USD
-  // Esto es para ayudar durante la migración de datos, eliminar después
-  const [mostrarSinPrecioBaseUSD, setMostrarSinPrecioBaseUSD] = useState(false);
-  // FIN: FILTRO TEMPORAL PARA MIGRACIÓN
-  
   // Estado para tasas de cambio
   const [tasaBCV, setTasaBCV] = useState(null);
   const [tasaParalelo, setTasaParalelo] = useState(null);
   const [tasaSeleccionadaProducto, setTasaSeleccionadaProducto] = useState({});
+  
+  // Estado para diálogo de edición de tasa
+  const [editTasaDialogOpen, setEditTasaDialogOpen] = useState(false);
+  const [tipoTasaEdicion, setTipoTasaEdicion] = useState('');
+  const [nuevaTasaValor, setNuevaTasaValor] = useState('');
   
   // Estado para diálogo informativo
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
@@ -97,7 +100,8 @@ const ListadoProductos = () => {
     categorias: [],
     tipo_tasa: '',
     productos_ids: [],
-    tamaño_lote: 20
+    tamaño_lote: 20,
+    direccion_sync: 'bidireccional'
   });
   
   // Estado para diálogo de selección de productos específicos
@@ -112,32 +116,6 @@ const ListadoProductos = () => {
     message: '',
     severity: 'info'
   });
-  
-  // INICIO: CONTADOR TEMPORAL DE PRODUCTOS CON PRECIO BASE USD
-  // Este contador es temporal y se usa durante la migración de datos
-  // para rastrear cuántos productos tienen precio_base_usd configurado.
-  // TODO: Eliminar esta sección una vez completada la migración
-  const [contadorPrecioBaseUSD, setContadorPrecioBaseUSD] = useState({
-    total: 0,
-    conPrecioBaseUSD: 0,
-    porcentaje: 0
-  });
-  
-  useEffect(() => {
-    if (productos.length > 0) {
-      const total = productos.length;
-      const conPrecioBaseUSD = productos.filter(p => 
-        p.precio_base_usd && Number(p.precio_base_usd) > 0
-      ).length;
-      
-      setContadorPrecioBaseUSD({
-        total,
-        conPrecioBaseUSD,
-        porcentaje: Math.round((conPrecioBaseUSD / total) * 100)
-      });
-    }
-  }, [productos]);
-  // FIN: CONTADOR TEMPORAL DE PRODUCTOS CON PRECIO BASE USD
   
   // Cargar productos y tasas al montar el componente
   useEffect(() => {
@@ -195,18 +173,10 @@ const ListadoProductos = () => {
         );
       }
       
-      // INICIO: FILTRO TEMPORAL PARA PRODUCTOS SIN PRECIO BASE USD
-      if (mostrarSinPrecioBaseUSD) {
-        filtered = filtered.filter(producto => 
-          !producto.precio_base_usd || Number(producto.precio_base_usd) <= 0
-        );
-      }
-      // FIN: FILTRO TEMPORAL
-      
       setProductosFiltrados(filtered);
       setPage(0); // Resetear a la primera página cuando cambia el filtro
     }
-  }, [searchTerm, categoriaSeleccionada, productos, mostrarSinPrecioBaseUSD]);
+  }, [searchTerm, categoriaSeleccionada, productos]);
   
   // Manejadores para la paginación
   const handleChangePage = (event, newPage) => {
@@ -260,7 +230,6 @@ const ListadoProductos = () => {
   const resetearFiltros = () => {
     setSearchTerm('');
     setCategoriaSeleccionada('');
-    setMostrarSinPrecioBaseUSD(false);
   };
   
   // Función para calcular el precio en USD desde BS
@@ -326,40 +295,6 @@ const ListadoProductos = () => {
     abrirSyncOptionsDialog();
   };
   
-  // Función para iniciar la sincronización con las opciones seleccionadas
-  const iniciarSincronizacion = () => {
-    setSincronizando(true);
-    cerrarSyncOptionsDialog();
-    
-    console.log("Iniciando sincronización con opciones:", opcionesSincronizacion);
-    
-    dispatch(syncFromLoyverse(opcionesSincronizacion))
-      .then((result) => {
-        if (result.error) {
-          console.error("Error en la sincronización:", result.error.message);
-          setSnackbar({
-            open: true,
-            message: `Error al sincronizar: ${result.error.message}`,
-            severity: 'error'
-          });
-        } else {
-          console.log("Sincronización completada exitosamente:", result.payload);
-          
-          // Mostrar mensaje de éxito con los detalles recibidos
-          setSnackbar({
-            open: true,
-            message: result.payload.message || 'Sincronización completada exitosamente',
-            severity: 'success'
-          });
-          
-          dispatch(fetchProductos()); // Refrescar la lista de productos
-        }
-      })
-      .finally(() => {
-        setSincronizando(false);
-      });
-  };
-  
   // Manejar cambio en productos seleccionados
   const handleChangeProductosSeleccionados = (event) => {
     const value = event.target.value;
@@ -408,6 +343,62 @@ const ListadoProductos = () => {
     setStatsDialogOpen(false);
   };
   
+  // Abrir diálogo de edición de tasa
+  const abrirEditTasaDialog = (tipo) => {
+    setTipoTasaEdicion(tipo);
+    setNuevaTasaValor(tipo === 'BCV' ? (tasaBCV?.valor || '') : (tasaParalelo?.valor || ''));
+    setEditTasaDialogOpen(true);
+  };
+  
+  // Cerrar diálogo de edición de tasa
+  const cerrarEditTasaDialog = () => {
+    setEditTasaDialogOpen(false);
+  };
+  
+  // Guardar nueva tasa de cambio
+  const guardarNuevaTasa = () => {
+    if (!nuevaTasaValor || nuevaTasaValor <= 0) {
+      setSnackbar({
+        open: true,
+        message: 'Por favor ingrese un valor válido para la tasa de cambio',
+        severity: 'error'
+      });
+      return;
+    }
+
+    const tasaData = {
+      tipo: tipoTasaEdicion,
+      valor: parseFloat(nuevaTasaValor),
+      fecha: new Date().toISOString().split('T')[0]
+    };
+
+    dispatch(createTasaCambio(tasaData))
+      .unwrap()
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: `Tasa de cambio ${tipoTasaEdicion} actualizada correctamente`,
+          severity: 'success'
+        });
+        dispatch(fetchLatestTasa(tipoTasaEdicion)).then(action => {
+          if (tipoTasaEdicion === 'BCV') {
+            setTasaBCV(action.payload);
+          } else {
+            setTasaParalelo(action.payload);
+          }
+        });
+        setEditTasaDialogOpen(false);
+      })
+      .catch((error) => {
+        console.error("Error al actualizar la tasa de cambio:", error);
+        setSnackbar({
+          open: true,
+          message: `Error al actualizar la tasa de cambio: ${error.message}`,
+          severity: 'error'
+        });
+      });
+  };
+  
   // Obtener el ícono para la fuente de actualización
   const getFuenteActualizacionIcon = (fuente) => {
     switch (fuente) {
@@ -452,6 +443,56 @@ const ListadoProductos = () => {
   // Cerrar snackbar
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+  
+  // Función para iniciar la sincronización con las opciones seleccionadas
+  const iniciarSincronizacion = () => {
+    setSincronizando(true);
+    cerrarSyncOptionsDialog();
+    
+    console.log("Iniciando sincronización con opciones:", opcionesSincronizacion);
+    
+    dispatch(syncFromLoyverse(opcionesSincronizacion))
+      .then((result) => {
+        if (result.error) {
+          console.error("Error en la sincronización:", result.error.message);
+          setSnackbar({
+            open: true,
+            message: `Error al sincronizar: ${result.error.message}`,
+            severity: 'error'
+          });
+        } else {
+          console.log("Sincronización completada exitosamente:", result.payload);
+          
+          // Mostrar mensaje de éxito con los detalles recibidos
+          setSnackbar({
+            open: true,
+            message: result.payload.message || 'Sincronización completada exitosamente',
+            severity: 'success'
+          });
+          
+          dispatch(fetchProductos()); // Refrescar la lista de productos
+        }
+      })
+      .finally(() => {
+        setSincronizando(false);
+      });
+  };
+  
+  // Obtener el texto del botón de sincronización según la dirección seleccionada
+  const getBotonSincronizacionTexto = () => {
+    if (sincronizando) return 'Sincronizando...';
+    
+    const direccion = opcionesSincronizacion.direccion_sync;
+    if (direccion === 'bidireccional') {
+      return 'Iniciar Sincronización Bidireccional';
+    } else if (direccion === 'bodegaclick_to_loyverse') {
+      return 'Exportar Precios a Loyverse';
+    } else if (direccion === 'loyverse_to_bodegaclick') {
+      return 'Importar Productos de Loyverse';
+    }
+    
+    return 'Iniciar Sincronización';
   };
   
   return (
@@ -516,121 +557,11 @@ const ListadoProductos = () => {
               fontWeight: 600
             }}
           >
-            {sincronizando ? 'Sincronizando...' : 'Sincronizar con Loyverse'}
+            {getBotonSincronizacionTexto()}
             {sincronizando && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
           </Button>
         </Box>
       </Box>
-      
-      {/* INICIO: CONTADOR TEMPORAL - Eliminar después de la migración */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 2, 
-          mb: 3, 
-          borderRadius: 2,
-          border: '2px solid #ff9800',
-          backgroundColor: '#fff8e1',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <Box sx={{ 
-          position: 'absolute', 
-          top: 0, 
-          right: 0, 
-          backgroundColor: '#ff9800', 
-          color: 'white',
-          px: 2,
-          py: 0.5,
-          borderBottomLeftRadius: 8
-        }}>
-          <Typography variant="subtitle2">
-            TEMPORAL - Para migración
-          </Typography>
-        </Box>
-        
-        <Typography variant="h6" sx={{ mb: 1, color: '#e65100', fontWeight: 'bold' }}>
-          Progreso de Migración - Precios Base USD
-        </Typography>
-        
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              <strong>Productos con precio base USD:</strong> {contadorPrecioBaseUSD.conPrecioBaseUSD} de {contadorPrecioBaseUSD.total} ({contadorPrecioBaseUSD.porcentaje}%)
-            </Typography>
-            <Typography variant="body1" color="error.main" sx={{ mt: 1 }}>
-              <strong>Productos sin precio base USD:</strong> {contadorPrecioBaseUSD.total - contadorPrecioBaseUSD.conPrecioBaseUSD} ({100 - contadorPrecioBaseUSD.porcentaje}%)
-            </Typography>
-            <Button
-              variant="contained"
-              color="warning"
-              size="small"
-              onClick={() => setMostrarSinPrecioBaseUSD(!mostrarSinPrecioBaseUSD)}
-              sx={{ 
-                mt: 1, 
-                textTransform: 'none',
-                backgroundColor: mostrarSinPrecioBaseUSD ? '#f97316' : '#fb923c',
-                '&:hover': {
-                  backgroundColor: '#ea580c',
-                },
-                fontWeight: 600
-              }}
-            >
-              {mostrarSinPrecioBaseUSD ? 'Quitar filtro sin precio USD' : 'Mostrar solo sin precio USD'}
-            </Button>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', mr: 1 }}>
-              <Box sx={{ 
-                width: '100%', 
-                bgcolor: '#ffcc80', 
-                borderRadius: 1,
-                height: 10,
-                position: 'relative'
-              }}>
-                <Box sx={{ 
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  bgcolor: '#fb8c00',
-                  height: '100%',
-                  width: `${contadorPrecioBaseUSD.porcentaje}%`,
-                  borderRadius: 1,
-                  transition: 'width 0.5s'
-                }} />
-              </Box>
-            </Box>
-            {mostrarSinPrecioBaseUSD && (
-              <Box sx={{ 
-                mt: 2, 
-                px: 2, 
-                py: 1, 
-                bgcolor: '#fee2e2', 
-                borderRadius: 1,
-                border: '1px solid #fecaca',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <Typography variant="body2" color="error.main" fontWeight={600}>
-                  Mostrando solo productos sin precio base USD
-                </Typography>
-                <Chip 
-                  label={productosFiltrados.length} 
-                  size="small" 
-                  color="error"
-                  sx={{ 
-                    fontWeight: 700,
-                    ml: 1
-                  }} 
-                />
-              </Box>
-            )}
-          </Grid>
-        </Grid>
-      </Paper>
-      {/* FIN: CONTADOR TEMPORAL */}
       
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -647,11 +578,30 @@ const ListadoProductos = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2, 
+              height: '100%', 
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: 3,
+                bgcolor: '#f8fafc'
+              }
+            }}
+            onClick={() => abrirEditTasaDialog('BCV')}
+          >
             <CardContent>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Tasa BCV Actual
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  Tasa BCV Actual
+                </Typography>
+                <Tooltip title="Editar tasa BCV" arrow>
+                  <EditAttributesIcon color="primary" fontSize="small" />
+                </Tooltip>
+              </Box>
               <Typography variant="h3" component="div" color="primary">
                 {tasaBCV ? tasaBCV.valor : 'N/A'} Bs
               </Typography>
@@ -659,11 +609,30 @@ const ListadoProductos = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2, 
+              height: '100%', 
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: 3,
+                bgcolor: '#f8fafc'
+              }
+            }}
+            onClick={() => abrirEditTasaDialog('PARALELO')}
+          >
             <CardContent>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Tasa Paralelo Actual
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  Tasa Paralelo Actual
+                </Typography>
+                <Tooltip title="Editar tasa Paralelo" arrow>
+                  <EditAttributesIcon color="secondary" fontSize="small" />
+                </Tooltip>
+              </Box>
               <Typography variant="h3" component="div" color="secondary">
                 {tasaParalelo ? tasaParalelo.valor : 'N/A'} Bs
               </Typography>
@@ -796,7 +765,7 @@ const ListadoProductos = () => {
           </Box>
         ) : (
           <>
-            {(categoriaSeleccionada || mostrarSinPrecioBaseUSD) && (
+            {categoriaSeleccionada && (
               <Box sx={{ 
                 p: 2, 
                 bgcolor: '#e0f2fe', 
@@ -806,28 +775,15 @@ const ListadoProductos = () => {
                 borderBottom: '1px solid #bae6fd'
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {mostrarSinPrecioBaseUSD && (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <FilterListIcon color="error" />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#b91c1c', ml: 1 }}>
-                        Filtrando: <span style={{ color: '#ef4444' }}>Solo productos sin precio base USD</span>
-                      </Typography>
-                      <Divider orientation="vertical" flexItem sx={{ mx: 2, height: 24 }} />
-                    </Box>
-                  )}
-                  {categoriaSeleccionada && (
-                    <>
-                      <FilterListIcon color="primary" />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
-                        Categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
-                      </Typography>
-                    </>
-                  )}
+                  <FilterListIcon color="primary" />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
+                    Categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
+                  </Typography>
                 </Box>
                 <Button
                   size="small"
                   variant="outlined"
-                  color={mostrarSinPrecioBaseUSD ? "error" : "primary"}
+                  color="primary"
                   onClick={resetearFiltros}
                   sx={{ 
                     borderRadius: 1,
@@ -1042,16 +998,42 @@ const ListadoProductos = () => {
             </Typography>
             <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
               <Box>
-                <Typography variant="body1" color="primary" sx={{ fontWeight: 500 }}>
+                <Typography variant="body1" color="primary" sx={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
                   BCV: {tasaBCV ? tasaBCV.valor : 'No disponible'} Bs/USD
+                  <Tooltip title="Editar tasa BCV" arrow>
+                    <IconButton 
+                      color="primary" 
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cerrarInfoDialog();
+                        abrirEditTasaDialog('BCV');
+                      }}
+                    >
+                      <EditAttributesIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Última actualización: {tasaBCV ? new Date(tasaBCV.fecha).toLocaleDateString() : 'N/A'}
                 </Typography>
               </Box>
               <Box>
-                <Typography variant="body1" color="secondary" sx={{ fontWeight: 500 }}>
+                <Typography variant="body1" color="secondary" sx={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
                   Paralelo: {tasaParalelo ? tasaParalelo.valor : 'No disponible'} Bs/USD
+                  <Tooltip title="Editar tasa Paralelo" arrow>
+                    <IconButton 
+                      color="secondary" 
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cerrarInfoDialog();
+                        abrirEditTasaDialog('PARALELO');
+                      }}
+                    >
+                      <EditAttributesIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Última actualización: {tasaParalelo ? new Date(tasaParalelo.fecha).toLocaleDateString() : 'N/A'}
@@ -1368,6 +1350,39 @@ const ListadoProductos = () => {
             </Grid>
             
             <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Dirección de sincronización
+              </Typography>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  name="direccion_sync"
+                  value={opcionesSincronizacion.direccion_sync}
+                  onChange={handleChangeOpcionesSincronizacion}
+                  row
+                >
+                  <FormControlLabel 
+                    value="bidireccional" 
+                    control={<Radio />} 
+                    label="Bidireccional" 
+                  />
+                  <FormControlLabel 
+                    value="bodegaclick_to_loyverse" 
+                    control={<Radio />} 
+                    label="Solo BodegaClick → Loyverse (precios)" 
+                  />
+                  <FormControlLabel 
+                    value="loyverse_to_bodegaclick" 
+                    control={<Radio />} 
+                    label="Solo Loyverse → BodegaClick (productos/categorías)" 
+                  />
+                </RadioGroup>
+                <FormHelperText>
+                  Selecciona la dirección de sincronización según tu necesidad
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
               <Box sx={{ 
                 bgcolor: '#f1f9ff', 
                 p: 2, 
@@ -1377,10 +1392,25 @@ const ListadoProductos = () => {
               }}>
                 <Typography variant="body2" color="info.main">
                   <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
-                  <strong>Importante:</strong> La sincronización traerá todos los productos de Loyverse 
-                  (sin sus precios) y podrá enviar los precios calculados en BodegaClick 
-                  (precio_base_usd * tasa) hacia Loyverse dependiendo de la configuración seleccionada.
+                  <strong>Importante:</strong> La sincronización se comportará según la dirección seleccionada:
                 </Typography>
+                <ul style={{ margin: '8px 0', paddingLeft: '24px' }}>
+                  <li>
+                    <Typography variant="body2" color="info.main">
+                      <strong>Bidireccional:</strong> Trae productos desde Loyverse y envía precios calculados de BodegaClick.
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="info.main">
+                      <strong>BodegaClick → Loyverse:</strong> Solo exporta precios calculados hacia Loyverse.
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="info.main">
+                      <strong>Loyverse → BodegaClick:</strong> Solo importa productos y categorías sin modificar precios.
+                    </Typography>
+                  </li>
+                </ul>
               </Box>
             </Grid>
           </Grid>
@@ -1396,7 +1426,83 @@ const ListadoProductos = () => {
             disabled={sincronizando}
             startIcon={sincronizando ? <CircularProgress size={20} /> : <SyncIcon />}
           >
-            {sincronizando ? 'Sincronizando...' : 'Iniciar Sincronización'}
+            {getBotonSincronizacionTexto()}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Diálogo para editar tasa de cambio */}
+      <Dialog
+        open={editTasaDialogOpen}
+        onClose={cerrarEditTasaDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: 24
+          }
+        }}
+      >
+        <DialogTitle 
+          sx={{ 
+            backgroundColor: '#f8fafc', 
+            borderBottom: '1px solid #e2e8f0',
+            px: 3,
+            py: 2
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CurrencyExchangeIcon color="primary" />
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155' }}>
+              Editar Tasa de Cambio {tipoTasaEdicion}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label={`Valor actual de la tasa ${tipoTasaEdicion}`}
+                type="number"
+                value={nuevaTasaValor}
+                onChange={(e) => setNuevaTasaValor(Number(e.target.value))}
+                inputProps={{ min: 0, step: 0.01 }}
+                helperText={tipoTasaEdicion === 'BCV' 
+                  ? `Valor actual: ${tasaBCV?.valor || 'No disponible'} Bs/USD`
+                  : `Valor actual: ${tasaParalelo?.valor || 'No disponible'} Bs/USD`}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.secondary">
+                Al actualizar esta tasa, se afectará el cálculo de precios para todos los productos que utilizan esta tasa.
+              </Typography>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+          <Button 
+            onClick={cerrarEditTasaDialog} 
+            variant="outlined"
+            color="inherit"
+            sx={{ borderRadius: 1 }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={guardarNuevaTasa} 
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 1 }}
+          >
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>

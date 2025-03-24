@@ -67,6 +67,10 @@ def sincronizar_desde_loyverse(opciones=None):
             - tipo_tasa (str): Filtrar por tipo de tasa (BCV o PARALELO)
             - productos_ids (list): IDs específicos de productos a exportar
             - tamaño_lote (int): Número de productos por lote para exportación (default: 20)
+            - direccion_sync (str): Dirección de sincronización:
+                - 'bidireccional': Importa y exporta (comportamiento predeterminado)
+                - 'bodegaclick_to_loyverse': Solo exporta precios a Loyverse
+                - 'loyverse_to_bodegaclick': Solo importa productos desde Loyverse
             
     Returns:
         dict: Estadísticas completas de la operación
@@ -85,6 +89,14 @@ def sincronizar_desde_loyverse(opciones=None):
     if opciones.get('tipo_tasa'):
         logger.info(f"💲 Filtrado por tipo de tasa: {opciones.get('tipo_tasa')}")
     
+    # Procesar dirección de sincronización
+    direccion_sync = opciones.get('direccion_sync', 'bidireccional')
+    logger.info(f"🔄 Dirección de sincronización: {direccion_sync}")
+    
+    # Determinar si debemos importar, exportar o ambos según la dirección seleccionada
+    importar = direccion_sync in ['bidireccional', 'loyverse_to_bodegaclick']
+    exportar = direccion_sync in ['bidireccional', 'bodegaclick_to_loyverse']
+    
     # Tamaño de lote para exportación
     tamaño_lote = opciones.get('tamaño_lote', 20)
     if tamaño_lote != 20:  # Solo log si es diferente del valor por defecto
@@ -98,46 +110,49 @@ def sincronizar_desde_loyverse(opciones=None):
         'importacion': {},
         'exportacion': {},
         'tiempo_total': 0,
-        'exportacion_realizada': False
+        'exportacion_realizada': False,
+        'importacion_realizada': False,
+        'direccion_sync': direccion_sync
     }
     
     try:
-        # Importar productos (siempre preservando precio_base_usd)
-        with transaction.atomic():
-            opciones_importacion = {
-                'categorias': opciones.get('categorias'),
-                'actualizar_todos_datos': True
-            }
-            
-            if opciones.get('productos_ids'):
-                # Si se especificaron productos, verificar si ya existen en DB y filtrar
-                from facturacion.models import Producto
-                ids_loyverse = []
-                for producto_id in opciones.get('productos_ids'):
-                    try:
-                        producto = Producto.objects.get(id=producto_id)
-                        if producto.loyverse_id:
-                            ids_loyverse.append(producto.loyverse_id)
-                            logger.info(f"✅ Producto para prueba encontrado: {producto.nombre} (ID: {producto.id}, Loyverse ID: {producto.loyverse_id})")
-                        else:
-                            logger.warning(f"⚠️ Producto sin Loyverse ID, no se puede sincronizar: {producto.nombre} (ID: {producto.id})")
-                    except Producto.DoesNotExist:
-                        logger.warning(f"⚠️ Producto no encontrado con ID: {producto_id}")
+        # Importar productos si corresponde según la dirección
+        if importar:
+            with transaction.atomic():
+                opciones_importacion = {
+                    'categorias': opciones.get('categorias'),
+                    'actualizar_todos_datos': True
+                }
                 
-                # Solo importar si hay IDs de Loyverse válidos
-                if ids_loyverse:
-                    opciones_importacion['loyverse_ids'] = ids_loyverse
-                    logger.info(f"🔍 Filtrando importación a solo {len(ids_loyverse)} productos específicos")
-            
-            stats['importacion'] = importar_productos(opciones_importacion)
-            
-        logger.info("✅ Importación completada exitosamente")
+                if opciones.get('productos_ids'):
+                    # Si se especificaron productos, verificar si ya existen en DB y filtrar
+                    from facturacion.models import Producto
+                    ids_loyverse = []
+                    for producto_id in opciones.get('productos_ids'):
+                        try:
+                            producto = Producto.objects.get(id=producto_id)
+                            if producto.loyverse_id:
+                                ids_loyverse.append(producto.loyverse_id)
+                                logger.info(f"✅ Producto para prueba encontrado: {producto.nombre} (ID: {producto.id}, Loyverse ID: {producto.loyverse_id})")
+                            else:
+                                logger.warning(f"⚠️ Producto sin Loyverse ID, no se puede sincronizar: {producto.nombre} (ID: {producto.id})")
+                        except Producto.DoesNotExist:
+                            logger.warning(f"⚠️ Producto no encontrado con ID: {producto_id}")
+                    
+                    # Solo importar si hay IDs de Loyverse válidos
+                    if ids_loyverse:
+                        opciones_importacion['loyverse_ids'] = ids_loyverse
+                        logger.info(f"🔍 Filtrando importación a solo {len(ids_loyverse)} productos específicos")
+                
+                stats['importacion'] = importar_productos(opciones_importacion)
+                stats['importacion_realizada'] = True
+                
+            logger.info("✅ Importación completada exitosamente")
+        else:
+            logger.info("ℹ️ Importación omitida según la dirección de sincronización seleccionada")
         
-        # Determinar si debemos exportar precios
-        realizar_exportacion = not opciones.get('solo_importar', False)
-        
-        # Exportar precios si es necesario (siempre que se solicite, sin verificar facturas)
-        if realizar_exportacion:
+        # Exportar precios si corresponde según la dirección
+        if exportar:
             logger.info("🔄 Iniciando exportación de precios calculados a Loyverse")
             
             with transaction.atomic():
@@ -152,7 +167,7 @@ def sincronizar_desde_loyverse(opciones=None):
                 
             logger.info("✅ Exportación de precios completada exitosamente")
         else:
-            logger.info("ℹ️ Exportación de precios no solicitada, solo se realizó importación")
+            logger.info("ℹ️ Exportación de precios omitida según la dirección de sincronización seleccionada")
     
     except Exception as e:
         logger.exception(f"❌ Error durante la sincronización: {str(e)}")
