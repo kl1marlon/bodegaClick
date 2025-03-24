@@ -15,7 +15,7 @@ django.setup()
 from facturacion.models import Producto, TasaCambio, Factura, DetalleFactura, Webhook
 
 def listar_productos(limit=10, offset=0, buscar=None):
-    """Listar productos con paginación y filtro opcional."""
+    """Listar productos con paginación y filtro opcional."""    
     queryset = Producto.objects.all()
     
     if buscar:
@@ -25,13 +25,15 @@ def listar_productos(limit=10, offset=0, buscar=None):
     productos = queryset.order_by('nombre')[offset:offset+limit]
     
     print(f"\n=== PRODUCTOS ({total} encontrados) ===")
-    print(f"{'ID':<5} {'NOMBRE':<30} {'PRECIO BASE':<12} {'STOCK':<8} {'CATEGORÍA':<20}")
-    print("-" * 80)
+    # Actualizar encabezados para mostrar todos los campos
+    print(f"{'ID':<5} {'NOMBRE':<30} {'DESCRIPCIÓN':<30} {'PRECIO BASE':<12} {'PRECIO COMPRA':<15} {'STOCK':<8} {'CATEGORÍA':<20} {'UNIDADES PAQUETE':<20} {'PRECIO VENTA':<15} {'APLICAR IVA':<10} {'PORCENTAJE GANANCIA':<20} {'TIPO TASA':<10} {'ES PRECIO VARIABLE':<20}")
+    print("-" * 160)
     
     for producto in productos:
-        print(f"{producto.id:<5} {producto.nombre[:28]:<30} {producto.precio_base:<12} {producto.stock_actual:<8} {(producto.categoria or '')[:18]:<20}")
+        # Mostrar todos los campos relevantes
+        print(f"{producto.id:<5} {producto.nombre[:28]:<30} {producto.descripcion[:28] if producto.descripcion else 'N/A':<30} {producto.precio_base:<12} {producto.precio_compra:<15} {producto.stock_actual:<8} {(producto.categoria or '')[:18]:<20} {producto.unidades_paquete:<20} {producto.precio_venta_calculado:<15} {'Sí' if producto.aplicar_iva else 'No':<10} {producto.porcentaje_ganancia:<20} {producto.tipo_tasa:<10} {'Sí' if producto.es_precio_variable else 'No':<20}")
     
-    print("-" * 80)
+    print("-" * 160)
 
 def listar_tasas_cambio(limit=10):
     """Listar últimas tasas de cambio."""
@@ -117,6 +119,16 @@ def ver_detalle_producto(producto_id):
         
     except Producto.DoesNotExist:
         print(f"Error: No se encontró el producto con ID {producto_id}")
+
+def contar_productos_precio():
+
+    """Contar productos con y sin precio base en USD."""
+    total_con_precio = Producto.objects.filter(precio_base_usd__isnull=False).count()
+    total_sin_precio = Producto.objects.filter(precio_base_usd__isnull=True).count()
+    
+    print(f"Productos con precio base USD: {total_con_precio}")
+    print(f"Productos sin precio base USD: {total_sin_precio}")
+
 
 def mostrar_estructura_producto():
     """Muestra información detallada sobre la estructura del modelo Producto en la base de datos."""
@@ -220,6 +232,7 @@ def menu_principal():
         print("4. Listar facturas")
         print("5. Ver detalles de una factura")
         print("6. Mostrar estructura del modelo Producto")
+        print("7. Contar productos con y sin precio base en USD")
         print("0. Salir")
         
         opcion = input("\nSeleccione una opción: ")
@@ -249,6 +262,9 @@ def menu_principal():
             
         elif opcion == "6":
             mostrar_estructura_producto()
+
+        elif opcion == "7":
+            contar_productos_precio()
         
         elif opcion == "0":
             print("¡Hasta pronto!")

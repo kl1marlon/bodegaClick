@@ -13,12 +13,20 @@ export const fetchProductos = createAsyncThunk(
 
 export const syncFromLoyverse = createAsyncThunk(
   'productos/syncFromLoyverse',
-  async (actualizarPrecios = true) => {
+  async (opciones = {}) => {
     try {
-      console.log(`Iniciando sincronización de productos desde Loyverse. Actualizar precios: ${actualizarPrecios}`);
-      const response = await axios.post(`${API_URL}/productos/sync_from_loyverse/`, {
-        actualizar_precios: actualizarPrecios
-      });
+      // Configurar opciones por defecto
+      const opcionesSincronizacion = {
+        actualizar_precios: opciones.actualizar_precios !== undefined ? opciones.actualizar_precios : true,
+        categorias: opciones.categorias || null,
+        tipo_tasa: opciones.tipo_tasa || null,
+        productos_ids: opciones.productos_ids || null,
+        forzar_exportar: opciones.forzar_exportar || false
+      };
+      
+      console.log(`Iniciando sincronización de productos desde Loyverse con opciones:`, opcionesSincronizacion);
+      
+      const response = await axios.post(`${API_URL}/productos/sync_from_loyverse/`, opcionesSincronizacion);
       console.log('Respuesta de sincronización:', response.data);
       return response.data;
     } catch (error) {

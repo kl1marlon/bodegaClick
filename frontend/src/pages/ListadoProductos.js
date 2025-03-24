@@ -36,7 +36,9 @@ import {
   Switch,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  FormHelperText,
+  Slider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -83,6 +85,21 @@ const ListadoProductos = () => {
   // Estado para sincronización
   const [sincronizando, setSincronizando] = useState(false);
   const [actualizarPrecios, setActualizarPrecios] = useState(true);
+  
+  // Estado para opciones de sincronización
+  const [opcionesSincronizacion, setOpcionesSincronizacion] = useState({
+    actualizar_precios: true,
+    categorias: [],
+    tipo_tasa: '',
+    productos_ids: [],
+    tamaño_lote: 20
+  });
+  
+  // Estado para diálogo de selección de productos específicos
+  const [productosSeleccionados, setProductosSeleccionados] = useState([]);
+  
+  // Estado para diálogo de opciones de sincronización
+  const [syncOptionsDialogOpen, setSyncOptionsDialogOpen] = useState(false);
   
   // Estado para feedback
   const [snackbar, setSnackbar] = useState({
@@ -253,11 +270,30 @@ const ListadoProductos = () => {
     return 'N/A';
   };
   
-  // Función para sincronizar productos desde Loyverse
+  // Función para abrir diálogo de opciones de sincronización
+  const abrirSyncOptionsDialog = () => {
+    setSyncOptionsDialogOpen(true);
+  };
+  
+  // Función para cerrar diálogo de opciones de sincronización
+  const cerrarSyncOptionsDialog = () => {
+    setSyncOptionsDialogOpen(false);
+  };
+  
+  // Función para manejar la sincronización desde Loyverse
   const handleSyncFromLoyverse = () => {
+    // Primero abrir el diálogo de opciones en lugar de iniciar directamente
+    abrirSyncOptionsDialog();
+  };
+  
+  // Función para iniciar la sincronización con las opciones seleccionadas
+  const iniciarSincronizacion = () => {
     setSincronizando(true);
-    console.log("Iniciando sincronización desde la interfaz. Actualizar precios:", actualizarPrecios);
-    dispatch(syncFromLoyverse(actualizarPrecios))
+    cerrarSyncOptionsDialog();
+    
+    console.log("Iniciando sincronización con opciones:", opcionesSincronizacion);
+    
+    dispatch(syncFromLoyverse(opcionesSincronizacion))
       .then((result) => {
         if (result.error) {
           console.error("Error en la sincronización:", result.error.message);
@@ -268,47 +304,11 @@ const ListadoProductos = () => {
           });
         } else {
           console.log("Sincronización completada exitosamente:", result.payload);
-          let mensajeDetallado = `Productos sincronizados correctamente. `;
           
-          if (result.payload) {
-            // Añadir detalles sobre los productos procesados
-            if (result.payload.created !== undefined) {
-              mensajeDetallado += `Creados: ${result.payload.created}, `;
-            }
-            
-            if (result.payload.updated !== undefined) {
-              mensajeDetallado += `Actualizados: ${result.payload.updated}, `;
-            }
-            
-            if (result.payload.prices_unchanged !== undefined) {
-              mensajeDetallado += `Precios no modificados: ${result.payload.prices_unchanged}. `;
-            }
-            
-            // Detalles sobre páginas y total procesado
-            if (result.payload.total_pages !== undefined) {
-              mensajeDetallado += `Páginas procesadas: ${result.payload.total_pages}. `;
-            }
-            
-            if (result.payload.total_processed !== undefined) {
-              mensajeDetallado += `Total productos procesados: ${result.payload.total_processed}. `;
-            }
-            
-            // Información sobre facturas recientes
-            if (result.payload.facturas_recientes) {
-              mensajeDetallado += `No se actualizaron precios debido a facturas recientes en los últimos 2 días. `;
-            }
-            
-            // Información sobre aplicar_iva
-            mensajeDetallado += "Todos los productos tienen aplicar_iva=false por defecto.";
-          } else if (result.payload && result.payload.message) {
-            mensajeDetallado += result.payload.message;
-          } else {
-            mensajeDetallado += `${actualizarPrecios ? 'Precios actualizados.' : 'Precios no modificados.'}`;
-          }
-          
+          // Mostrar mensaje de éxito con los detalles recibidos
           setSnackbar({
             open: true,
-            message: mensajeDetallado,
+            message: result.payload.message || 'Sincronización completada exitosamente',
             severity: 'success'
           });
           
@@ -318,6 +318,34 @@ const ListadoProductos = () => {
       .finally(() => {
         setSincronizando(false);
       });
+  };
+  
+  // Manejar cambio en productos seleccionados
+  const handleChangeProductosSeleccionados = (event) => {
+    const value = event.target.value;
+    setProductosSeleccionados(value);
+    setOpcionesSincronizacion(prev => ({
+      ...prev,
+      productos_ids: value
+    }));
+  };
+  
+  // Manejar cambio en categorías seleccionadas (múltiples)
+  const handleChangeCategoriasSincronizacion = (event) => {
+    const value = event.target.value;
+    setOpcionesSincronizacion(prev => ({
+      ...prev,
+      categorias: typeof value === 'string' ? value.split(',') : value
+    }));
+  };
+  
+  // Manejar cambio en opciones de sincronización
+  const handleChangeOpcionesSincronizacion = (event) => {
+    const { name, value, checked, type } = event.target;
+    setOpcionesSincronizacion(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
   
   // Abrir el diálogo informativo
@@ -434,16 +462,6 @@ const ListadoProductos = () => {
         </Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={actualizarPrecios}
-                onChange={(e) => setActualizarPrecios(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Actualizar precios"
-          />
           <Button
             variant="contained"
             color="primary"
@@ -1009,6 +1027,213 @@ const ListadoProductos = () => {
         <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
           <Button onClick={cerrarStatsDialog} color="primary" variant="contained">
             Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Diálogo de opciones de sincronización */}
+      <Dialog
+        open={syncOptionsDialogOpen}
+        onClose={cerrarSyncOptionsDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SyncIcon color="primary" />
+            <Typography variant="h6">Opciones de Sincronización con Loyverse</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                Configurar sincronización:
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Selecciona las opciones para personalizar el proceso de sincronización de productos con Loyverse.
+              </Typography>
+            </Grid>
+            
+            {/* Actualizar precios */}
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={opcionesSincronizacion.actualizar_precios}
+                    onChange={handleChangeOpcionesSincronizacion}
+                    name="actualizar_precios"
+                    color="primary"
+                  />
+                }
+                label="Actualizar precios en Loyverse (usando precio_base_usd * tasa)"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                Si está activado, se enviarán los precios calculados de BodegaClick hacia Loyverse.
+              </Typography>
+            </Grid>
+            
+            {/* Selección de categorías */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="categorias-select-label">Filtrar por Categorías</InputLabel>
+                <Select
+                  labelId="categorias-select-label"
+                  id="categorias-select"
+                  multiple
+                  value={opcionesSincronizacion.categorias}
+                  onChange={handleChangeCategoriasSincronizacion}
+                  label="Filtrar por Categorías"
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip key={value} label={value} size="small" />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  <MenuItem value="">
+                    <em>Todas las categorías</em>
+                  </MenuItem>
+                  {categorias.filter(cat => cat !== '').map((categoria) => (
+                    <MenuItem key={categoria} value={categoria}>
+                      {categoria}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>
+                  Deja vacío para sincronizar todas las categorías
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+            
+            {/* Selección de tipo de tasa */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="tipo-tasa-select-label">Filtrar por Tipo de Tasa</InputLabel>
+                <Select
+                  labelId="tipo-tasa-select-label"
+                  id="tipo-tasa-select"
+                  value={opcionesSincronizacion.tipo_tasa}
+                  onChange={handleChangeOpcionesSincronizacion}
+                  name="tipo_tasa"
+                  label="Filtrar por Tipo de Tasa"
+                >
+                  <MenuItem value="">Todas las tasas</MenuItem>
+                  <MenuItem value="BCV">Solo productos con tasa BCV</MenuItem>
+                  <MenuItem value="PARALELO">Solo productos con tasa Paralelo</MenuItem>
+                </Select>
+                <FormHelperText>
+                  Al exportar precios, solo se procesarán productos con este tipo de tasa
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+            
+            {/* Selección de productos específicos para pruebas */}
+            <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="productos-select-label">Productos para prueba</InputLabel>
+                <Select
+                  labelId="productos-select-label"
+                  id="productos-select"
+                  multiple
+                  value={productosSeleccionados}
+                  onChange={handleChangeProductosSeleccionados}
+                  label="Productos para prueba"
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => {
+                        const producto = productos.find(p => p.id === value);
+                        return (
+                          <Chip 
+                            key={value} 
+                            label={producto ? producto.nombre : `ID: ${value}`} 
+                            size="small" 
+                          />
+                        );
+                      })}
+                    </Box>
+                  )}
+                >
+                  {productos
+                    .filter(producto => producto.loyverse_id) // Solo productos con ID de Loyverse
+                    .map((producto) => (
+                      <MenuItem key={producto.id} value={producto.id}>
+                        {producto.nombre} ({producto.tipo_tasa} - {producto.categoria || 'Sin categoría'})
+                      </MenuItem>
+                    ))}
+                </Select>
+                <FormHelperText>
+                  Selecciona productos específicos para probar la sincronización (deja vacío para sincronizar según categorías)
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+            
+            {/* Tamaño de lote para exportación */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Tamaño de lote para exportación
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Slider
+                  value={opcionesSincronizacion.tamaño_lote}
+                  onChange={(event, newValue) => {
+                    setOpcionesSincronizacion(prev => ({
+                      ...prev,
+                      tamaño_lote: newValue
+                    }));
+                  }}
+                  step={5}
+                  marks={[
+                    { value: 5, label: '5' },
+                    { value: 20, label: '20' },
+                    { value: 50, label: '50' },
+                    { value: 100, label: '100' }
+                  ]}
+                  min={5}
+                  max={100}
+                  valueLabelDisplay="auto"
+                  aria-labelledby="tamaño-lote-slider"
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+                  {opcionesSincronizacion.tamaño_lote} productos por lote
+                </Typography>
+              </Box>
+              <FormHelperText>
+                Un valor menor es más lento pero más seguro. Útil para conexiones lentas o inestables.
+              </FormHelperText>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box sx={{ 
+                bgcolor: '#f1f9ff', 
+                p: 2, 
+                borderRadius: 1, 
+                border: '1px solid #e0f2fe',
+                mt: 2 
+              }}>
+                <Typography variant="body2" color="info.main">
+                  <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
+                  <strong>Importante:</strong> La sincronización traerá todos los productos de Loyverse 
+                  (sin sus precios) y podrá enviar los precios calculados en BodegaClick 
+                  (precio_base_usd * tasa) hacia Loyverse dependiendo de la configuración seleccionada.
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={cerrarSyncOptionsDialog} color="inherit">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={iniciarSincronizacion} 
+            color="primary" 
+            variant="contained"
+            disabled={sincronizando}
+            startIcon={sincronizando ? <CircularProgress size={20} /> : <SyncIcon />}
+          >
+            {sincronizando ? 'Sincronizando...' : 'Iniciar Sincronización'}
           </Button>
         </DialogActions>
       </Dialog>

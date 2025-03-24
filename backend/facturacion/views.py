@@ -27,6 +27,8 @@ import sys
 import os
 sys.path.append(os.path.join(settings.BASE_DIR))
 from sync_products import sync_products
+import logging
+from loyverse_sync.sync import sincronizar_desde_loyverse
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -34,41 +36,104 @@ class ProductoViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def sync_from_loyverse(self, request):
-        # Obtener el parámetro de actualización de precios, por defecto True
-        actualizar_precios = request.data.get('actualizar_precios', True)
+        """
+        Endpoint para sincronizar productos desde Loyverse.
         
-        print(f"Iniciando sync_from_loyverse desde API. Actualizar precios: {actualizar_precios}")
+        Permite sincronización selectiva por categoría, tipo de tasa, y productos específicos,
+        preservando los precios base en USD.
+        
+        Args:
+            request.data (dict):
+                - actualizar_precios (bool): Si es True, exporta precios a Loyverse
+                - categorias (list): Lista de categorías a sincronizar
+                - tipo_tasa (str): Filtrar por tipo de tasa (BCV o PARALELO)
+                - productos_ids (list): IDs específicos de productos a exportar
+                - tamaño_lote (int): Número de productos por lote para exportación
+        """
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔄 Iniciando sync_from_loyverse desde API con datos: {request.data}")
+        
+        # Procesar parámetros de la petición
+        opciones = {
+            'solo_importar': not request.data.get('actualizar_precios', True),
+            'categorias': request.data.get('categorias'),
+            'tipo_tasa': request.data.get('tipo_tasa'),
+            'productos_ids': request.data.get('productos_ids')
+        }
+        
+        # Procesar tamaño del lote si se proporciona
+        if 'tamaño_lote' in request.data:
+            try:
+                tamaño_lote = int(request.data.get('tamaño_lote'))
+                if 5 <= tamaño_lote <= 100:  # Validar rango
+                    opciones['tamaño_lote'] = tamaño_lote
+                    logger.info(f"📊 Tamaño de lote personalizado: {tamaño_lote}")
+            except (ValueError, TypeError):
+                logger.warning(f"⚠️ Valor de tamaño_lote inválido: {request.data.get('tamaño_lote')}")
         
         try:
-            # Usar sync_products con el parámetro actualizar_precios
-            result = sync_products(actualizar_precios)
+            # Ejecutar sincronización con las opciones especificadas
+            result = sincronizar_desde_loyverse(opciones)
             
-            # Preparar mensaje de respuesta
-            mensaje = f"Productos sincronizados correctamente usando sync_products.py"
-            mensaje += f" Creados: {result['created']}, Actualizados: {result['updated']}"
+            # Construir mensaje informativo para el usuario
+            if 'error' in result:
+                return Response({
+                    'error': f"Error en sincronización: {result['error']}",
+                    'detalles': result
+                }, status=status.HTTP_400_BAD_REQUEST)
             
-            if result['prices_updated'] > 0:
-                mensaje += f", Precios actualizados: {result['prices_updated']}"
+            # Preparar mensaje de éxito
+            mensaje = "Sincronización completada exitosamente. "
             
-            # Solo informar si los precios no se actualizaron por configuración
-            if not result['actualizar_precios']:
-                mensaje += ". Actualización de precios desactivada por configuración del usuario."
+            # Detalles de productos específicos si es modo prueba
+            if opciones.get('productos_ids'):
+                mensaje = "PRUEBA DE SINCRONIZACIÓN: " + mensaje
+                mensaje += f"Se procesaron los productos específicos seleccionados. "
             
+            mensaje += f"Creados: {result['importacion'].get('creados', 0)}, "
+            mensaje += f"Actualizados: {result['importacion'].get('actualizados', 0)}"
+            
+            if result.get('exportacion_realizada'):
+                mensaje += f", Precios actualizados: {result['exportacion'].get('actualizados', 0)}"
+            
+            # Todos los productos tienen aplicar_iva=false por defecto
             mensaje += " Todos los productos tienen aplicar_iva=false por defecto."
             
-            return Response({
+            # Incluir filtros aplicados en la respuesta
+            filtros_aplicados = []
+            if opciones.get('categorias'):
+                filtros_aplicados.append(f"categorías: {opciones['categorias']}")
+            if opciones.get('tipo_tasa'):
+                filtros_aplicados.append(f"tipo de tasa: {opciones['tipo_tasa']}")
+            if opciones.get('productos_ids'):
+                filtros_aplicados.append(f"productos específicos: {len(opciones['productos_ids'])}")
+            
+            if filtros_aplicados:
+                mensaje += f" Filtros aplicados: {', '.join(filtros_aplicados)}."
+            
+            # Construir respuesta de éxito con estadísticas
+            response_data = {
                 'message': mensaje,
-                'created': result['created'], 
-                'updated': result['updated'],
-                'prices_unchanged': result['updated'] - result['prices_updated'],
-                'actualizar_precios': result['actualizar_precios'],
-                'total_pages': 1,  # No aplica para sync_products.py pero mantenemos para compatibilidad
-                'total_processed': result['total_loyverse'],
-                'total': result['created'] + result['updated']
-            })
+                'tiempo_total': result['tiempo_total'],
+                'created': result['importacion'].get('creados', 0),
+                'updated': result['importacion'].get('actualizados', 0),
+                'exportacion_realizada': result.get('exportacion_realizada', False),
+                'total_processed': result['importacion'].get('total_procesados', 0),
+                'modo_prueba': bool(opciones.get('productos_ids'))
+            }
+            
+            # Incluir estadísticas de exportación si se realizó
+            if result.get('exportacion_realizada'):
+                response_data.update({
+                    'precios_actualizados': result['exportacion'].get('actualizados', 0),
+                    'precios_fallidos': result['exportacion'].get('fallidos', 0),
+                    'sin_precio_base': result['exportacion'].get('sin_precio', 0)
+                })
+            
+            return Response(response_data)
             
         except Exception as e:
-            print(f"Error en sincronización: {str(e)}")
+            logger.exception(f"❌ Error en sincronización: {str(e)}")
             return Response({
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
