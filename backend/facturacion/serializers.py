@@ -17,6 +17,7 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
     precio_unitario = serializers.DecimalField(max_digits=10, decimal_places=2)
     cantidad = serializers.DecimalField(max_digits=10, decimal_places=2)
     precio_compra_usd = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    unidades_paquete = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     aplicarIva = serializers.BooleanField(required=False, default=False)
     precio_base_usd = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     tipo_tasa = serializers.CharField(max_length=10, required=False)
@@ -28,19 +29,64 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
                  'aplicarIva', 'precio_base_usd', 'tipo_tasa']
     
     def validate(self, data):
+        from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+        
+        # Lista de campos decimales a validar y formatear
+        campos_decimales = [
+            'cantidad', 'precio_unitario', 'precio_compra_usd', 
+            'unidades_paquete', 'porcentaje_ganancia', 'precio_base_usd'
+        ]
+        
+        # Mensaje personalizado por campo
+        mensajes_campos = {
+            'cantidad': 'La cantidad',
+            'precio_unitario': 'El precio unitario',
+            'precio_compra_usd': 'El precio de compra',
+            'unidades_paquete': 'Las unidades por paquete',
+            'porcentaje_ganancia': 'El porcentaje de ganancia',
+            'precio_base_usd': 'El precio base USD'
+        }
+        
+        # Validar y formatear cada campo decimal
+        for campo in campos_decimales:
+            if campo in data:
+                try:
+                    # Intentar convertir a Decimal si es necesario
+                    valor = data[campo]
+                    if not isinstance(valor, Decimal):
+                        valor = Decimal(str(valor))
+                    
+                    # Determinar el número de decimales permitidos para el campo
+                    decimales = 2
+                    
+                    # Validar que el número no tenga más decimales de los permitidos
+                    decimal_str = str(valor)
+                    if '.' in decimal_str:
+                        parte_entera, parte_decimal = decimal_str.split('.')
+                        if len(parte_decimal) > decimales:
+                            nombre_campo = mensajes_campos.get(campo, f'El campo {campo}')
+                            raise serializers.ValidationError({
+                                campo: f"{nombre_campo} debe tener máximo {decimales} decimales. Valor recibido: {decimal_str}"
+                            })
+                    
+                    # Redondear al número de decimales permitido
+                    data[campo] = valor.quantize(Decimal(f'0.{"0" * decimales}'), rounding=ROUND_HALF_UP)
+                except InvalidOperation:
+                    nombre_campo = mensajes_campos.get(campo, f'El campo {campo}')
+                    raise serializers.ValidationError({
+                        campo: f"{nombre_campo} debe ser un número decimal válido. Valor recibido: {data[campo]}"
+                    })
+                except Exception as e:
+                    raise serializers.ValidationError({
+                        campo: f"Error al procesar el campo {campo}: {str(e)}"
+                    })
+        
         # Calcular el total automáticamente
         if 'cantidad' in data and 'precio_unitario' in data:
-            from decimal import Decimal, ROUND_HALF_UP
-            # Calcular y redondear el total a 2 decimales
-            cantidad = Decimal(str(data['cantidad']))
-            precio = Decimal(str(data['precio_unitario']))
+            cantidad = data['cantidad']
+            precio = data['precio_unitario']
             data['total'] = (cantidad * precio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            
-        # Asegurarse de que todos los valores decimales estén redondeados a 2 decimales
-        if 'precio_compra_usd' in data:
-            from decimal import Decimal, ROUND_HALF_UP
-            data['precio_compra_usd'] = Decimal(str(data['precio_compra_usd'])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            
+        
         return data
 
 class FacturaSerializer(serializers.ModelSerializer):

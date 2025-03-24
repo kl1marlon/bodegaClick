@@ -213,14 +213,58 @@ class FacturaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             print("Errores de validación:", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Mejora en el manejo de errores para campos decimales
+            errores_formateados = {}
+            
+            for campo, errores in serializer.errors.items():
+                # Manejar errores específicos para detalles
+                if campo == 'detalles' and isinstance(errores, list):
+                    errores_detalles = []
+                    for idx, error_detalle in enumerate(errores):
+                        if isinstance(error_detalle, dict):
+                            detalle_formateado = {}
+                            for subcampo, suberrores in error_detalle.items():
+                                # Formatear mensajes específicos para campos con restricciones decimales
+                                if 'decimal' in str(suberrores).lower() or 'válido' in str(suberrores).lower():
+                                    if subcampo == 'unidades_paquete':
+                                        detalle_formateado[subcampo] = [
+                                            "Este campo debe ser un número decimal con máximo 2 decimales. Ejemplo: 5.54"
+                                        ]
+                                    elif subcampo in ['precio_compra_usd', 'precio_unitario', 'precio_base_usd']:
+                                        detalle_formateado[subcampo] = [
+                                            "Este campo debe ser un número decimal con máximo 2 decimales. Ejemplo: 10.50"
+                                        ]
+                                    else:
+                                        detalle_formateado[subcampo] = suberrores
+                                else:
+                                    detalle_formateado[subcampo] = suberrores
+                            errores_detalles.append(detalle_formateado)
+                        else:
+                            errores_detalles.append(error_detalle)
+                    errores_formateados[campo] = errores_detalles
+                else:
+                    errores_formateados[campo] = errores
+            
+            # Agregamos un mensaje general para facilitar la comprensión
+            mensaje_error = "No se pudo crear la factura debido a errores en los datos. "
+            if 'detalles' in serializer.errors:
+                mensaje_error += "Verifique que los campos numéricos no exceden el máximo de 2 decimales permitidos."
+            
+            return Response({
+                "error": mensaje_error,
+                "detalles_error": errores_formateados
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             instance = serializer.save()
             return Response(FacturaSerializer(instance).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             print("Error al crear factura:", str(e))
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "error": "Error al crear la factura",
+                "detalle": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def procesar_factura(self, request, pk=None):

@@ -227,30 +227,40 @@ const NuevaFactura = () => {
 
   // Guardar la factura
   const handleSubmit = () => {
+    // Función para asegurar que los valores tengan exactamente 2 decimales
+    const asegurarDosDecimales = (valor) => {
+      if (valor === null || valor === undefined || isNaN(valor)) return 0;
+      // Convertir a número, luego a string con 2 decimales fijos, y volver a número
+      return parseFloat(parseFloat(valor).toFixed(2));
+    };
+    
     // Si la moneda es USD, convertimos los precios a BS para Loyverse
     const facturaData = {
       moneda: moneda,
       tasa_cambio: tasaCambio?.id,
-      porcentaje_ganancia: porcentajeGanancia,
+      porcentaje_ganancia: asegurarDosDecimales(porcentajeGanancia),
       detalles: productosSeleccionados.map(item => {
         // Calcular precio unitario y total en BS si es en USD
-        const precio_unitario = moneda === 'USD' && tasaCambio 
+        const precio_unitario_calculado = moneda === 'USD' && tasaCambio 
           ? calcularPrecioBs(item.precio_unitario, tasaCambio.valor) 
           : aplicarRedondeoEspecial(item.precio_unitario);
         
-        const total = precio_unitario * item.cantidad;
+        // Asegurar 2 decimales en todos los valores numéricos
+        const precio_unitario = asegurarDosDecimales(precio_unitario_calculado);
+        const cantidad = asegurarDosDecimales(item.cantidad);
+        const total = asegurarDosDecimales(precio_unitario * cantidad);
         
         return {
           producto: item.producto.id,
-          cantidad: item.cantidad,
+          cantidad: cantidad,
           precio_unitario: precio_unitario,
-          porcentaje_ganancia: item.porcentajeGanancia || porcentajeGanancia,
-          precio_compra_usd: item.precio_compra_usd ? parseFloat(Number(item.precio_compra_usd).toFixed(2)) : 0,
-          unidades_paquete: item.unidades_paquete,
+          porcentaje_ganancia: asegurarDosDecimales(item.porcentajeGanancia || porcentajeGanancia),
+          precio_compra_usd: asegurarDosDecimales(item.precio_compra_usd),
+          unidades_paquete: asegurarDosDecimales(item.unidades_paquete),
           total: total,
           aplicarIva: item.aplicarIva || false,
-          precio_base_usd: item.precio_base_usd,  // Nuevo campo
-          tipo_tasa: item.tipo_tasa || tipoTasa   // Tipo de tasa usado
+          precio_base_usd: asegurarDosDecimales(item.precio_base_usd),  
+          tipo_tasa: item.tipo_tasa || tipoTasa   
         };
       })
     };
@@ -259,6 +269,44 @@ const NuevaFactura = () => {
     
     dispatch(createFactura(facturaData))
       .then(response => {
+        if (response.error) {
+          // Manejar errores de la API
+          console.error('Error en respuesta:', response.error);
+          
+          let mensajeError = 'Error al crear la factura';
+          
+          // Verificar si hay detalles de error
+          if (response.payload && response.payload.detalles_error) {
+            const detallesError = response.payload.detalles_error;
+            
+            // Verificar errores específicos en los detalles de la factura
+            if (detallesError.detalles && Array.isArray(detallesError.detalles)) {
+              const mensajesError = [];
+              
+              detallesError.detalles.forEach((detalle, index) => {
+                Object.entries(detalle).forEach(([campo, errores]) => {
+                  if (Array.isArray(errores)) {
+                    errores.forEach(error => {
+                      mensajesError.push(`Producto ${index + 1}, ${campo}: ${error}`);
+                    });
+                  }
+                });
+              });
+              
+              if (mensajesError.length > 0) {
+                mensajeError = `Errores en los datos de la factura:\n${mensajesError.join('\n')}`;
+              }
+            } else if (response.payload.error) {
+              mensajeError = response.payload.error;
+            }
+          } else if (response.payload && response.payload.error) {
+            mensajeError = response.payload.error;
+          }
+          
+          handleShowMessage(mensajeError, 'error');
+          return;
+        }
+        
         // Mostrar mensaje de factura creada
         handleShowMessage('Factura creada correctamente');
         
@@ -286,7 +334,45 @@ const NuevaFactura = () => {
       })
       .catch(error => {
         console.error('Error al crear factura:', error);
-        handleShowMessage('Error al crear factura: ' + (error.response?.data?.error || error.message), 'error');
+        
+        let mensajeError = 'Error al crear factura';
+        
+        // Intentar extraer mensaje de error detallado de la respuesta
+        if (error.response && error.response.data) {
+          if (error.response.data.error) {
+            mensajeError = error.response.data.error;
+          } else if (error.response.data.detalles_error) {
+            const detallesError = error.response.data.detalles_error;
+            const errores = [];
+            
+            // Extraer todos los mensajes de error
+            const procesarErrores = (obj, prefijo = '') => {
+              if (typeof obj === 'object' && obj !== null) {
+                Object.entries(obj).forEach(([key, value]) => {
+                  if (Array.isArray(value)) {
+                    value.forEach(item => {
+                      if (typeof item === 'string') {
+                        errores.push(`${prefijo}${key}: ${item}`);
+                      } else if (typeof item === 'object') {
+                        procesarErrores(item, `${prefijo}${key} - `);
+                      }
+                    });
+                  } else if (typeof value === 'object') {
+                    procesarErrores(value, `${prefijo}${key} - `);
+                  }
+                });
+              }
+            };
+            
+            procesarErrores(detallesError);
+            
+            if (errores.length > 0) {
+              mensajeError = `Errores en los datos:\n${errores.join('\n')}`;
+            }
+          }
+        }
+        
+        handleShowMessage(mensajeError, 'error');
       });
   };
 

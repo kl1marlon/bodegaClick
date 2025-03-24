@@ -71,6 +71,11 @@ const ListadoProductos = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [categorias, setCategorias] = useState([]);
   
+  // INICIO: FILTRO TEMPORAL PARA MIGRACIÓN - PRODUCTOS SIN PRECIO BASE USD
+  // Esto es para ayudar durante la migración de datos, eliminar después
+  const [mostrarSinPrecioBaseUSD, setMostrarSinPrecioBaseUSD] = useState(false);
+  // FIN: FILTRO TEMPORAL PARA MIGRACIÓN
+  
   // Estado para tasas de cambio
   const [tasaBCV, setTasaBCV] = useState(null);
   const [tasaParalelo, setTasaParalelo] = useState(null);
@@ -107,6 +112,32 @@ const ListadoProductos = () => {
     message: '',
     severity: 'info'
   });
+  
+  // INICIO: CONTADOR TEMPORAL DE PRODUCTOS CON PRECIO BASE USD
+  // Este contador es temporal y se usa durante la migración de datos
+  // para rastrear cuántos productos tienen precio_base_usd configurado.
+  // TODO: Eliminar esta sección una vez completada la migración
+  const [contadorPrecioBaseUSD, setContadorPrecioBaseUSD] = useState({
+    total: 0,
+    conPrecioBaseUSD: 0,
+    porcentaje: 0
+  });
+  
+  useEffect(() => {
+    if (productos.length > 0) {
+      const total = productos.length;
+      const conPrecioBaseUSD = productos.filter(p => 
+        p.precio_base_usd && Number(p.precio_base_usd) > 0
+      ).length;
+      
+      setContadorPrecioBaseUSD({
+        total,
+        conPrecioBaseUSD,
+        porcentaje: Math.round((conPrecioBaseUSD / total) * 100)
+      });
+    }
+  }, [productos]);
+  // FIN: CONTADOR TEMPORAL DE PRODUCTOS CON PRECIO BASE USD
   
   // Cargar productos y tasas al montar el componente
   useEffect(() => {
@@ -164,10 +195,18 @@ const ListadoProductos = () => {
         );
       }
       
+      // INICIO: FILTRO TEMPORAL PARA PRODUCTOS SIN PRECIO BASE USD
+      if (mostrarSinPrecioBaseUSD) {
+        filtered = filtered.filter(producto => 
+          !producto.precio_base_usd || Number(producto.precio_base_usd) <= 0
+        );
+      }
+      // FIN: FILTRO TEMPORAL
+      
       setProductosFiltrados(filtered);
       setPage(0); // Resetear a la primera página cuando cambia el filtro
     }
-  }, [searchTerm, categoriaSeleccionada, productos]);
+  }, [searchTerm, categoriaSeleccionada, productos, mostrarSinPrecioBaseUSD]);
   
   // Manejadores para la paginación
   const handleChangePage = (event, newPage) => {
@@ -221,6 +260,7 @@ const ListadoProductos = () => {
   const resetearFiltros = () => {
     setSearchTerm('');
     setCategoriaSeleccionada('');
+    setMostrarSinPrecioBaseUSD(false);
   };
   
   // Función para calcular el precio en USD desde BS
@@ -482,6 +522,116 @@ const ListadoProductos = () => {
         </Box>
       </Box>
       
+      {/* INICIO: CONTADOR TEMPORAL - Eliminar después de la migración */}
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 2, 
+          mb: 3, 
+          borderRadius: 2,
+          border: '2px solid #ff9800',
+          backgroundColor: '#fff8e1',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <Box sx={{ 
+          position: 'absolute', 
+          top: 0, 
+          right: 0, 
+          backgroundColor: '#ff9800', 
+          color: 'white',
+          px: 2,
+          py: 0.5,
+          borderBottomLeftRadius: 8
+        }}>
+          <Typography variant="subtitle2">
+            TEMPORAL - Para migración
+          </Typography>
+        </Box>
+        
+        <Typography variant="h6" sx={{ mb: 1, color: '#e65100', fontWeight: 'bold' }}>
+          Progreso de Migración - Precios Base USD
+        </Typography>
+        
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <Typography variant="body1">
+              <strong>Productos con precio base USD:</strong> {contadorPrecioBaseUSD.conPrecioBaseUSD} de {contadorPrecioBaseUSD.total} ({contadorPrecioBaseUSD.porcentaje}%)
+            </Typography>
+            <Typography variant="body1" color="error.main" sx={{ mt: 1 }}>
+              <strong>Productos sin precio base USD:</strong> {contadorPrecioBaseUSD.total - contadorPrecioBaseUSD.conPrecioBaseUSD} ({100 - contadorPrecioBaseUSD.porcentaje}%)
+            </Typography>
+            <Button
+              variant="contained"
+              color="warning"
+              size="small"
+              onClick={() => setMostrarSinPrecioBaseUSD(!mostrarSinPrecioBaseUSD)}
+              sx={{ 
+                mt: 1, 
+                textTransform: 'none',
+                backgroundColor: mostrarSinPrecioBaseUSD ? '#f97316' : '#fb923c',
+                '&:hover': {
+                  backgroundColor: '#ea580c',
+                },
+                fontWeight: 600
+              }}
+            >
+              {mostrarSinPrecioBaseUSD ? 'Quitar filtro sin precio USD' : 'Mostrar solo sin precio USD'}
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ width: '100%', mr: 1 }}>
+              <Box sx={{ 
+                width: '100%', 
+                bgcolor: '#ffcc80', 
+                borderRadius: 1,
+                height: 10,
+                position: 'relative'
+              }}>
+                <Box sx={{ 
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  bgcolor: '#fb8c00',
+                  height: '100%',
+                  width: `${contadorPrecioBaseUSD.porcentaje}%`,
+                  borderRadius: 1,
+                  transition: 'width 0.5s'
+                }} />
+              </Box>
+            </Box>
+            {mostrarSinPrecioBaseUSD && (
+              <Box sx={{ 
+                mt: 2, 
+                px: 2, 
+                py: 1, 
+                bgcolor: '#fee2e2', 
+                borderRadius: 1,
+                border: '1px solid #fecaca',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <Typography variant="body2" color="error.main" fontWeight={600}>
+                  Mostrando solo productos sin precio base USD
+                </Typography>
+                <Chip 
+                  label={productosFiltrados.length} 
+                  size="small" 
+                  color="error"
+                  sx={{ 
+                    fontWeight: 700,
+                    ml: 1
+                  }} 
+                />
+              </Box>
+            )}
+          </Grid>
+        </Grid>
+      </Paper>
+      {/* FIN: CONTADOR TEMPORAL */}
+      
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={3}>
@@ -646,7 +796,7 @@ const ListadoProductos = () => {
           </Box>
         ) : (
           <>
-            {categoriaSeleccionada && (
+            {(categoriaSeleccionada || mostrarSinPrecioBaseUSD) && (
               <Box sx={{ 
                 p: 2, 
                 bgcolor: '#e0f2fe', 
@@ -656,23 +806,36 @@ const ListadoProductos = () => {
                 borderBottom: '1px solid #bae6fd'
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FilterListIcon color="primary" />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
-                    Filtrando por categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
-                  </Typography>
+                  {mostrarSinPrecioBaseUSD && (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <FilterListIcon color="error" />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#b91c1c', ml: 1 }}>
+                        Filtrando: <span style={{ color: '#ef4444' }}>Solo productos sin precio base USD</span>
+                      </Typography>
+                      <Divider orientation="vertical" flexItem sx={{ mx: 2, height: 24 }} />
+                    </Box>
+                  )}
+                  {categoriaSeleccionada && (
+                    <>
+                      <FilterListIcon color="primary" />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
+                        Categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
+                      </Typography>
+                    </>
+                  )}
                 </Box>
                 <Button
                   size="small"
                   variant="outlined"
-                  color="primary"
-                  onClick={() => setCategoriaSeleccionada('')}
+                  color={mostrarSinPrecioBaseUSD ? "error" : "primary"}
+                  onClick={resetearFiltros}
                   sx={{ 
                     borderRadius: 1,
                     textTransform: 'none',
                     fontWeight: 500
                   }}
                 >
-                  Quitar filtro
+                  Quitar filtros
                 </Button>
               </Box>
             )}

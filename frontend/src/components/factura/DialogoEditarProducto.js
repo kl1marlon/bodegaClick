@@ -39,6 +39,33 @@ import {
 const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSave, tasaCambio, moneda }) => {
   // Manejar cambios en el formulario
   const handleChange = (field, value) => {
+    // Si es un campo numérico, validar el formato
+    if (['precio_compra_usd', 'unidades_paquete', 'cantidad', 'porcentajeGanancia'].includes(field) && value !== '') {
+      // Convertir a string para manejar decimales
+      const valueStr = value.toString();
+      
+      // Verificar que no tenga más de 2 decimales
+      if (valueStr.includes('.')) {
+        const [parteEntera, parteDecimal] = valueStr.split('.');
+        
+        // Si tiene más de 2 decimales, truncar
+        if (parteDecimal && parteDecimal.length > 2) {
+          // Truncar a 2 decimales manteniendo solo los primeros 2 dígitos decimales
+          const decimalTruncado = parteDecimal.substring(0, 2);
+          value = parseFloat(`${parteEntera}.${decimalTruncado}`);
+        }
+      }
+      
+      // Si el valor es NaN, cero o negativo para campos que no deben serlo, corregir
+      if (isNaN(value)) {
+        value = '';
+      } else if (field === 'unidades_paquete' && value <= 0) {
+        value = 0.01; // Valor mínimo para unidades
+      } else if (field === 'cantidad' && value <= 0) {
+        value = 0.01; // Valor mínimo para cantidad
+      }
+    }
+    
     onChange({
       ...productoEditando,
       [field]: value
@@ -116,6 +143,58 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
     }
   };
 
+  // Validar antes de guardar
+  const handleSave = () => {
+    // Validar campos requeridos
+    if (!productoEditando) return;
+    
+    const errores = [];
+    
+    // Validar precio de compra
+    if (!productoEditando.precio_compra_usd) {
+      errores.push('El precio de compra es obligatorio');
+    }
+    
+    // Validar unidades por paquete
+    if (!productoEditando.unidades_paquete) {
+      errores.push('Las unidades por paquete son obligatorias');
+    }
+    
+    // Validar cantidad
+    if (!productoEditando.cantidad || productoEditando.cantidad <= 0) {
+      errores.push('La cantidad debe ser mayor a 0');
+    }
+    
+    // Validar que los campos numéricos no tengan más de 2 decimales
+    const camposNumericos = [
+      { nombre: 'Precio de compra', valor: productoEditando.precio_compra_usd },
+      { nombre: 'Unidades por paquete', valor: productoEditando.unidades_paquete },
+      { nombre: 'Cantidad', valor: productoEditando.cantidad },
+      { nombre: 'Porcentaje de ganancia', valor: productoEditando.porcentajeGanancia }
+    ];
+    
+    camposNumericos.forEach(campo => {
+      if (campo.valor) {
+        const valueStr = campo.valor.toString();
+        if (valueStr.includes('.')) {
+          const [, decimal] = valueStr.split('.');
+          if (decimal && decimal.length > 2) {
+            errores.push(`${campo.nombre} no debe tener más de 2 decimales`);
+          }
+        }
+      }
+    });
+    
+    // Si hay errores, mostrarlos
+    if (errores.length > 0) {
+      alert(`Por favor corrija los siguientes errores:\n${errores.join('\n')}`);
+      return;
+    }
+    
+    // Si todo está bien, guardar
+    onSave();
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -150,6 +229,12 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               type="number"
               value={productoEditando?.precio_compra_usd || ''}
               onChange={(e) => handleChange('precio_compra_usd', Number(e.target.value))}
+              onBlur={(e) => {
+                // Formatear a 2 decimales al perder el foco
+                if (e.target.value) {
+                  handleChange('precio_compra_usd', parseFloat(parseFloat(e.target.value).toFixed(2)));
+                }
+              }}
               inputProps={{ min: 0, step: 0.01 }}
               variant="outlined"
               sx={{
@@ -167,7 +252,13 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               type="number"
               value={productoEditando?.unidades_paquete || ''}
               onChange={(e) => handleChange('unidades_paquete', Number(e.target.value))}
-              inputProps={{ min: 1 }}
+              onBlur={(e) => {
+                // Formatear a 2 decimales al perder el foco
+                if (e.target.value) {
+                  handleChange('unidades_paquete', parseFloat(parseFloat(e.target.value).toFixed(2)));
+                }
+              }}
+              inputProps={{ min: 0.01, step: 0.01 }}
               variant="outlined"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -183,7 +274,13 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               type="number"
               value={productoEditando?.cantidad || ''}
               onChange={(e) => handleChange('cantidad', Number(e.target.value))}
-              inputProps={{ min: 1 }}
+              onBlur={(e) => {
+                // Formatear a 2 decimales al perder el foco
+                if (e.target.value) {
+                  handleChange('cantidad', parseFloat(parseFloat(e.target.value).toFixed(2)));
+                }
+              }}
+              inputProps={{ min: 0.01, step: 0.01 }}
               variant="outlined"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -199,7 +296,13 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               type="number"
               value={productoEditando?.porcentajeGanancia || ''}
               onChange={(e) => handleChange('porcentajeGanancia', Number(e.target.value))}
-              inputProps={{ min: 0, max: 100, step: 1 }}
+              onBlur={(e) => {
+                // Formatear a 2 decimales al perder el foco
+                if (e.target.value) {
+                  handleChange('porcentajeGanancia', parseFloat(parseFloat(e.target.value).toFixed(2)));
+                }
+              }}
+              inputProps={{ min: 0, max: 100, step: 0.01 }}
               helperText="Dejar vacío para usar el porcentaje global"
               variant="outlined"
               sx={{
@@ -276,30 +379,27 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
         }}
       >
         <Button 
-          onClick={onClose} 
+          onClick={onClose}
           sx={{ 
             color: '#64748b',
-            fontWeight: 500,
-            borderRadius: 1,
-            px: 3,
-            '&:hover': {
-              backgroundColor: '#f1f5f9'
-            }
+            textTransform: 'none',
+            fontWeight: 500
           }}
         >
           Cancelar
         </Button>
         <Button 
-          onClick={onSave} 
-          variant="contained"
+          variant="contained" 
+          onClick={handleSave}
+          color="primary"
           sx={{ 
-            backgroundColor: '#3b82f6',
+            textTransform: 'none', 
             fontWeight: 500,
-            borderRadius: 1,
-            textTransform: 'none',
             px: 3,
+            py: 1,
+            backgroundColor: '#0284c7',
             '&:hover': {
-              backgroundColor: '#2563eb'
+              backgroundColor: '#0369a1'
             }
           }}
         >
