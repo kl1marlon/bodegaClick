@@ -269,19 +269,49 @@ class FacturaViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def procesar_factura(self, request, pk=None):
         """
-        Procesa una factura existente para actualizar precios y sincronizar con Loyverse
-        """
-        service = LoyverseService()
-        result = service.actualizar_precios_desde_factura(pk)
+        Procesa una factura existente para actualizar precios e inventario en Loyverse
         
-        if result['success']:
+        NOTA: Esta implementación combina la actualización de precios existente con
+        la nueva funcionalidad de actualización de inventario.
+        """
+        import sys
+        print(f"\n🔄 INICIANDO procesar_factura para ID: {pk}")
+        sys.stdout.flush()
+        service = LoyverseService()
+        
+        # Actualizar precios (funcionalidad existente)
+        print(f"💲 Llamando a actualizar_precios_desde_factura")
+        sys.stdout.flush()
+        result_precios = service.actualizar_precios_desde_factura(pk)
+        print(f"💲 Resultado de actualizar_precios_desde_factura: {result_precios['success']}")
+        sys.stdout.flush()
+        
+        # Actualizar inventario (nueva funcionalidad)
+        print(f"📦 Llamando a actualizar_inventario_desde_factura")
+        sys.stdout.flush()
+        result_inventario = service.actualizar_inventario_desde_factura(pk)
+        print(f"📦 Resultado de actualizar_inventario_desde_factura: {result_inventario['success']}")
+        sys.stdout.flush()
+        
+        if result_precios['success'] and result_inventario['success']:
+            print(f"✅ Ambos procesos ejecutados con éxito")
+            sys.stdout.flush()
             return Response({
-                'message': f"Factura procesada correctamente. Productos actualizados: {result['productos_actualizados']}",
-                'detalle': result
+                'message': f"Factura procesada correctamente. Productos con precios actualizados: {result_precios['productos_actualizados']}, Productos con inventario actualizado: {result_inventario['productos_actualizados']}",
+                'detalle_precios': result_precios,
+                'detalle_inventario': result_inventario
             })
         
+        errores = []
+        if not result_precios['success']:
+            errores.append(result_precios['error'])
+        if not result_inventario['success']:
+            errores.append(result_inventario['error'])
+        
+        print(f"❌ Errores en el proceso: {errores}")
+        sys.stdout.flush()
         return Response({
-            'error': result['error']
+            'error': "Error al procesar la factura: " + ", ".join(errores)
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class WebhookViewSet(viewsets.ModelViewSet):

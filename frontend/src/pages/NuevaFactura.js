@@ -315,17 +315,29 @@ const NuevaFactura = () => {
           // Realizar la llamada al endpoint para procesar la factura usando axios
           axios.post(`${API_URL}/facturas/${response.payload.id}/procesar_factura/`)
             .then(res => {
-              console.log('Precios actualizados:', res.data);
+              console.log('Procesamiento de factura:', res.data);
+              
+              // Construir mensaje detallado
+              let mensajeExito = 'Factura procesada correctamente';
+              
+              if (res.data.detalle_precios && res.data.detalle_precios.productos_actualizados) {
+                mensajeExito += `. ${res.data.detalle_precios.productos_actualizados} productos con precios actualizados`;
+              }
+              
+              if (res.data.detalle_inventario && res.data.detalle_inventario.productos_actualizados) {
+                mensajeExito += `, ${res.data.detalle_inventario.productos_actualizados} productos con inventario actualizado`;
+              }
+              
               // Mostrar mensaje de éxito
-              handleShowMessage('Precios actualizados en Loyverse correctamente');
+              handleShowMessage(mensajeExito);
               
               // Limpiar el formulario
               setProductosSeleccionados([]);
             })
             .catch(error => {
-              console.error('Error al actualizar precios:', error);
+              console.error('Error al procesar factura:', error);
               // Mostrar mensaje de error
-              handleShowMessage('Error al actualizar precios: ' + (error.response?.data?.error || error.message), 'error');
+              handleShowMessage('Error al procesar factura: ' + (error.response?.data?.error || error.message), 'error');
             });
         } else {
           // Limpiar el formulario si no se van a actualizar precios
