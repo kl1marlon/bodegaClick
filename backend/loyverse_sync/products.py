@@ -184,6 +184,11 @@ def aplicar_redondeo_especial(precio_bs):
     """
     Implementa la misma lógica de redondeo que se usa en el frontend.
     
+    ¡IMPORTANTE! Esta función debe ser llamada siempre que se actualicen precios 
+    en bolívares para mantener la consistencia de los precios en toda la aplicación.
+    Cualquier parte del código que actualice precio_base sin usar esta función 
+    causará inconsistencias en los precios.
+    
     Args:
         precio_bs (Decimal): Precio en bolívares
         
@@ -265,7 +270,7 @@ def exportar_precios(opciones=None):
             - categorias (list): Lista de categorías a exportar
             - tipo_tasa (str): Exportar solo productos con este tipo de tasa (BCV o PARALELO)
             - ids (list): IDs específicos de productos a exportar
-            - tamaño_lote (int): Número de productos por lote (default: 20)
+            - tamaño_lote (int): Número de productos por lote (default: 100)
             
     Returns:
         dict: Estadísticas de la operación
@@ -273,8 +278,8 @@ def exportar_precios(opciones=None):
     if opciones is None:
         opciones = {}
     
-    # Definir tamaño del lote (por defecto 20 productos por lote para evitar sobrecarga)
-    tamaño_lote = opciones.get('tamaño_lote', 20)
+    # Definir tamaño del lote (por defecto 100 productos por lote para mayor velocidad)
+    tamaño_lote = opciones.get('tamaño_lote', 100)
     
     # Construir filtros
     filtros = Q(loyverse_id__isnull=False)

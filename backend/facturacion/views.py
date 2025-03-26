@@ -49,10 +49,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
                 - tipo_tasa (str): Filtrar por tipo de tasa (BCV o PARALELO)
                 - productos_ids (list): IDs específicos de productos a exportar
                 - tamaño_lote (int): Número de productos por lote para exportación
-                - direccion_sync (str): Dirección de sincronización:
-                    - 'bidireccional': Importa y exporta (comportamiento predeterminado)
-                    - 'bodegaclick_to_loyverse': Solo exporta precios a Loyverse
-                    - 'loyverse_to_bodegaclick': Solo importa productos desde Loyverse
         """
         logger = logging.getLogger(__name__)
         logger.info(f"🔄 Iniciando sync_from_loyverse desde API con datos: {request.data}")
@@ -62,8 +58,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
             'solo_importar': not request.data.get('actualizar_precios', True),
             'categorias': request.data.get('categorias'),
             'tipo_tasa': request.data.get('tipo_tasa'),
-            'productos_ids': request.data.get('productos_ids'),
-            'direccion_sync': request.data.get('direccion_sync', 'bidireccional')
+            'productos_ids': request.data.get('productos_ids')
         }
         
         # Procesar tamaño del lote si se proporciona
@@ -90,30 +85,16 @@ class ProductoViewSet(viewsets.ModelViewSet):
             # Preparar mensaje de éxito
             mensaje = "Sincronización completada exitosamente. "
             
-            # Agregar información sobre la dirección de sincronización
-            direccion_sync = result.get('direccion_sync', 'bidireccional')
-            if direccion_sync == 'bidireccional':
-                mensaje += "Se han realizado operaciones bidireccionales. "
-            elif direccion_sync == 'bodegaclick_to_loyverse':
-                mensaje += "Se han exportado precios a Loyverse. "
-            elif direccion_sync == 'loyverse_to_bodegaclick':
-                mensaje += "Se han importado productos desde Loyverse. "
-            
             # Detalles de productos específicos si es modo prueba
             if opciones.get('productos_ids'):
                 mensaje = "PRUEBA DE SINCRONIZACIÓN: " + mensaje
                 mensaje += f"Se procesaron los productos específicos seleccionados. "
             
-            # Detalles de importación si se realizó
-            if result.get('importacion_realizada'):
-                mensaje += f"Creados: {result['importacion'].get('creados', 0)}, "
-                mensaje += f"Actualizados: {result['importacion'].get('actualizados', 0)}"
+            mensaje += f"Creados: {result['importacion'].get('creados', 0)}, "
+            mensaje += f"Actualizados: {result['importacion'].get('actualizados', 0)}"
             
-            # Detalles de exportación si se realizó
             if result.get('exportacion_realizada'):
-                if result.get('importacion_realizada'):
-                    mensaje += ", "
-                mensaje += f"Precios actualizados: {result['exportacion'].get('actualizados', 0)}"
+                mensaje += f", Precios actualizados: {result['exportacion'].get('actualizados', 0)}"
             
             # Todos los productos tienen aplicar_iva=false por defecto
             mensaje += " Todos los productos tienen aplicar_iva=false por defecto."

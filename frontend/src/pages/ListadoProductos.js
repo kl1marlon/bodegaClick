@@ -38,9 +38,7 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  Slider,
-  RadioGroup,
-  Radio
+  Slider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -100,8 +98,7 @@ const ListadoProductos = () => {
     categorias: [],
     tipo_tasa: '',
     productos_ids: [],
-    tamaño_lote: 20,
-    direccion_sync: 'bidireccional'
+    tamaño_lote: 20
   });
   
   // Estado para diálogo de selección de productos específicos
@@ -479,22 +476,6 @@ const ListadoProductos = () => {
       });
   };
   
-  // Obtener el texto del botón de sincronización según la dirección seleccionada
-  const getBotonSincronizacionTexto = () => {
-    if (sincronizando) return 'Sincronizando...';
-    
-    const direccion = opcionesSincronizacion.direccion_sync;
-    if (direccion === 'bidireccional') {
-      return 'Iniciar Sincronización Bidireccional';
-    } else if (direccion === 'bodegaclick_to_loyverse') {
-      return 'Exportar Precios a Loyverse';
-    } else if (direccion === 'loyverse_to_bodegaclick') {
-      return 'Importar Productos de Loyverse';
-    }
-    
-    return 'Iniciar Sincronización';
-  };
-  
   return (
     <Box sx={{ 
       maxWidth: 1200, 
@@ -557,7 +538,7 @@ const ListadoProductos = () => {
               fontWeight: 600
             }}
           >
-            {getBotonSincronizacionTexto()}
+            {sincronizando ? 'Sincronizando...' : 'Sincronizar con Loyverse'}
             {sincronizando && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
           </Button>
         </Box>
@@ -1350,39 +1331,6 @@ const ListadoProductos = () => {
             </Grid>
             
             <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>
-                Dirección de sincronización
-              </Typography>
-              <FormControl component="fieldset">
-                <RadioGroup
-                  name="direccion_sync"
-                  value={opcionesSincronizacion.direccion_sync}
-                  onChange={handleChangeOpcionesSincronizacion}
-                  row
-                >
-                  <FormControlLabel 
-                    value="bidireccional" 
-                    control={<Radio />} 
-                    label="Bidireccional" 
-                  />
-                  <FormControlLabel 
-                    value="bodegaclick_to_loyverse" 
-                    control={<Radio />} 
-                    label="Solo BodegaClick → Loyverse (precios)" 
-                  />
-                  <FormControlLabel 
-                    value="loyverse_to_bodegaclick" 
-                    control={<Radio />} 
-                    label="Solo Loyverse → BodegaClick (productos/categorías)" 
-                  />
-                </RadioGroup>
-                <FormHelperText>
-                  Selecciona la dirección de sincronización según tu necesidad
-                </FormHelperText>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
               <Box sx={{ 
                 bgcolor: '#f1f9ff', 
                 p: 2, 
@@ -1392,25 +1340,10 @@ const ListadoProductos = () => {
               }}>
                 <Typography variant="body2" color="info.main">
                   <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
-                  <strong>Importante:</strong> La sincronización se comportará según la dirección seleccionada:
+                  <strong>Importante:</strong> La sincronización traerá todos los productos de Loyverse 
+                  (sin sus precios) y podrá enviar los precios calculados en BodegaClick 
+                  (precio_base_usd * tasa) hacia Loyverse dependiendo de la configuración seleccionada.
                 </Typography>
-                <ul style={{ margin: '8px 0', paddingLeft: '24px' }}>
-                  <li>
-                    <Typography variant="body2" color="info.main">
-                      <strong>Bidireccional:</strong> Trae productos desde Loyverse y envía precios calculados de BodegaClick.
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="info.main">
-                      <strong>BodegaClick → Loyverse:</strong> Solo exporta precios calculados hacia Loyverse.
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="info.main">
-                      <strong>Loyverse → BodegaClick:</strong> Solo importa productos y categorías sin modificar precios.
-                    </Typography>
-                  </li>
-                </ul>
               </Box>
             </Grid>
           </Grid>
@@ -1426,7 +1359,7 @@ const ListadoProductos = () => {
             disabled={sincronizando}
             startIcon={sincronizando ? <CircularProgress size={20} /> : <SyncIcon />}
           >
-            {getBotonSincronizacionTexto()}
+            {sincronizando ? 'Sincronizando...' : 'Iniciar Sincronización'}
           </Button>
         </DialogActions>
       </Dialog>

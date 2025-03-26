@@ -3,6 +3,10 @@ from django.conf import settings
 from .models import Producto, TasaCambio
 from decimal import Decimal
 import datetime
+from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
+from loyverse_sync.products import aplicar_redondeo_especial
 
 class LoyverseService:
     BASE_URL = 'https://api.loyverse.com/v1.0'
@@ -15,24 +19,29 @@ class LoyverseService:
     
     def fetch_products(self, actualizar_precios=True):
         """
-        Obtiene todos los productos de Loyverse y los almacena en la base de datos local
+        Obtiene productos de Loyverse y los guarda en la base de datos local.
         
         Args:
-            actualizar_precios (bool): Si es True, actualiza los precios de los productos.
-                                      Si hay facturas recientes (2 días), no actualiza los precios.
+            actualizar_precios: Si es True, actualiza los precios de productos existentes.
+                                Si es False, mantiene los precios anteriores.
+                                
+        Returns:
+            dict: Estadísticas sobre el proceso de sincronización
         """
-        # Verificar si hay facturas recientes (últimos 2 días) en caso de solicitar actualización de precios
-        facturas_recientes = False
-        if actualizar_precios:
-            from .models import Factura
-            import datetime
-            fecha_limite = datetime.datetime.now() - datetime.timedelta(days=2)
-            facturas_recientes = Factura.objects.filter(fecha__gte=fecha_limite).exists()
-            
-            # Si hay facturas recientes, no actualizar precios
-            if facturas_recientes:
-                print(f"Se encontraron facturas recientes desde {fecha_limite}. No se actualizarán los precios.")
-                actualizar_precios = False
+        from .models import Producto, Factura, TasaCambio
+        from django.db.models import Q
+        from django.utils import timezone
+        import datetime
+        from datetime import timedelta
+        from loyverse_sync.products import aplicar_redondeo_especial
+        
+        # Verificar si existen facturas recientes (últimos 2 días)
+        dos_dias_atras = timezone.now() - timedelta(days=2)
+        facturas_recientes = Factura.objects.filter(created_at__gte=dos_dias_atras).exists()
+        
+        if facturas_recientes and actualizar_precios:
+            print("Existen facturas recientes (últimos 2 días). Se preservarán los precios actuales.")
+            actualizar_precios = False
         
         # Obtener las categorías para mapear IDs a nombres
         categories_dict = {}
@@ -133,11 +142,14 @@ class LoyverseService:
                         
                         # Solo actualizar el precio si está habilitado y no hay facturas recientes
                         if actualizar_precios:
+                            # Aplicar redondeo especial si es necesario
+                            precio_redondeado = aplicar_redondeo_especial(precio)
                             defaults.update({
-                                'precio_base': precio,
+                                'precio_base': precio_redondeado,
                                 'ultima_actualizacion_precio': updated_at,
                                 'fuente_actualizacion': 'loyverse'
                             })
+                            print(f"Aplicando precio redondeado para {item['item_name']}: {precio} -> {precio_redondeado}")
                         else:
                             prices_unchanged += 1
                         
@@ -266,73 +278,68 @@ class LoyverseService:
         
     def calcular_precios_venta(self, producto_id=None, porcentaje_ganancia=None):
         """
-        Calcula los precios de venta para productos basados en:
-        precio_venta = (precio_compra × tasa_dolar_paralelo / unidades) × (1 + porcentaje_ganancia/100)
+        Calcula los precios de venta para productos, basado en el precio de compra, 
+        unidades por paquete y un porcentaje de ganancia.
+        Utiliza la tasa de cambio paralelo más reciente.
         
-        Si se proporciona producto_id, solo calcula para ese producto.
-        Si se proporciona porcentaje_ganancia, usa ese valor, de lo contrario usa el porcentaje por defecto.
+        Args:
+            producto_id: ID específico de un producto (opcional)
+            porcentaje_ganancia: Porcentaje de ganancia a aplicar (opcional, default: 30%)
+            
+        Returns:
+            dict: Resultados de la operación
         """
+        # Importar aquí para evitar problemas de importación circular
+        from loyverse_sync.products import aplicar_redondeo_especial
+        from decimal import Decimal
+        import datetime
+        from facturacion.models import Producto, TasaCambio
+        
+        # Obtener la última tasa paralelo
         try:
-            # Obtener la tasa de cambio paralelo más reciente
             tasa_paralelo = TasaCambio.objects.filter(tipo='PARALELO').latest('fecha')
-            
-            if producto_id:
-                productos = Producto.objects.filter(id=producto_id)
-            else:
-                productos = Producto.objects.all()
-                
-            for producto in productos:
-                # Verificar si tenemos información de precio_compra_usd y unidades_paquete
-                if producto.precio_compra_usd > 0 and producto.unidades_paquete > 0:
-                    # Si no se proporciona un porcentaje específico, usar el valor por defecto (30%)
-                    porcentaje = porcentaje_ganancia if porcentaje_ganancia is not None else Decimal('30.0')
-                    
-                    # Calcular el precio de venta según la fórmula actualizada
-                    precio_base = (producto.precio_compra_usd * tasa_paralelo.valor) / Decimal(producto.unidades_paquete)
-                    precio_venta = precio_base * (Decimal('1.0') + (porcentaje / Decimal('100.0')))
-                    
-                    # Redondear a 2 decimales
-                    producto.precio_venta_calculado = round(precio_venta, 2)
-                    # También actualizar el precio base para sincronizar con Loyverse
-                    producto.precio_base = producto.precio_venta_calculado
-                    producto.ultima_actualizacion_precio = datetime.datetime.now()
-                    producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
-                    producto.save()
-                # Mantener la compatibilidad con el método anterior
-                elif producto.precio_compra > 0 and producto.unidades_compra > 0:
-                    # Si no se proporciona un porcentaje específico, usar el valor por defecto (30%)
-                    porcentaje = porcentaje_ganancia if porcentaje_ganancia is not None else Decimal('30.0')
-                    
-                    # Calcular el precio de venta según la fórmula
-                    precio_venta = (
-                        (producto.precio_compra * tasa_paralelo.valor / Decimal(producto.unidades_compra)) *
-                        (Decimal('1.0') + (porcentaje / Decimal('100.0')))
-                    )
-                    
-                    # Redondear a 2 decimales
-                    producto.precio_venta_calculado = round(precio_venta, 2)
-                    # También actualizar el precio base para sincronizar con Loyverse
-                    producto.precio_base = producto.precio_venta_calculado
-                    producto.ultima_actualizacion_precio = datetime.datetime.now()
-                    producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
-                    producto.save()
-            
-            return {
-                'success': True,
-                'count': productos.count(),
-                'message': f"Se calcularon los precios de {productos.count()} productos"
-            }
-            
         except TasaCambio.DoesNotExist:
-            return {
-                'success': False,
-                'error': 'No hay tasa de cambio PARALELO registrada'
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {'success': False, 'error': 'No hay tasa PARALELO disponible'}
+        
+        # Filtrar productos si se especifica un ID
+        if producto_id:
+            productos = Producto.objects.filter(id=producto_id)
+        else:
+            productos = Producto.objects.all()
+            
+        productos_actualizados = 0
+            
+        for producto in productos:
+            # Verificar si tenemos información de precio_compra_usd y unidades_paquete
+            if producto.precio_compra_usd > 0 and producto.unidades_paquete > 0:
+                # Si no se proporciona un porcentaje específico, usar el valor por defecto (30%)
+                porcentaje = porcentaje_ganancia if porcentaje_ganancia is not None else Decimal('30.0')
+                
+                # Calcular el precio de venta según la fórmula actualizada
+                precio_base = (producto.precio_compra_usd * tasa_paralelo.valor) / Decimal(producto.unidades_paquete)
+                precio_venta = precio_base * (Decimal('1.0') + (porcentaje / Decimal('100.0')))
+                
+                # Redondear a 2 decimales primero para evitar problemas de precisión
+                precio_venta_redondeado = round(precio_venta, 2)
+                
+                # Aplicar reglas de redondeo especiales para precios en bolívares
+                precio_final = aplicar_redondeo_especial(precio_venta_redondeado)
+                
+                # Actualizar los campos del producto
+                producto.precio_venta_calculado = precio_final
+                # También actualizar el precio base para sincronizar con Loyverse
+                producto.precio_base = precio_final
+                producto.ultima_actualizacion_precio = datetime.datetime.now()
+                producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
+                producto.save()
+                
+                productos_actualizados += 1
+                
+        return {
+            'success': True,
+            'actualizados': productos_actualizados,
+            'total_productos': len(productos)
+        }
     
     def actualizar_precios_desde_factura(self, factura_id):
         """
@@ -340,6 +347,7 @@ class LoyverseService:
         y los sincroniza con Loyverse
         """
         from .models import Factura, DetalleFactura
+        from loyverse_sync.products import aplicar_redondeo_especial
         
         try:
             factura = Factura.objects.get(id=factura_id)
@@ -370,9 +378,17 @@ class LoyverseService:
                 
                 # Guardamos la información de unidades
                 producto.unidades_paquete = detalle.unidades_paquete
-                producto.unidades_compra = detalle.unidades_paquete  # Para compatibilidad
+                producto.unidades_compra = detalle.unidades_paquete
                 
-                # Actualizar el precio base con el precio unitario de la factura
+                # Aplicar redondeo especial al precio unitario de la factura si es en BS
+                if factura.moneda == 'BS':
+                    precio_redondeado = aplicar_redondeo_especial(precio_unitario)
+                    # Solo actualizar si el precio redondeado es diferente
+                    if precio_unitario != precio_redondeado:
+                        print(f"Aplicando redondeo a {producto.nombre}: {precio_unitario} -> {precio_redondeado}")
+                        precio_unitario = precio_redondeado
+                
+                # Actualizar el precio base con el precio unitario de la factura (redondeado si es BS)
                 producto.precio_base = precio_unitario
                 producto.precio_venta_calculado = precio_unitario
                 producto.ultima_actualizacion_precio = datetime.datetime.now()

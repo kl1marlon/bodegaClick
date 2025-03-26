@@ -21,8 +21,7 @@ export const syncFromLoyverse = createAsyncThunk(
         categorias: opciones.categorias || null,
         tipo_tasa: opciones.tipo_tasa || null,
         productos_ids: opciones.productos_ids || null,
-        tamaño_lote: opciones.tamaño_lote || 20,
-        direccion_sync: opciones.direccion_sync || 'bidireccional'
+        forzar_exportar: opciones.forzar_exportar || false
       };
       
       console.log(`Iniciando sincronización de productos desde Loyverse con opciones:`, opcionesSincronizacion);

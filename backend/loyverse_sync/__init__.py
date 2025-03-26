@@ -1,11 +1,10 @@
 """
 Módulo de sincronización con Loyverse.
 
-Proporciona funcionalidades para:
-1. Importar productos/categorías desde Loyverse
-2. Exportar precios calculados hacia Loyverse
-3. Controlar la dirección de sincronización para flujos específicos
-"""
-from .sync import sincronizar_desde_loyverse
-
-__all__ = ['sincronizar_desde_loyverse'] 
+Este módulo proporciona funcionalidades para sincronizar productos entre 
+BodegaClick y Loyverse, con un enfoque especial en:
+- Importar categorías y datos básicos de productos desde Loyverse
+- Preservar los precios definidos en BodegaClick (precio_base_usd)
+- Exportar precios calculados desde BodegaClick hacia Loyverse
+- Sincronización selectiva por categorías y tipos de tasa
+""" 
