@@ -47,4 +47,4 @@ exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
 CMD ["/app/entrypoint.sh"]
 
 # Exponer puerto fijo (la variable PORT se usará en el entrypoint)
-EXPOSE 8000
+EXPOSE $PORT
