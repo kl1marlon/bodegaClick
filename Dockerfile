@@ -37,7 +37,7 @@ if [ -f /.env.railway ]; then\n\
 fi\n\
 \n\
 # Usar PORT predeterminado si no está definido\n\
-PORT="${PORT:-8000}"\n\
+export PORT="${PORT:-8000}"\n\
 \n\
 # Solo ejecutar gunicorn, sin migraciones ni collectstatic\n\
 exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
@@ -47,4 +47,4 @@ exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
 CMD ["/app/entrypoint.sh"]
 
 # Exponer puerto fijo (la variable PORT se usará en el entrypoint)
-EXPOSE $PORT
+EXPOSE 8000
