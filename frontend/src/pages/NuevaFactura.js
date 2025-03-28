@@ -67,6 +67,7 @@ const NuevaFactura = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Cargar productos al iniciar
   useEffect(() => {
@@ -388,6 +389,32 @@ const NuevaFactura = () => {
       });
   };
 
+  // Forzar la actualización de todos los precios
+  const handleForzarActualizacion = () => {
+    setIsLoading(true);
+    
+    axios.post(`${API_URL}/productos/forzar_actualizacion_precios/`)
+      .then(response => {
+        if (response.data && response.data.message) {
+          // Mostrar mensaje de éxito
+          handleShowMessage(response.data.message);
+          
+          // Actualizar lista de productos
+          dispatch(fetchProductos());
+        } else {
+          // Mostrar mensaje genérico
+          handleShowMessage('Precios actualizados correctamente');
+        }
+      })
+      .catch(error => {
+        // Mostrar mensaje de error
+        handleShowMessage(error.response?.data?.error || 'Error al actualizar precios', 'error');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
@@ -469,7 +496,7 @@ const NuevaFactura = () => {
           </Grid>
         </Grid>
         
-        <Box mt={3}>
+        <Box mt={3} display="flex" justifyContent="space-between" alignItems="center">
           <FormControlLabel
             control={
               <Switch
@@ -481,6 +508,29 @@ const NuevaFactura = () => {
             label="Actualizar precios en Loyverse automáticamente"
             sx={{ color: '#4b5563' }}
           />
+          
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={handleForzarActualizacion}
+            disabled={isLoading}
+            sx={{ 
+              borderRadius: 1,
+              textTransform: 'none',
+              fontWeight: 500,
+              boxShadow: 0,
+              py: 1,
+              px: 2,
+              borderColor: '#3b82f6',
+              color: '#3b82f6',
+              '&:hover': {
+                backgroundColor: '#eff6ff',
+                borderColor: '#2563eb'
+              }
+            }}
+          >
+            {isLoading ? 'Actualizando...' : 'Forzar Actualización de Precios'}
+          </Button>
         </Box>
       </Paper>
 

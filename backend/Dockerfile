@@ -3,6 +3,7 @@ FROM python:3.9-slim
 # Establecer entorno para no crear archivos .pyc y mantener output
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DEBUG=False
 
 WORKDIR /app
 
@@ -14,10 +15,14 @@ RUN apt-get update \
 
 # Copiar e instalar dependencias
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
+RUN pip install --no-cache-dir -r requirements.txt gunicorn psycopg2-binary \
     && rm -rf ~/.cache/pip
 
 # Copiar el código del proyecto
 COPY . .
 
-EXPOSE 8000 
+# Comando para ejecución en producción
+CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn backend.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+
+# El puerto será definido por Railway mediante la variable PORT
+EXPOSE ${PORT:-8000} 

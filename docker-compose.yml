@@ -24,29 +24,20 @@ services:
           memory: 256M
 
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
-      - /app/.env
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - LOYVERSE_API_TOKEN=${LOYVERSE_API_TOKEN}
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
     depends_on:
-      db:
-        condition: service_healthy
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
+      - db
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - app-network
 
   frontend:
     build: 
@@ -70,7 +61,19 @@ services:
           cpus: '0.5'
           memory: 256M
 
- 
-  
+  localtunnel:
+    image: node:16-alpine
+    command: sh -c "npm install -g localtunnel && lt --port 8000"
+    ports:
+      - "1234:1234"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
 volumes:
-  postgres_data: 
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge 

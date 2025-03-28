@@ -153,6 +153,40 @@ class ProductoViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'])
+    def forzar_actualizacion_precios(self, request):
+        """
+        Endpoint para forzar la actualización de todos los precios de los productos
+        independientemente de cuándo se crearon las facturas.
+        
+        Ignora la restricción de los 2 días para las facturas recientes.
+        Útil en escenarios de alta inflación donde se necesita actualizar precios rápidamente.
+        """
+        try:
+            # Usar el servicio de Loyverse con actualizar_precios=True forzado
+            service = LoyverseService()
+            result = service.fetch_products(actualizar_precios=True)
+            
+            if result['success']:
+                return Response({
+                    'message': "Actualización de precios forzada completada exitosamente",
+                    'detalles': {
+                        'productos_creados': result['created'],
+                        'productos_actualizados': result['updated'],
+                        'precios_sin_cambios': result['prices_unchanged'],
+                        'total_procesados': result['total_processed']
+                    }
+                })
+            else:
+                return Response({
+                    'error': result.get('error', 'Error desconocido durante la actualización'),
+                    'detalles': result
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'error': f"Error al forzar actualización de precios: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'])
     def calcular_precios(self, request):
         serializer = ActualizarPreciosSerializer(data=request.data)
         if serializer.is_valid():
@@ -375,6 +409,8 @@ class WebhookReceiveView(APIView):
             # Manejar el evento según su tipo
             if event_type == 'inventory_levels.update':
                 self._handle_inventory_update(data)
+            elif event_type == 'items.update':
+                self._handle_items_update(data)
             # Otros tipos se pueden manejar aquí
             
             return Response({'status': 'success'}, status=status.HTTP_200_OK)
@@ -383,19 +419,17 @@ class WebhookReceiveView(APIView):
     
     def _verify_signature(self, payload, signature):
         """
-        Verifica la firma del webhook usando HMAC con SHA-256
+        Verifica la firma del webhook usando HMAC con SHA1
         """
         if not signature or not settings.LOYVERSE_WEBHOOK_SECRET:
             return False
         
-        # Calcular firma esperada
-        expected = base64.b64encode(
-            hmac.new(
-                settings.LOYVERSE_WEBHOOK_SECRET.encode('utf-8'),
-                payload,
-                hashlib.sha256
-            ).digest()
-        ).decode('utf-8')
+        # Calcular firma esperada usando HmacSHA1 (según retroalimentación del desarrollador)
+        expected = hmac.new(
+            settings.LOYVERSE_WEBHOOK_SECRET.encode('utf-8'),
+            payload,
+            hashlib.sha1
+        ).hexdigest()
         
         # Comparar con la firma recibida
         return hmac.compare_digest(expected, signature)
@@ -446,4 +480,124 @@ class WebhookReceiveView(APIView):
             except Producto.DoesNotExist:
                 # Si el producto no existe, sincronizar desde Loyverse
                 print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
-                service.fetch_products() 
+                service.fetch_products()
+    
+    def _handle_items_update(self, data):
+        """
+        Maneja la actualización de ítems (productos)
+        """
+        items = data.get('items', [])
+        service = LoyverseService()
+        channel_layer = get_channel_layer()
+        
+        for item in items:
+            item_id = item.get('item_id')
+            action = item.get('action', 'MODIFIED')
+            
+            try:
+                # Si el producto fue eliminado en Loyverse
+                if action == 'DELETED':
+                    try:
+                        producto = Producto.objects.get(loyverse_id=item_id)
+                        logger.info(f"Producto {producto.nombre} eliminado en Loyverse")
+                        
+                        # Opción 1: Marcar como inactivo (recomendado)
+                        producto.activo = False
+                        producto.save()
+                        
+                        # Notificar eliminación
+                        async_to_sync(channel_layer.group_send)(
+                            "productos_updates",
+                            {
+                                'type': 'producto_update',
+                                'producto': ProductoSerializer(producto).data,
+                                'message': f"El producto {producto.nombre} ha sido desactivado (eliminado en Loyverse)"
+                            }
+                        )
+                    except Producto.DoesNotExist:
+                        logger.info(f"Producto con ID {item_id} no existe, no se requiere eliminar")
+                        
+                # Si el producto fue creado o modificado
+                else:
+                    # Obtener detalles del producto desde Loyverse
+                    producto_data = service.get_product_details(item_id)
+                    
+                    if not producto_data:
+                        logger.error(f"No se pudo obtener detalles del producto {item_id}")
+                        continue
+                    
+                    # Buscar si el producto ya existe
+                    try:
+                        producto = Producto.objects.get(loyverse_id=item_id)
+                        logger.info(f"Actualizando producto existente: {producto.nombre}")
+                        
+                        # Guardar precio USD anterior
+                        precio_base_usd_anterior = producto.precio_base_usd
+                        
+                        # Actualizar información básica
+                        producto.nombre = producto_data.get('name', producto.nombre)
+                        producto.descripcion = producto_data.get('description', producto.descripcion)
+                        producto.precio_base = producto_data.get('price', producto.precio_base)
+                        producto.categoria = producto_data.get('category', producto.categoria)
+                        
+                        # Preservar precio USD si es precio variable
+                        if not producto.es_precio_variable:
+                            # Recalcular el precio base USD usando la tasa actual
+                            try:
+                                tasa = TasaCambio.objects.filter(tipo=producto.tipo_tasa).latest('fecha')
+                                producto.precio_base_usd = float(producto.precio_base) / float(tasa.valor)
+                            except Exception as e:
+                                logger.warning(f"No se pudo actualizar precio USD: {str(e)}")
+                        
+                        producto.save()
+                        
+                        # Notificar actualización
+                        async_to_sync(channel_layer.group_send)(
+                            "productos_updates",
+                            {
+                                'type': 'producto_update',
+                                'producto': ProductoSerializer(producto).data,
+                                'message': f"El producto {producto.nombre} ha sido actualizado desde Loyverse"
+                            }
+                        )
+                        
+                    except Producto.DoesNotExist:
+                        # Crear producto nuevo
+                        logger.info(f"Creando producto nuevo desde Loyverse: {producto_data.get('name')}")
+                        
+                        # Crear objeto producto con valores por defecto
+                        nuevo_producto = {
+                            'loyverse_id': item_id,
+                            'nombre': producto_data.get('name', ''),
+                            'descripcion': producto_data.get('description', ''),
+                            'precio_base': producto_data.get('price', 0),
+                            'categoria': producto_data.get('category', ''),
+                            'aplicar_iva': False,
+                            'es_precio_variable': False,
+                            'tipo_tasa': 'BCV',
+                            'porcentaje_ganancia': 30.00
+                        }
+                        
+                        # Calcular precio en USD
+                        try:
+                            tasa = TasaCambio.objects.filter(tipo='BCV').latest('fecha')
+                            nuevo_producto['precio_base_usd'] = float(nuevo_producto['precio_base']) / float(tasa.valor)
+                        except Exception as e:
+                            logger.warning(f"No se pudo calcular precio USD: {str(e)}")
+                            nuevo_producto['precio_base_usd'] = 0
+                            
+                        # Crear el producto
+                        producto = Producto.objects.create(**nuevo_producto)
+                        
+                        # Notificar creación
+                        async_to_sync(channel_layer.group_send)(
+                            "productos_updates",
+                            {
+                                'type': 'producto_create',
+                                'producto': ProductoSerializer(producto).data,
+                                'message': f"Se ha creado un nuevo producto: {producto.nombre}"
+                            }
+                        )
+                        
+            except Exception as e:
+                logger.error(f"Error procesando item {item_id}: {str(e)}") 

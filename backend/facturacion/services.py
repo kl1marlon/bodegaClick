@@ -8,6 +8,9 @@ from django.utils import timezone
 from datetime import timedelta
 from loyverse_sync.products import aplicar_redondeo_especial
 import sys  # Añadir para poder hacer flush de stdout
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LoyverseService:
     BASE_URL = 'https://api.loyverse.com/v1.0'
@@ -36,13 +39,17 @@ class LoyverseService:
         from datetime import timedelta
         from loyverse_sync.products import aplicar_redondeo_especial
         
-        # Verificar si existen facturas recientes (últimos 2 días)
-        dos_dias_atras = timezone.now() - timedelta(days=2)
-        facturas_recientes = Factura.objects.filter(created_at__gte=dos_dias_atras).exists()
+        # Comentado: Ya no verificamos si existen facturas recientes para actualizar precios
+        # Los precios se actualizarán independientemente de la existencia de facturas recientes
+        # dos_dias_atras = timezone.now() - timedelta(days=2)
+        # facturas_recientes = Factura.objects.filter(created_at__gte=dos_dias_atras).exists()
         
-        if facturas_recientes and actualizar_precios:
-            print("Existen facturas recientes (últimos 2 días). Se preservarán los precios actuales.")
-            actualizar_precios = False
+        # if facturas_recientes and actualizar_precios:
+        #     print("Existen facturas recientes (últimos 2 días). Se preservarán los precios actuales.")
+        #     actualizar_precios = False
+        
+        # Siempre permitir actualizar precios independientemente de facturas recientes
+        facturas_recientes = False
         
         # Obtener las categorías para mapear IDs a nombres
         categories_dict = {}
@@ -330,7 +337,7 @@ class LoyverseService:
                 producto.precio_venta_calculado = precio_final
                 # También actualizar el precio base para sincronizar con Loyverse
                 producto.precio_base = precio_final
-                producto.ultima_actualizacion_precio = datetime.datetime.now()
+                producto.ultima_actualizacion_precio = timezone.now()
                 producto.fuente_actualizacion = 'calculado'  # Indicar que fue calculado automáticamente
                 producto.save()
                 
@@ -392,7 +399,7 @@ class LoyverseService:
                 # Actualizar el precio base con el precio unitario de la factura (redondeado si es BS)
                 producto.precio_base = precio_unitario
                 producto.precio_venta_calculado = precio_unitario
-                producto.ultima_actualizacion_precio = datetime.datetime.now()
+                producto.ultima_actualizacion_precio = timezone.now()
                 producto.fuente_actualizacion = 'factura'  # Registrar que fue actualizado desde factura
                 
                 # Actualizar precio_base_usd y tipo_tasa si están disponibles en el detalle
@@ -916,7 +923,7 @@ class LoyverseService:
                                 try:
                                     producto = Producto.objects.get(nombre=update["product"])
                                     producto.stock_actual = update["new_stock"]
-                                    producto.ultima_actualizacion_stock = datetime.datetime.now()
+                                    producto.ultima_actualizacion_stock = timezone.now()
                                     producto.save()
                                     print(f"✅ Stock actualizado localmente para {producto.nombre}: {update['new_stock']}")
                                     sys.stdout.flush()
@@ -977,4 +984,22 @@ class LoyverseService:
             return {
                 'success': False,
                 'error': str(e)
-            } 
+            }
+
+    def get_product_details(self, item_id):
+        """
+        Obtiene los detalles de un producto específico desde Loyverse
+        """
+        url = f"{self.BASE_URL}/items/{item_id}"
+        
+        try:
+            response = requests.get(url, headers=self.headers)
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"Error obteniendo detalles del producto {item_id}: {response.status_code}")
+                return None
+        except Exception as e:
+            logger.error(f"Excepción obteniendo detalles del producto {item_id}: {str(e)}")
+            return None 
