@@ -13,6 +13,9 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Establecer puerto predeterminado
+ENV PORT=8000
+
 # Copiar archivos de entorno si existen
 COPY backend/requirements.txt .
 COPY .env.railway /.env.railway
@@ -32,6 +35,9 @@ set -e\n\
 if [ -f /.env.railway ]; then\n\
   export $(grep -v "^#" /.env.railway | xargs)\n\
 fi\n\
+\n\
+# Usar PORT predeterminado si no está definido\n\
+PORT="${PORT:-8000}"\n\
 \n\
 # Solo ejecutar gunicorn, sin migraciones ni collectstatic\n\
 exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
