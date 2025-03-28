@@ -33,8 +33,7 @@ if [ -f /.env.railway ]; then\n\
   export $(grep -v "^#" /.env.railway | xargs)\n\
 fi\n\
 \n\
-# Solo ejecutar collectstatic y gunicorn, sin migraciones\n\
-python manage.py collectstatic --noinput\n\
+# Solo ejecutar gunicorn, sin migraciones ni collectstatic\n\
 exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
