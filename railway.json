@@ -5,7 +5,7 @@
     "dockerfilePath": "./backend/Dockerfile"
   },
   "deploy": {
-    "startCommand": "sh -c \"python manage.py collectstatic --noinput && python manage.py migrate && daphne -b 0.0.0.0 -p $PORT config.asgi:application\"",
+    "startCommand": "python manage.py migrate && daphne -b 0.0.0.0 -p $PORT config.asgi:application",
     "healthcheckPath": "/admin/",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
