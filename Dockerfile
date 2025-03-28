@@ -22,12 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn psycopg2-binary dj-d
     && rm -rf ~/.cache/pip
 
 # Copiar el código del proyecto
-# IMPORTANTE: Notar que copiamos al directorio principal, no dentro de otro directorio
-COPY backend/ /app/
-
-# Crear directorio que asegure que el módulo backend sea importable
-RUN mkdir -p /app/backend && \
-    touch /app/backend/__init__.py
+COPY backend/ .
 
 # Crear script para iniciar la aplicación con logging detallado
 RUN echo '#!/bin/bash\n\
@@ -38,23 +33,6 @@ echo "Fecha y hora: $(date)"\n\
 echo "Directorio actual: $(pwd)"\n\
 echo "Contenido del directorio:"\n\
 ls -la\n\
-\n\
-echo "=== ESTRUCTURA DEL PROYECTO ==="\n\
-echo "Verificando estructura del proyecto..."\n\
-find . -type f -name "*.py" | sort\n\
-\n\
-echo "=== VERIFICANDO CONFIGURACIÓN DEL WSGI ==="\n\
-if [ -f wsgi.py ]; then\n\
-  echo "wsgi.py encontrado en la raíz"\n\
-  WSGI_APP="wsgi:application"\n\
-elif [ -f backend/wsgi.py ]; then\n\
-  echo "backend/wsgi.py encontrado"\n\
-  WSGI_APP="backend.wsgi:application"\n\
-else\n\
-  echo "ERROR: No se encontró el archivo wsgi.py"\n\
-  ls -la\n\
-  exit 1\n\
-fi\n\
 \n\
 echo "=== CONFIGURACIÓN DE ENTORNO ==="\n\
 # Exportar variables de entorno si existe .env.railway\n\
@@ -74,17 +52,25 @@ else\n\
   echo "Usando puerto definido por Railway: ${PORT}"\n\
 fi\n\
 \n\
-# Verificar entorno Python\n\
-echo "=== PYTHON PATH ==="\n\
-echo $PYTHONPATH\n\
-echo "=== PYTHON MODULES ==="\n\
-pip list\n\
+echo "=== VERIFICACIÓN DE ARCHIVOS CRÍTICOS ==="\n\
+if [ -f manage.py ]; then\n\
+  echo "manage.py encontrado"\n\
+else\n\
+  echo "ERROR: manage.py no encontrado"\n\
+  ls -la\n\
+fi\n\
+\n\
+if [ -f config/wsgi.py ]; then\n\
+  echo "config/wsgi.py encontrado"\n\
+else\n\
+  echo "ERROR: config/wsgi.py no encontrado"\n\
+  find . -name wsgi.py\n\
+fi\n\
 \n\
 echo "=== INICIANDO SERVIDOR GUNICORN ==="\n\
 echo "Usando puerto: ${PORT}"\n\
-echo "Usando WSGI app: ${WSGI_APP}"\n\
 # Ejecutar gunicorn con configuración detallada de logs\n\
-exec gunicorn ${WSGI_APP} \\\n\
+exec gunicorn config.wsgi:application \\\n\
   --bind 0.0.0.0:${PORT} \\\n\
   --workers 2 \\\n\
   --threads 2 \\\n\
@@ -101,5 +87,4 @@ CMD ["/app/entrypoint.sh"]
 
 # Puerto será asignado por Railway
 ENV PORT=8000
-# Usar el valor de la variable de entorno PORT
-EXPOSE 8000
+EXPOSE ${PORT}
