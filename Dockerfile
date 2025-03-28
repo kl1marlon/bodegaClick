@@ -46,5 +46,5 @@ exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
 # Usar el script como punto de entrada
 CMD ["/app/entrypoint.sh"]
 
-# El puerto será definido por Railway mediante la variable PORT
-EXPOSE $PORT
+# Exponer puerto fijo (la variable PORT se usará en el entrypoint)
+EXPOSE 8000
