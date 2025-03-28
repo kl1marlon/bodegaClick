@@ -2,18 +2,18 @@ FROM node:16-alpine as builder
 
 WORKDIR /app
 
-# Copiar solo package.json para instalar dependencias
-# Esto permite mejor caché de Docker
-COPY package.json ./
+# Copiar solo package.json y package-lock.json para mejor caché
+COPY package*.json ./
 
 # Instalar solo dependencias de producción para reducir el tiempo y tamaño
-RUN npm install --only=production --no-audit --no-fund
+RUN npm ci --only=production --no-audit --no-fund
 
 # Copiar el resto de los archivos del proyecto
-COPY public ./public
-COPY src ./src
-COPY .env* ./
-COPY *.js ./
+COPY . .
+
+# Configurar variables de entorno para build
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
 # Construir la aplicación
 RUN npm run build
@@ -34,7 +34,15 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 ENV NODE_ENV=production
 ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
 
+# Crear archivo para reemplazar variables de entorno en tiempo de ejecución
+RUN echo 'window.RUNTIME_ENV = { API_URL: "${API_URL}" };' > /usr/share/nginx/html/runtime-config.js
+
+# Copiar script de entrada personalizado
+COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE 80
 
-# Comando para iniciar nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Usar script de entrada personalizado
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
