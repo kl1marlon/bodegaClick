@@ -4,6 +4,7 @@ FROM python:3.9-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Crear directorio de trabajo
 WORKDIR /app
 
 # Instalar dependencias del sistema
@@ -12,16 +13,15 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar e instalar dependencias
-COPY requirements.txt .
+# Copiar todo el código primero para asegurar que requirements.txt esté disponible
+COPY . /app/
+
+# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt \
     && rm -rf ~/.cache/pip
 
 # Crear directorio para archivos estáticos
 RUN mkdir -p /app/staticfiles
-
-# Copiar el código del proyecto
-COPY . .
 
 EXPOSE 8000 
 
