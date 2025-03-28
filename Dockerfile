@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn psycopg2-binary dj-d
 # Copiar el código del proyecto
 COPY backend/ .
 
-# Crear script para omitir migraciones en el primer despliegue y agregar logs detallados
+# Crear script para iniciar la aplicación con logging detallado
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
@@ -44,6 +44,14 @@ else\n\
   echo "ADVERTENCIA: Archivo .env.railway no encontrado"\n\
 fi\n\
 \n\
+# Configuración del puerto\n\
+if [ -z "${PORT}" ]; then\n\
+  echo "Variable de entorno PORT no establecida, usando puerto predeterminado 8000"\n\
+  export PORT=8000\n\
+else\n\
+  echo "Usando puerto definido por Railway: ${PORT}"\n\
+fi\n\
+\n\
 echo "=== VERIFICACIÓN DE ARCHIVOS CRÍTICOS ==="\n\
 if [ -f manage.py ]; then\n\
   echo "manage.py encontrado"\n\
@@ -53,13 +61,23 @@ else\n\
 fi\n\
 \n\
 echo "=== INICIANDO SERVIDOR GUNICORN ==="\n\
-echo "Usando puerto: 8000"\n\
-# Solo ejecutar gunicorn, sin migraciones ni collectstatic\n\
-exec gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --log-level debug --access-logfile - --error-logfile -\n\
+echo "Usando puerto: ${PORT}"\n\
+# Ejecutar gunicorn con configuración detallada de logs\n\
+exec gunicorn backend.wsgi:application \\\n\
+  --bind 0.0.0.0:${PORT} \\\n\
+  --workers 2 \\\n\
+  --threads 2 \\\n\
+  --timeout 30 \\\n\
+  --graceful-timeout 30 \\\n\
+  --keep-alive 5 \\\n\
+  --log-level debug \\\n\
+  --access-logfile - \\\n\
+  --error-logfile -\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Usar el script como punto de entrada
 CMD ["/app/entrypoint.sh"]
 
-# Exponer puerto fijo
-EXPOSE 8000
+# Puerto será asignado por Railway
+ENV PORT=8000
+EXPOSE ${PORT}
