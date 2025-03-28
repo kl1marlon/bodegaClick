@@ -47,11 +47,11 @@ python manage.py migrate || {\n\
 \n\
 # Continuar con el resto de comandos\n\
 python manage.py collectstatic --noinput\n\
-exec gunicorn backend.wsgi:application --bind 0.0.0.0:${PORT:-8000}\n\
+exec gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Usar el script como punto de entrada
 CMD ["/app/entrypoint.sh"]
 
 # El puerto será definido por Railway mediante la variable PORT
-EXPOSE ${PORT:-8000} 
+EXPOSE $PORT
