@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'facturacion',
+    'django_celery_results',
     # 'channels',  # Comentado temporalmente
 ]
 
@@ -132,3 +133,13 @@ if not LOYVERSE_API_TOKEN:
 #         'BACKEND': 'channels.layers.InMemoryChannelLayer',
 #     },
 # } 
+
+# Celery Configuration
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'memory://')
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json' 
