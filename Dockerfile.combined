@@ -1,0 +1,99 @@
+FROM node:16-alpine as frontend-builder
+
+WORKDIR /frontend
+
+# Copiar archivos de frontend
+COPY frontend/package.json ./
+RUN npm install --only=production --no-audit --no-fund
+
+COPY frontend/public ./public
+COPY frontend/src ./src
+COPY frontend/.env* ./
+COPY frontend/*.js ./
+
+# Construir la aplicación frontend
+RUN npm run build
+
+# Segunda etapa - Imagen de Python para el backend
+FROM python:3.9-slim
+
+# Establecer entorno para no crear archivos .pyc y mantener output
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBUG=False
+
+WORKDIR /app
+
+# Instalar nginx para servir el frontend
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev nginx \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configurar nginx
+COPY frontend/nginx.combined.conf /etc/nginx/sites-available/default
+
+# Copiar el frontend construido a la ubicación de nginx
+COPY --from=frontend-builder /frontend/build /app/frontend
+
+# Copiar archivos de entorno si existen
+COPY backend/requirements.txt .
+COPY .env.railway /.env.railway
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt gunicorn psycopg2-binary dj-database-url \
+    && rm -rf ~/.cache/pip
+
+# Copiar el código del backend
+COPY backend/ .
+
+# Crear script para iniciar tanto el backend como nginx
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "=== INICIANDO DESPLIEGUE ==="\n\
+echo "Fecha y hora: $(date)"\n\
+\n\
+# Exportar variables de entorno si existe .env.railway\n\
+if [ -f /.env.railway ]; then\n\
+  echo "Cargando variables desde .env.railway"\n\
+  export $(grep -v "^#" /.env.railway | xargs)\n\
+  echo "Variables cargadas correctamente"\n\
+fi\n\
+\n\
+# Configuración del puerto\n\
+if [ -z "${PORT}" ]; then\n\
+  echo "Variable de entorno PORT no establecida, usando puerto predeterminado 8000"\n\
+  export PORT=8000\n\
+else\n\
+  echo "Usando puerto definido por Railway: ${PORT}"\n\
+fi\n\
+\n\
+# Configurar frontend para usar la URL correcta de la API\n\
+echo "Configurando URL de la API para el frontend..."\n\
+sed -i "s|http://localhost:8000/api|/api|g" /app/frontend/index.html\n\
+\n\
+# Iniciar nginx en segundo plano\n\
+echo "Iniciando nginx para servir el frontend..."\n\
+nginx -g "daemon on;"\n\
+\n\
+# Iniciar gunicorn para el backend\n\
+echo "Iniciando gunicorn para el backend..."\n\
+exec gunicorn config.wsgi:application \\\n\
+  --bind 127.0.0.1:8000 \\\n\
+  --workers 2 \\\n\
+  --threads 2 \\\n\
+  --timeout 30 \\\n\
+  --graceful-timeout 30 \\\n\
+  --keep-alive 5 \\\n\
+  --log-level debug \\\n\
+  --access-logfile - \\\n\
+  --error-logfile -\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# Usar el script como punto de entrada
+CMD ["/app/entrypoint.sh"]
+
+# Puerto será asignado por Railway
+ENV PORT=80
+EXPOSE 80 
