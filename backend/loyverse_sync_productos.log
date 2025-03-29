@@ -22243,3 +22243,203 @@ requests.exceptions.RequestException: Error 400: {"errors":[{"code":"INVALID_VAL
 2025-03-29 11:03:33,851 - WARNING - Not Found: /ws/notificaciones/
 2025-03-29 11:03:38,968 - WARNING - Not Found: /ws/notificaciones/
 2025-03-29 11:03:39,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:24,382 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:26,265 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:26,319 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:28,206 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:30,656 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:31,575 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:32,619 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:36,576 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:36,858 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:39,224 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:42,935 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:45,160 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:46,492 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:50,817 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:51,713 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:52,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:56,125 - INFO - 🔄 Iniciando sync_from_loyverse desde API con datos: {'actualizar_precios': True, 'categorias': ['Comida'], 'tipo_tasa': 'PARALELO', 'productos_ids': [397], 'forzar_exportar': False}
+2025-03-29 11:06:56,136 - INFO - 🚀 Iniciando sincronización con Loyverse. Opciones: {'solo_importar': False, 'categorias': ['Comida'], 'tipo_tasa': 'PARALELO', 'productos_ids': [397]}
+2025-03-29 11:06:56,147 - INFO - ⚠️ MODO PRUEBA: Sincronizando solo productos específicos: [397]
+2025-03-29 11:06:56,159 - INFO - 📂 Filtrado por categorías: ['Comida']
+2025-03-29 11:06:56,170 - INFO - 💲 Filtrado por tipo de tasa: PARALELO
+2025-03-29 11:06:56,181 - INFO - 🧹 Caché de API limpiado
+2025-03-29 11:06:56,263 - INFO - ✅ Producto para prueba encontrado: fama de america 100g (ID: 397, Loyverse ID: 0147c04e-9f4f-4426-9602-50640b793903)
+2025-03-29 11:06:56,263 - INFO - 🔍 Filtrando importación a solo 1 productos específicos
+2025-03-29 11:06:56,263 - INFO - 🔍 Obteniendo categorías desde Loyverse...
+2025-03-29 11:06:57,785 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:58,077 - INFO - ✅ Obtenidas 16 categorías
+2025-03-29 11:06:58,078 - INFO - 🔍 Obteniendo productos desde Loyverse...
+2025-03-29 11:06:58,079 - INFO - 📥 Obteniendo página 1 de productos (cursor: None)...
+2025-03-29 11:06:58,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:06:59,593 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:00,026 - INFO - ✅ Obtenidos 250 productos en página 1. Total acumulado: 250
+2025-03-29 11:07:01,028 - INFO - 📥 Obteniendo página 2 de productos (cursor: OPoBQPTzpHxIBQ==)...
+2025-03-29 11:07:02,762 - INFO - ✅ Obtenidos 250 productos en página 2. Total acumulado: 500
+2025-03-29 11:07:03,763 - INFO - 📥 Obteniendo página 3 de productos (cursor: OPoBQPPxpHxIBQ==)...
+2025-03-29 11:07:04,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:05,025 - INFO - ✅ Obtenidos 13 productos en página 3. Total acumulado: 513
+2025-03-29 11:07:05,026 - INFO - ✅ Proceso completado. Obtenidos 513 productos en total.
+2025-03-29 11:07:05,028 - INFO - 🔍 Filtrando por 1 IDs específicos de Loyverse
+2025-03-29 11:07:05,030 - INFO - ✅ Filtrado completado. Productos encontrados: 1
+2025-03-29 11:07:05,031 - INFO - 🔍 Filtrando por categorías: ['Comida']. Productos filtrados: 1
+2025-03-29 11:07:05,045 - INFO - ✅ Importación completada. Creados: 0, Actualizados: 0, Categorías actualizadas: 0
+2025-03-29 11:07:05,047 - INFO - ✅ Importación completada exitosamente
+2025-03-29 11:07:05,048 - INFO - 🔄 Iniciando exportación de precios calculados a Loyverse
+2025-03-29 11:07:05,060 - INFO - 🔄 Exportando precios para 1 productos en lotes de 20
+2025-03-29 11:07:05,060 - INFO - 🔄 Procesando lote 1: productos 1-1 de 1
+2025-03-29 11:07:05,063 - INFO - 🔍 Obteniendo producto con ID 0147c04e-9f4f-4426-9602-50640b793903...
+2025-03-29 11:07:05,580 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:05,740 - INFO - 🔄 Actualizando precio de fama de america 100g de 80.0 a 85.0 Bs (USD 0.93 * PARALELO 90.0, con redondeo especial)
+2025-03-29 11:07:05,741 - INFO - 🔄 Actualizando producto 0147c04e-9f4f-4426-9602-50640b793903...
+2025-03-29 11:07:06,562 - INFO - ✅ Producto actualizado correctamente
+2025-03-29 11:07:06,571 - INFO - ✅ Precio actualizado para fama de america 100g
+2025-03-29 11:07:06,572 - INFO - ✅ Exportación completada en 1 lotes. Actualizados: 1, Fallidos: 0, Sin precio: 0, Sin tasa: 0
+2025-03-29 11:07:06,574 - INFO - ✅ Exportación de precios completada exitosamente
+2025-03-29 11:07:06,574 - INFO - 🏁 Sincronización completada en 10.44 segundos
+2025-03-29 11:07:07,619 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:10,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:14,573 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:15,195 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:16,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:22,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:23,046 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:24,542 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:28,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:31,994 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:33,056 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:34,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:40,123 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:40,216 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:41,047 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:46,131 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:49,905 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:50,099 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:52,164 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:56,518 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:58,217 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:07:58,634 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:04,208 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:06,846 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:08,762 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:10,245 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:13,266 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:16,779 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:17,336 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:22,816 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:24,294 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:25,072 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:32,073 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:32,569 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:34,692 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:40,389 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:41,710 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:42,011 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:46,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:48,491 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:50,891 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:52,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:54,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:57,554 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:08:58,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:00,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:04,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:06,108 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:06,808 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:10,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:12,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:16,370 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:16,681 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:18,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:22,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:24,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:26,458 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:28,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:30,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:34,116 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:36,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:36,671 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:40,132 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:42,124 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:44,704 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:46,165 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:48,150 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:52,021 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:52,195 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:54,151 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:09:58,175 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:00,206 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:00,231 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:04,428 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:06,261 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:09,752 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:10,856 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:12,477 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:16,504 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:16,888 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:19,264 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:25,481 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:26,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:26,955 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:32,648 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:34,050 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:36,577 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:40,692 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:42,191 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:46,533 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:47,443 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:48,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:52,108 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:53,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:54,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:58,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:10:59,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:00,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:04,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:12,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:16,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:17,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:18,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:22,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:23,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:24,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:28,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:29,119 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:30,123 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:34,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:35,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:36,123 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:40,123 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:41,128 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:42,139 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:46,136 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:47,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:48,132 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:52,155 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:53,149 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:54,253 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:58,223 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:11:59,230 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:00,378 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:04,367 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:05,183 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:06,548 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:10,313 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:11,426 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:12,632 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:16,617 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:18,160 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:19,171 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:23,179 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:24,610 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:29,917 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:31,000 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:33,293 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:36,711 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:37,529 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:44,019 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:44,087 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:44,633 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:49,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:12:50,932 - WARNING - Not Found: /ws/notificaciones/

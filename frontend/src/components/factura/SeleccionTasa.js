@@ -48,7 +48,7 @@ const SeleccionTasa = ({ tipoTasa, onTipoTasaChange, tasaCambio, onTasaUpdated, 
   
   // Abrir el diálogo de edición de tasa
   const handleOpenTasaDialog = () => {
-    setNuevaTasaValor(tasaCambio ? tasaCambio.valor : '');
+    setNuevaTasaValor(tasaCambio?.valor || '');
     setTasaDialogOpen(true);
   };
   

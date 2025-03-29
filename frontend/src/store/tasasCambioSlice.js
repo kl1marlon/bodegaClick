@@ -32,6 +32,7 @@ const tasasCambioSlice = createSlice({
   initialState: {
     items: [],
     latestTasa: null,
+    latestTasas: {},
     status: 'idle',
     error: null,
   },
@@ -50,12 +51,18 @@ const tasasCambioSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(fetchLatestTasa.fulfilled, (state, action) => {
-        state.latestTasa = action.payload;
+        if (action.payload && action.payload.tipo) {
+          state.latestTasas[action.payload.tipo] = action.payload;
+          state.latestTasa = action.payload;
+        }
       })
       .addCase(createTasaCambio.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
-        if (state.latestTasa && state.latestTasa.tipo === action.payload.tipo) {
-          state.latestTasa = action.payload;
+        if (action.payload && action.payload.tipo) {
+          state.latestTasas[action.payload.tipo] = action.payload;
+          if (state.latestTasa && state.latestTasa.tipo === action.payload.tipo) {
+            state.latestTasa = action.payload;
+          }
         }
       });
   },

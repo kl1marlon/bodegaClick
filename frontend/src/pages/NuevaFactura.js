@@ -43,6 +43,7 @@ const NuevaFactura = () => {
   const dispatch = useDispatch();
   const productos = useSelector((state) => state.productos.items);
   const tasaCambio = useSelector((state) => state.tasasCambio.latestTasa);
+  const latestTasas = useSelector((state) => state.tasasCambio.latestTasas);
   
   // Estados principales
   const [moneda, setMoneda] = useState('');
@@ -73,13 +74,21 @@ const NuevaFactura = () => {
     console.log('Iniciando carga de productos...');
     dispatch(fetchProductos());
   }, [dispatch]);
+  
+  // Añadir diagnóstico para ver cuando cambian las tasas
+  useEffect(() => {
+    console.log('Tipo de tasa seleccionada:', tipoTasa);
+    console.log('Tasa actual:', tasaCambio);
+    console.log('Tasas disponibles:', latestTasas);
+  }, [tipoTasa, tasaCambio, latestTasas]);
 
   // Cargar tasa de cambio cuando se selecciona un tipo
   useEffect(() => {
-    if (tipoTasa && !tasaCambio) {
+    if (tipoTasa) {
+      // Siempre cargar la tasa cuando cambia el tipo
       dispatch(fetchLatestTasa(tipoTasa));
     }
-  }, [dispatch, tipoTasa, tasaCambio]);
+  }, [dispatch, tipoTasa]);
 
   // Manejar cambio de moneda
   const handleMonedaChange = (nuevaMoneda) => {
@@ -96,6 +105,9 @@ const NuevaFactura = () => {
 
   // Manejar cambio de tipo de tasa
   const handleTipoTasaChange = (nuevoTipoTasa) => {
+    // Si es el mismo tipo, no hacer nada
+    if (nuevoTipoTasa === tipoTasa) return;
+    
     setTipoTasa(nuevoTipoTasa);
   };
 
