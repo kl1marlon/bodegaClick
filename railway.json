@@ -1,0 +1,21 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": [
+    {
+      "name": "backend",
+      "path": "./backend",
+      "envs": {
+        "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
+        "DEBUG": "False",
+        "ALLOWED_HOSTS": ".railway.app"
+      }
+    },
+    {
+      "name": "frontend",
+      "path": "./frontend",
+      "envs": {
+        "REACT_APP_API_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}/api"
+      }
+    }
+  ]
+} 

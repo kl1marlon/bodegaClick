@@ -22,19 +22,22 @@ RUN npm run build
 FROM nginx:alpine
 
 # Eliminar archivos default de nginx
-RUN rm -rf /usr/share/nginx/html/*
+RUN rm -rf /usr/share/nginx/html/* && rm /etc/nginx/conf.d/default.conf
 
 # Copiar solo los archivos de build necesarios
 COPY --from=builder /app/build /usr/share/nginx/html
 
 # Copiar la configuración de nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/
 
-# Configurar variables para un mejor rendimiento
-ENV NODE_ENV=production
-ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
-
+# Configurar variables para Railway
+ENV PORT=80
 EXPOSE 80
 
-# Comando para iniciar nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Script de inicio para Railway
+RUN echo '#!/bin/sh\n\
+sed -i "s|listen 80|listen $PORT|g" /etc/nginx/conf.d/nginx.conf\n\
+nginx -g "daemon off;"\n'\
+> /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+
+CMD ["/docker-entrypoint.sh"] 

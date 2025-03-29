@@ -22899,3 +22899,4 @@ requests.exceptions.RequestException: Error 400: {"errors":[{"code":"INVALID_VAL
 2025-03-29 11:37:45,330 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
 2025-03-29 11:37:45,418 - INFO - /app/config/settings.py changed, reloading.
 2025-03-29 11:38:04,140 - INFO - /app/config/urls.py changed, reloading.
+2025-03-29 12:10:43,398 - INFO - /app/config/settings.py changed, reloading.
