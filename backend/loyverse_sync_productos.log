@@ -22443,3 +22443,459 @@ requests.exceptions.RequestException: Error 400: {"errors":[{"code":"INVALID_VAL
 2025-03-29 11:12:44,633 - WARNING - Not Found: /ws/notificaciones/
 2025-03-29 11:12:49,109 - WARNING - Not Found: /ws/notificaciones/
 2025-03-29 11:12:50,932 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:00,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:04,144 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:04,145 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:06,145 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:10,135 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:10,250 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:12,185 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:16,251 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:16,371 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:18,257 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:22,338 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:22,348 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:24,364 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:28,248 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:28,689 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:30,691 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:34,910 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:35,618 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:37,198 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:41,596 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:43,493 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:44,287 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:49,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:50,533 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:52,257 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:55,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:56,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:14:58,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:01,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:02,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:04,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:07,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:08,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:10,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:13,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:14,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:16,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:19,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:20,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:22,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:25,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:26,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:28,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:31,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:32,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:34,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:37,129 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:38,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:40,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:43,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:44,120 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:46,116 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:49,182 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:50,131 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:52,144 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:55,262 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:56,169 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:15:58,153 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:01,289 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:02,225 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:04,145 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:07,300 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:08,225 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:10,383 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:13,497 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:14,723 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:16,560 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:20,496 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:21,196 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:23,354 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:29,217 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:30,288 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:30,835 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:38,059 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:38,243 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:39,818 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:46,999 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:47,719 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:49,482 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:54,571 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:56,395 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:16:57,729 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:00,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:03,812 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:06,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:06,627 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:10,981 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:12,108 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:13,227 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:18,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:18,227 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:23,695 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:24,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:25,602 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:30,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:30,367 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:32,569 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:36,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:41,023 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:42,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:42,787 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:48,119 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:49,486 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:51,984 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:54,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:17:57,123 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:00,155 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:01,722 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:06,166 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:07,636 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:09,522 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:12,269 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:15,421 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:17,567 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:18,683 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:22,314 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:24,573 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:27,814 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:31,285 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:31,763 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:35,178 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:38,761 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:39,320 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:45,210 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:47,587 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:49,078 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:53,229 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:55,607 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:18:55,648 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:01,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:01,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:01,175 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:07,108 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:07,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:10,821 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:13,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:13,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:19,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:19,135 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:20,666 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:25,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:25,131 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:27,318 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:31,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:31,132 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:36,236 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:37,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:37,137 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:43,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:43,137 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:43,878 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:49,120 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:49,142 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:53,812 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:55,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:19:55,147 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:01,153 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:01,192 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:02,624 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:07,256 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:07,277 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:09,733 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:13,213 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:13,396 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:16,361 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:19,475 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:19,688 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:25,628 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:25,732 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:26,897 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:32,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:32,562 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:33,459 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:41,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:43,046 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:43,788 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:49,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:51,607 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:51,648 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:55,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:59,391 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:20:59,951 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:01,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:05,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:05,132 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:07,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:11,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:11,131 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:13,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:17,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:17,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:19,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:23,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:23,139 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:25,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:29,129 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:29,160 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:31,119 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:35,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:35,130 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:37,114 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:41,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:41,132 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:43,128 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:47,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:47,141 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:49,142 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:53,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:53,147 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:55,242 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:59,121 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:21:59,141 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:01,201 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:05,146 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:05,183 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:07,494 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:11,141 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:11,231 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:13,412 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:17,267 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:17,287 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:19,779 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:23,416 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:23,527 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:29,550 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:30,043 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:30,248 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:36,071 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:37,413 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:37,900 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:44,171 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:44,228 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:45,606 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:50,116 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:54,215 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:55,515 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:22:56,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:01,146 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:02,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:02,413 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:07,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:08,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:08,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:13,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:14,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:14,119 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:19,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:20,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:20,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:25,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:26,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:26,118 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:31,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:32,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:32,120 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:37,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:38,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:38,121 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:43,690 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:44,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:44,138 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:49,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:50,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:50,131 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:55,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:56,127 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:23:56,161 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:01,136 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:02,122 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:02,310 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:07,163 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:08,126 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:08,734 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:13,193 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:14,183 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:14,955 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:19,415 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:20,273 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:20,787 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:25,572 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:26,252 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:28,344 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:31,983 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:33,138 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:37,809 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:38,166 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:41,138 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:45,434 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:45,961 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:48,999 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:53,866 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:54,156 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:24:56,055 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:01,907 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:02,197 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:05,512 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:07,108 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:10,359 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:11,111 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:13,110 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:17,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:17,172 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:19,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:23,109 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:43,120 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:45,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:47,423 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:49,113 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:51,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:55,117 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:56,103 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:25:57,125 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:01,119 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:03,133 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:05,293 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:07,148 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:09,183 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:12,406 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:13,157 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:15,197 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:19,254 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:20,853 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:21,384 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:25,215 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:27,419 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:28,288 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:31,343 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:34,266 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:37,409 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:38,137 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:42,203 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:44,242 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:46,319 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:50,115 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:50,615 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:54,750 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:56,112 - WARNING - Not Found: /ws/notificaciones/
+2025-03-29 11:26:59,253 - INFO - /app/config/urls.py changed, reloading.
+2025-03-29 11:29:13,674 - INFO - /app/config/urls.py changed, reloading.
+2025-03-29 11:29:31,463 - INFO - /app/config/settings.py changed, reloading.
+2025-03-29 11:29:35,107 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:38,111 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:39,107 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:41,107 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:44,121 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:45,110 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:47,111 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:50,172 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:51,108 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:53,114 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:56,153 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:57,123 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:29:59,117 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:02,177 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:11,160 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:15,108 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:15,145 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:17,151 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:21,175 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:22,631 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:23,172 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:27,281 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:29,354 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:29,493 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:33,395 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:35,895 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:30:36,144 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:02,953 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:02,995 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:03,364 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:08,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:08,943 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:14,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:14,943 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:20,936 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:20,964 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:26,935 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:26,953 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:31,145 - INFO - "GET /api/tasas-cambio/ HTTP/1.1" 200 2533
+2025-03-29 11:33:32,929 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:32,946 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:38,930 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:38,946 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:44,930 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:44,945 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:50,941 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:50,956 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:56,934 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:33:56,960 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:02,994 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:03,009 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:08,976 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:08,994 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:15,140 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:15,183 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:21,092 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:21,341 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:27,353 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:27,411 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:33,999 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:34,172 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:41,620 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:41,735 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:51,276 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:51,700 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:34:59,353 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:01,029 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:04,925 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:06,927 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:10,927 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:12,926 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:16,926 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:18,926 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:22,929 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:24,927 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:28,934 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:30,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:34,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:36,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:40,929 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:42,932 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:46,928 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:48,935 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:52,932 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:54,936 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:35:58,936 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:00,948 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:04,954 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:06,988 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:11,059 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:13,018 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:17,182 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:19,224 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:23,511 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:25,338 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:29,412 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:31,535 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:36,523 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:38,158 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:46,300 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:46,620 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:54,660 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:36:55,543 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:02,845 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:02,875 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:09,774 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:11,351 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:18,581 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:19,550 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:27,406 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:29,817 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:35,436 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:36,353 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:45,330 - INFO - "GET /ws/notificaciones/ HTTP/1.1" 200 0
+2025-03-29 11:37:45,418 - INFO - /app/config/settings.py changed, reloading.
+2025-03-29 11:38:04,140 - INFO - /app/config/urls.py changed, reloading.
