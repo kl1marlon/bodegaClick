@@ -75,7 +75,6 @@ const SeleccionTasa = ({ tipoTasa, onTipoTasaChange, tasaCambio, onTasaUpdated, 
         if (onTasaUpdated) {
           onTasaUpdated(`Tasa de cambio ${tipoTasa} actualizada correctamente`);
         }
-        dispatch(fetchLatestTasa(tipoTasa));
         setTasaDialogOpen(false);
       })
       .catch(error => {

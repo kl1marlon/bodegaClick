@@ -3,7 +3,8 @@ import { Box, Container } from '@mui/material';
 import { Routes, Route, Link } from 'react-router-dom';
 import ListadoProductos from './pages/ListadoProductos';
 import NuevaFactura from './pages/NuevaFactura';
-import NotificacionInventario from './components/NotificacionInventario';
+// Comentamos la importación del componente de notificaciones
+// import NotificacionInventario from './components/NotificacionInventario';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -46,7 +47,8 @@ function App() {
         </Routes>
       </Container>
       
-      <NotificacionInventario />
+      {/* Comentamos el componente de notificaciones */}
+      {/* <NotificacionInventario /> */}
     </Box>
   );
 }

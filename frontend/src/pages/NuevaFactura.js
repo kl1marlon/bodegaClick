@@ -76,10 +76,10 @@ const NuevaFactura = () => {
 
   // Cargar tasa de cambio cuando se selecciona un tipo
   useEffect(() => {
-    if (tipoTasa) {
+    if (tipoTasa && !tasaCambio) {
       dispatch(fetchLatestTasa(tipoTasa));
     }
-  }, [dispatch, tipoTasa]);
+  }, [dispatch, tipoTasa, tasaCambio]);
 
   // Manejar cambio de moneda
   const handleMonedaChange = (nuevaMoneda) => {

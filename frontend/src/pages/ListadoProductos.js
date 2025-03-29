@@ -116,21 +116,42 @@ const ListadoProductos = () => {
   
   // Cargar productos y tasas al montar el componente
   useEffect(() => {
-    if (status !== 'succeeded') {
-      dispatch(fetchProductos());
-    }
-    dispatch(fetchTasasCambio());
-    dispatch(fetchLatestTasa('BCV')).then(action => {
-      if (action.payload) {
-        setTasaBCV(action.payload);
+    const obtenerDatos = async () => {
+      try {
+        // Solo cargar productos si aún no están cargados
+        if (status !== 'succeeded') {
+          await dispatch(fetchProductos()).unwrap();
+        }
+        
+        // Cargar tasas de cambio una sola vez
+        if (tasasCambio.length === 0) {
+          await dispatch(fetchTasasCambio()).unwrap();
+        }
+        
+        // Solo cargar tasas más recientes si no están cargadas
+        if (!tasaBCV && !tasaParalelo) {
+          const [bcvAction, paraleloAction] = await Promise.all([
+            dispatch(fetchLatestTasa('BCV')),
+            dispatch(fetchLatestTasa('PARALELO'))
+          ]);
+          
+          if (bcvAction.payload) {
+            setTasaBCV(bcvAction.payload);
+          }
+          
+          if (paraleloAction.payload) {
+            setTasaParalelo(paraleloAction.payload);
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar datos iniciales:", error);
       }
-    });
-    dispatch(fetchLatestTasa('PARALELO')).then(action => {
-      if (action.payload) {
-        setTasaParalelo(action.payload);
-      }
-    });
-  }, [dispatch, status]);
+    };
+    
+    obtenerDatos();
+    
+    // Eliminar dependencias que causan re-renders innecesarios
+  }, [dispatch, status, tasasCambio.length]);
   
   // Extraer categorías únicas de los productos
   useEffect(() => {

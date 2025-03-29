@@ -1,58 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import WebSocketService from '../services/WebSocketService';
+import React, { useState } from 'react';
 
 const NotificacionInventario = () => {
   const [notificaciones, setNotificaciones] = useState([]);
-  const [conectado, setConectado] = useState(false);
-
-  useEffect(() => {
-    // Iniciar conexión al WebSocket
-    WebSocketService.connect();
-
-    // Escuchar eventos de conexión
-    const connectedListener = WebSocketService.addListener('connected', () => {
-      setConectado(true);
-    });
-
-    const disconnectedListener = WebSocketService.addListener('disconnected', () => {
-      setConectado(false);
-    });
-
-    // Escuchar eventos de actualización de inventario
-    const inventoryListener = WebSocketService.addListener('inventory_update', (data) => {
-      // Agregar nueva notificación
-      const nuevaNotificacion = {
-        id: Date.now(), // ID único basado en timestamp
-        producto: data.producto.nombre,
-        mensaje: data.message,
-        fecha: new Date().toLocaleTimeString(),
-        leida: false
-      };
-
-      setNotificaciones((prev) => [nuevaNotificacion, ...prev].slice(0, 10)); // Mantener solo las 10 últimas
-      
-      // Mostrar notificación nativa si está disponible
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Actualización de Inventario', {
-          body: data.message,
-          icon: '/logo.png'
-        });
-      }
-    });
-
-    // Solicitar permiso para notificaciones
-    if ('Notification' in window && Notification.permission !== 'denied') {
-      Notification.requestPermission();
-    }
-
-    // Limpiar listeners al desmontar
-    return () => {
-      connectedListener();
-      disconnectedListener();
-      inventoryListener();
-      WebSocketService.disconnect();
-    };
-  }, []);
 
   // Marcar notificación como leída
   const marcarLeida = (id) => {
@@ -74,10 +23,7 @@ const NotificacionInventario = () => {
   return (
     <div className="notificaciones-container">
       <div className="notificaciones-header">
-        <h3>Notificaciones de Inventario {conectado ? 
-          <span className="estado-conectado">●</span> : 
-          <span className="estado-desconectado">●</span>}
-        </h3>
+        <h3>Notificaciones</h3>
         {notificaciones.length > 0 && (
           <button 
             className="clear-all" 
@@ -141,16 +87,6 @@ const NotificacionInventario = () => {
           font-size: 14px;
           display: flex;
           align-items: center;
-        }
-        
-        .estado-conectado {
-          color: green;
-          margin-left: 5px;
-        }
-        
-        .estado-desconectado {
-          color: red;
-          margin-left: 5px;
         }
         
         .clear-all {

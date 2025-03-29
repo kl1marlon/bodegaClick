@@ -54,6 +54,9 @@ const tasasCambioSlice = createSlice({
       })
       .addCase(createTasaCambio.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+        if (state.latestTasa && state.latestTasa.tipo === action.payload.tipo) {
+          state.latestTasa = action.payload;
+        }
       });
   },
 });

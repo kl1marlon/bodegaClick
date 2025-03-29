@@ -21,7 +21,6 @@ import uuid
 from django.conf import settings
 import datetime
 from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 # Importar la función sync_products
 import sys
 import os
@@ -404,7 +403,6 @@ class WebhookReceiveView(APIView):
         """
         Maneja la actualización de inventario
         """
-        channel_layer = get_channel_layer()
         inventory_levels = data.get('inventory_levels', [])
         service = LoyverseService()
         
@@ -426,22 +424,6 @@ class WebhookReceiveView(APIView):
                 producto.save()
                 
                 print(f"Inventario actualizado para {producto.nombre}: {in_stock} unidades")
-                
-                # Enviar notificación en tiempo real
-                async_to_sync(channel_layer.group_send)(
-                    "inventario_updates",
-                    {
-                        'type': 'inventory_update',
-                        'producto': {
-                            'id': producto.id,
-                            'nombre': producto.nombre,
-                            'loyverse_id': producto.loyverse_id
-                        },
-                        'stock_actual': float(in_stock),
-                        'stock_anterior': float(stock_anterior),
-                        'message': f"El inventario de {producto.nombre} ha cambiado de {stock_anterior} a {in_stock} unidades"
-                    }
-                )
                 
             except Producto.DoesNotExist:
                 # Si el producto no existe, sincronizar desde Loyverse
