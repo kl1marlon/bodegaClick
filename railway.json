@@ -7,16 +7,18 @@
       "envs": {
         "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
         "DEBUG": "False",
-        "ALLOWED_HOSTS": ".railway.app,backend-production-a8d3.up.railway.app"
+        "ALLOWED_HOSTS": ".railway.app,backend-production-a8d3.up.railway.app,*"
       }
     },
     {
       "name": "frontend",
       "path": "./frontend",
       "envs": {
-        "REACT_APP_API_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}/api",
-        "BACKEND_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}"
-      }
+        "REACT_APP_API_URL": "${{backend.RAILWAY_PUBLIC_URL}}/api",
+        "BACKEND_URL": "${{backend.RAILWAY_PUBLIC_URL}}"
+      },
+      "persistent_folders": [],
+      "depends_on": ["backend"]
     }
   ]
 } 

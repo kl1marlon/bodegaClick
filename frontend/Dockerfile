@@ -34,5 +34,25 @@ COPY nginx.conf /etc/nginx/conf.d/
 ENV PORT=80
 EXPOSE 80
 
-# Usar un script más robusto para la sustitución de variables
-CMD ["/bin/sh", "-c", "sed -i 's/RAILWAY_PORT/'$PORT'/g' /etc/nginx/conf.d/nginx.conf && sed -i 's|RAILWAY_BACKEND_URL|'$BACKEND_URL'|g' /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"] 
+# Crear un script de inicio más detallado para depuración
+RUN echo '#!/bin/sh\n\
+echo "Configurando nginx..."\n\
+echo "PORT: $PORT"\n\
+echo "BACKEND_URL: $BACKEND_URL"\n\
+\n\
+sed -i "s/RAILWAY_PORT/$PORT/g" /etc/nginx/conf.d/nginx.conf\n\
+\n\
+# Asegurar que backend_url no tenga https:// duplicado\n\
+BACKEND_URL_CLEAN=$(echo $BACKEND_URL | sed "s|^https://||")\n\
+echo "URL limpia para backend: $BACKEND_URL_CLEAN"\n\
+\n\
+sed -i "s|RAILWAY_BACKEND_URL|$BACKEND_URL_CLEAN|g" /etc/nginx/conf.d/nginx.conf\n\
+\n\
+echo "Configuración final de nginx:"\n\
+cat /etc/nginx/conf.d/nginx.conf\n\
+\n\
+echo "Iniciando nginx..."\n\
+nginx -g "daemon off;"\n\
+' > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+
+CMD ["/docker-entrypoint.sh"] 
