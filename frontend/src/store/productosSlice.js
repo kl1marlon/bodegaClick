@@ -45,6 +45,29 @@ export const syncFromLoyverse = createAsyncThunk(
   }
 );
 
+export const syncInventory = createAsyncThunk(
+  'productos/syncInventory',
+  async (opciones = {}) => {
+    try {
+      console.log(`Iniciando sincronización de inventario desde Loyverse con opciones:`, opciones);
+      
+      const response = await axios.post(`${API_URL}/sincronizar_inventario/`, {
+        force: opciones.force !== undefined ? opciones.force : false
+      }, {
+        headers: {
+          'X-Admin-Token': process.env.REACT_APP_ADMIN_SECRET_TOKEN || 'secret-token-placeholder'
+        }
+      });
+      
+      console.log('Respuesta de sincronización de inventario:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en sincronización de inventario:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+);
+
 export const updateProductoTipoTasa = createAsyncThunk(
   'productos/updateProductoTipoTasa',
   async ({ productoId, tipoTasa }) => {
@@ -88,6 +111,16 @@ const productosSlice = createSlice({
         state.status = 'succeeded';
       })
       .addCase(syncFromLoyverse.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(syncInventory.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(syncInventory.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(syncInventory.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       })

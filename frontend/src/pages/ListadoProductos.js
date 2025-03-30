@@ -51,7 +51,11 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import SyncIcon from '@mui/icons-material/Sync';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditAttributesIcon from '@mui/icons-material/EditAttributes';
-import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa } from '../store/productosSlice';
+import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
 
@@ -106,6 +110,13 @@ const ListadoProductos = () => {
   
   // Estado para diálogo de opciones de sincronización
   const [syncOptionsDialogOpen, setSyncOptionsDialogOpen] = useState(false);
+  
+  // Estado para diálogo de sincronización de inventario
+  const [syncInventoryDialogOpen, setSyncInventoryDialogOpen] = useState(false);
+  const [sincronizandoInventario, setSincronizandoInventario] = useState(false);
+  const [opcionesSincronizacionInventario, setOpcionesSincronizacionInventario] = useState({
+    force: false,
+  });
   
   // Estado para feedback
   const [snackbar, setSnackbar] = useState({
@@ -307,10 +318,26 @@ const ListadoProductos = () => {
     setSyncOptionsDialogOpen(false);
   };
   
+  // Función para abrir diálogo de opciones de sincronización de inventario
+  const abrirSyncInventoryDialog = () => {
+    setSyncInventoryDialogOpen(true);
+  };
+  
+  // Función para cerrar diálogo de opciones de sincronización de inventario
+  const cerrarSyncInventoryDialog = () => {
+    setSyncInventoryDialogOpen(false);
+  };
+  
   // Función para manejar la sincronización desde Loyverse
   const handleSyncFromLoyverse = () => {
     // Primero abrir el diálogo de opciones en lugar de iniciar directamente
     abrirSyncOptionsDialog();
+  };
+  
+  // Función para manejar la sincronización de inventario
+  const handleSyncInventory = () => {
+    // Abrir el diálogo de opciones de sincronización de inventario
+    abrirSyncInventoryDialog();
   };
   
   // Manejar cambio en productos seleccionados
@@ -497,6 +524,49 @@ const ListadoProductos = () => {
       });
   };
   
+  // Función para iniciar la sincronización de inventario
+  const iniciarSincronizacionInventario = () => {
+    setSincronizandoInventario(true);
+    cerrarSyncInventoryDialog();
+    
+    console.log("Iniciando sincronización de inventario con opciones:", opcionesSincronizacionInventario);
+    
+    dispatch(syncInventory(opcionesSincronizacionInventario))
+      .then((result) => {
+        if (result.error) {
+          console.error("Error en la sincronización de inventario:", result.error.message);
+          setSnackbar({
+            open: true,
+            message: `Error al sincronizar inventario: ${result.error.message}`,
+            severity: 'error'
+          });
+        } else {
+          console.log("Sincronización de inventario completada exitosamente:", result.payload);
+          
+          // Mostrar mensaje de éxito con los detalles recibidos
+          const estadisticas = result.payload.estadisticas || {};
+          const mensaje = `
+            Sincronización de inventario completada:
+            - Total productos: ${estadisticas.total || 0}
+            - Actualizados: ${estadisticas.actualizados || 0}
+            - Con Variant ID añadidos: ${estadisticas.variant_id_anadidos || 0}
+            - Productos con error: ${estadisticas.con_error || 0}
+          `;
+          
+          setSnackbar({
+            open: true,
+            message: mensaje,
+            severity: 'success'
+          });
+          
+          dispatch(fetchProductos()); // Refrescar la lista de productos
+        }
+      })
+      .finally(() => {
+        setSincronizandoInventario(false);
+      });
+  };
+  
   return (
     <Box sx={{ 
       maxWidth: 1200, 
@@ -545,23 +615,40 @@ const ListadoProductos = () => {
         </Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SyncIcon />}
-            onClick={handleSyncFromLoyverse}
-            disabled={sincronizando}
-            sx={{
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              textTransform: 'none',
-              fontWeight: 600
-            }}
-          >
-            {sincronizando ? 'Sincronizando...' : 'Sincronizar con Loyverse'}
-            {sincronizando && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
-          </Button>
+          <ButtonGroup variant="contained">
+            <Button
+              color="primary"
+              startIcon={<SyncIcon />}
+              onClick={handleSyncFromLoyverse}
+              disabled={sincronizando || sincronizandoInventario}
+              sx={{
+                borderRadius: '4px 0 0 4px',
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600
+              }}
+            >
+              {sincronizando ? 'Sincronizando...' : 'Sincronizar productos'}
+              {sincronizando && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
+            </Button>
+            <Button
+              color="secondary"
+              startIcon={<WarehouseIcon />}
+              onClick={handleSyncInventory}
+              disabled={sincronizando || sincronizandoInventario}
+              sx={{
+                borderRadius: '0 4px 4px 0',
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600
+              }}
+            >
+              {sincronizandoInventario ? 'Sincronizando...' : 'Sincronizar inventario'}
+              {sincronizandoInventario && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
+            </Button>
+          </ButtonGroup>
         </Box>
       </Box>
       
@@ -756,12 +843,17 @@ const ListadoProductos = () => {
           overflow: 'hidden'
         }}
       >
-        {status === 'loading' || sincronizando ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        {status === 'loading' || sincronizando || sincronizandoInventario ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400, flexDirection: 'column', gap: 2 }}>
             <CircularProgress />
             {sincronizando && (
               <Typography variant="h6" sx={{ ml: 2, color: '#475569' }}>
                 Sincronizando productos desde Loyverse...
+              </Typography>
+            )}
+            {sincronizandoInventario && (
+              <Typography variant="h6" sx={{ ml: 2, color: '#475569' }}>
+                Sincronizando inventario desde Loyverse...
               </Typography>
             )}
           </Box>
@@ -807,7 +899,12 @@ const ListadoProductos = () => {
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Precio BS</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Tasa</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Categoría</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Stock</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                        <WarehouseIcon fontSize="small" />
+                        Inventario
+                      </Box>
+                    </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Actualización</TableCell>
                   </TableRow>
                 </TableHead>
@@ -907,15 +1004,59 @@ const ListadoProductos = () => {
                         ) : 'Sin categoría'}
                       </TableCell>
                       <TableCell
-                        align="right"
+                        align="center"
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
                       >
-                        <Chip 
-                          label={producto.stock_actual || '0'} 
-                          size="small"
-                          color={producto.stock_actual > 10 ? 'success' : producto.stock_actual > 0 ? 'warning' : 'error'}
-                          sx={{ fontWeight: 600 }}
-                        />
+                        <Tooltip 
+                          title={
+                            <Box>
+                              <Typography variant="body2">
+                                ID Variante: {producto.variant_id ? producto.variant_id.substring(0, 8) + '...' : 'No disponible'}
+                              </Typography>
+                              <Typography variant="body2">
+                                Última actualización: {formatDate(producto.ultima_actualizacion_stock || 'No disponible')}
+                              </Typography>
+                            </Box>
+                          } 
+                          arrow
+                        >
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                            <Chip 
+                              label={producto.stock_actual || '0'} 
+                              size="small"
+                              color={producto.stock_actual > 10 ? 'success' : producto.stock_actual > 0 ? 'warning' : 'error'}
+                              sx={{ fontWeight: 600, minWidth: '60px' }}
+                            />
+                            {!producto.variant_id && (
+                              <Chip 
+                                label="Sin ID" 
+                                size="small"
+                                color="default"
+                                sx={{ 
+                                  fontSize: '0.65rem', 
+                                  height: '18px', 
+                                  '& .MuiChip-label': { 
+                                    padding: '0 6px' 
+                                  } 
+                                }}
+                              />
+                            )}
+                            {!producto.ultima_actualizacion_stock && (
+                              <Chip 
+                                label="Sin sync" 
+                                size="small"
+                                color="default"
+                                sx={{ 
+                                  fontSize: '0.65rem', 
+                                  height: '18px', 
+                                  '& .MuiChip-label': { 
+                                    padding: '0 6px' 
+                                  } 
+                                }}
+                              />
+                            )}
+                          </Box>
+                        </Tooltip>
                       </TableCell>
                       <TableCell
                         align="right"
@@ -990,7 +1131,7 @@ const ListadoProductos = () => {
         <DialogTitle sx={{ bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CurrencyExchangeIcon color="primary" />
-            <Typography variant="h6">Información sobre Tasas de Cambio</Typography>
+            <Typography variant="h6">Información sobre Sistema de Inventario</Typography>
           </Box>
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
@@ -1043,6 +1184,55 @@ const ListadoProductos = () => {
               </Box>
             </Box>
             <Divider sx={{ my: 2 }} />
+            
+            {/* Nueva sección de información sobre inventario */}
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarehouseIcon color="secondary" fontSize="small" />
+              Sistema de Inventario
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              El sistema de inventario funciona de forma bidireccional entre BodegaClick y Loyverse:
+            </Typography>
+            <Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 1, mb: 2 }}>
+              <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: '#334155' }}>
+                <ArrowDownwardIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1, color: '#0369a1' }} />
+                <strong>De Loyverse a BodegaClick (automático):</strong> Los cambios de inventario realizados en Loyverse 
+                se sincronizan automáticamente mediante webhooks.
+              </Typography>
+              <Typography variant="body2" gutterBottom sx={{ ml: 4, color: '#475569' }}>
+                Sin embargo, algunos productos podrían no tener inventario actualizado si no han tenido movimientos
+                en Loyverse desde que se implementaron los webhooks.
+              </Typography>
+              
+              <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: '#334155', mt: 1 }}>
+                <ArrowUpwardIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1, color: '#7c3aed' }} />
+                <strong>De BodegaClick a Loyverse (manual):</strong> Al crear facturas en BodegaClick, el inventario
+                se actualiza en Loyverse.
+              </Typography>
+            </Box>
+            
+            <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, color: '#0369a1' }}>
+              ¿Cuándo usar la Sincronización de Inventario?
+            </Typography>
+            <Typography variant="body2" paragraph>
+              Usa la función "Sincronizar Inventario" cuando necesites:
+            </Typography>
+            <Box component="ul" sx={{ ml: 2 }}>
+              <li>Actualizar productos que muestran "0" como stock pero tienen inventario en Loyverse</li>
+              <li>Completar campos "variant_id" necesarios para operaciones de inventario</li>
+              <li>Asegurar que todos los productos tienen información actualizada de inventario</li>
+            </Box>
+            
+            <Box sx={{ bgcolor: '#e0f2fe', p: 2, borderRadius: 1, mt: 2, mb: 2 }}>
+              <Typography variant="body2" color="primary">
+                <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
+                <strong>Tip:</strong> Al iniciar, puedes elegir sincronizar solo productos sin stock (por defecto) o 
+                forzar la sincronización de todos los productos.
+              </Typography>
+            </Box>
+            
+            <Divider sx={{ my: 2 }} />
+            
             <Typography variant="body1" gutterBottom>
               Los precios en USD son calculados a partir de los precios en Bolívares usando la tasa seleccionada para cada producto.
             </Typography>
@@ -1076,13 +1266,19 @@ const ListadoProductos = () => {
                   <strong>Cálculo automático:</strong> Precios calculados automáticamente basados en porcentajes de ganancia.
                 </Typography>
               </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WarehouseIcon sx={{ color: '#6366f1' }} />
+                <Typography variant="body1">
+                  <strong>Sincronización de inventario:</strong> Inventario actualizado manualmente desde Loyverse.
+                </Typography>
+              </Box>
             </Box>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
               Sincronización con Loyverse:
             </Typography>
             <Typography variant="body1">
-              Puede sincronizar manualmente los productos desde Loyverse haciendo clic en el botón "Sincronizar con Loyverse" en la parte superior de la página.
+              Puede sincronizar manualmente los productos desde Loyverse haciendo clic en el botón "Sincronizar productos" en la parte superior de la página.
               Esto traerá la información más actualizada de productos, incluyendo nombres, precios y categorías.
             </Typography>
             <Typography variant="body1" sx={{ mt: 1 }}>
@@ -1457,6 +1653,104 @@ const ListadoProductos = () => {
             sx={{ borderRadius: 1 }}
           >
             Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Diálogo de sincronización de inventario */}
+      <Dialog
+        open={syncInventoryDialogOpen}
+        onClose={cerrarSyncInventoryDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <WarehouseIcon color="secondary" />
+            <Typography variant="h6">Opciones de Sincronización de Inventario</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                Configurar sincronización de inventario:
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Esta función sincronizará el inventario desde Loyverse hacia BodegaClick, actualizando el stock de todos los productos.
+              </Typography>
+            </Grid>
+            
+            {/* Opciones de sincronización */}
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={opcionesSincronizacionInventario.force}
+                    onChange={(e) => setOpcionesSincronizacionInventario(prev => ({
+                      ...prev,
+                      force: e.target.checked
+                    }))}
+                    color="secondary"
+                  />
+                }
+                label="Forzar actualización de todos los productos"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                Si está desactivado, solo se actualizarán los productos con stock = 0. Si está activado, se actualizarán todos los productos.
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box sx={{ 
+                bgcolor: '#fff4e5', 
+                p: 2, 
+                borderRadius: 1, 
+                border: '1px solid #ffecb5',
+                mt: 2 
+              }}>
+                <Typography variant="body2" color="warning.dark">
+                  <InfoIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
+                  <strong>Importante:</strong> Esta sincronización consultará el inventario actual en Loyverse y 
+                  actualizará los registros en BodegaClick. También completará el campo variant_id para productos 
+                  que no lo tengan, necesario para operaciones de inventario.
+                </Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box sx={{ 
+                bgcolor: '#e8f5e9', 
+                p: 2, 
+                borderRadius: 1, 
+                border: '1px solid #c8e6c9',
+                mt: 1
+              }}>
+                <Typography variant="body2" color="success.dark">
+                  <WarehouseIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 1 }} />
+                  <strong>Proceso de sincronización:</strong>
+                </Typography>
+                <ol style={{ marginTop: '8px', paddingLeft: '24px' }}>
+                  <li>Obtiene los variant_id faltantes de los productos</li>
+                  <li>Consulta el inventario actual de cada producto en Loyverse</li>
+                  <li>Actualiza el stock_actual en la base de datos de BodegaClick</li>
+                </ol>
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={cerrarSyncInventoryDialog} color="inherit">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={iniciarSincronizacionInventario} 
+            color="secondary" 
+            variant="contained"
+            disabled={sincronizandoInventario}
+            startIcon={sincronizandoInventario ? <CircularProgress size={20} /> : <WarehouseIcon />}
+          >
+            {sincronizandoInventario ? 'Sincronizando inventario...' : 'Iniciar Sincronización de Inventario'}
           </Button>
         </DialogActions>
       </Dialog>
