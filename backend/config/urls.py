@@ -1,11 +1,16 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from facturacion.views import ProductoViewSet, TasaCambioViewSet, FacturaViewSet, WebhookViewSet, WebhookReceiveView
+from facturacion.views import ProductoViewSet, TasaCambioViewSet, FacturaViewSet, WebhookViewSet, WebhookReceiveView, ActualizarVariantIdsView
 from django.http import HttpResponse
 import logging
 import sys
 from django.middleware.common import CommonMiddleware
+from django.views.decorators.csrf import csrf_exempt
+
+# Desactivar temporalmente CSRF para el admin
+admin.site.login = csrf_exempt(admin.site.login)
+admin.site.logout = csrf_exempt(admin.site.logout)
 
 # Suprimir completamente los logs para ws/notificaciones
 class NoWSLoggingFilter(logging.Filter):
@@ -75,4 +80,5 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('webhook/', WebhookReceiveView.as_view(), name='webhook-receive'),
     path('ws/notificaciones/', websocket_dummy_view, name='websocket-dummy'),
+    path('api/actualizar-variant-ids/', ActualizarVariantIdsView.as_view(), name='actualizar_variant_ids'),
 ] 

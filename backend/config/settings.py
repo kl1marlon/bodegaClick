@@ -57,6 +57,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # Configuración de CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://backend-production-a8d3.up.railway.app",
+    "https://backend-production-a8d3.up.railway.app/admin/login/", 
     "https://*.railway.app",
 ]
 
@@ -185,5 +186,6 @@ LOGGING = {
 LOYVERSE_API_TOKEN = os.environ.get('LOYVERSE_API_TOKEN', '')
 LOYVERSE_MERCHANT_ID = os.environ.get('LOYVERSE_MERCHANT_ID', '')
 LOYVERSE_WEBHOOK_SECRET = os.environ.get('LOYVERSE_WEBHOOK_SECRET', '')
+ADMIN_SECRET_TOKEN = os.environ.get('ADMIN_SECRET_TOKEN', 'admin_secret_token_default')
 if not LOYVERSE_API_TOKEN:
     raise ValueError('LOYVERSE_API_TOKEN must be set in environment variables') 

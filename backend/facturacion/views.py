@@ -29,6 +29,9 @@ from sync_products import sync_products
 import logging
 from loyverse_sync.sync import sincronizar_desde_loyverse
 import requests
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -524,4 +527,84 @@ class WebhookReceiveView(APIView):
     # También aceptamos solicitudes GET para pruebas
     def get(self, request):
         """Endpoint para probar si el webhook está accesible"""
-        return Response({'status': 'Webhook endpoint activo'}, status=status.HTTP_200_OK) 
+        return Response({'status': 'Webhook endpoint activo'}, status=status.HTTP_200_OK)
+
+# Nuevo endpoint para actualizar variant_ids
+@method_decorator(csrf_exempt, name='dispatch')
+class ActualizarVariantIdsView(APIView):
+    def post(self, request):
+        # Obtener token secreto de la solicitud para validación
+        token = request.headers.get('X-Admin-Token')
+        if token != settings.ADMIN_SECRET_TOKEN:
+            return JsonResponse({'error': 'No autorizado'}, status=401)
+        
+        # Configuración de la API
+        BASE_URL = 'https://api.loyverse.com/v1.0'
+        headers = {
+            'Authorization': f'Bearer {settings.LOYVERSE_API_TOKEN}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Obtener productos sin variant_id
+        productos_sin_variant_id = Producto.objects.filter(
+            loyverse_id__isnull=False, 
+            variant_id__isnull=True
+        )
+        
+        total_productos = productos_sin_variant_id.count()
+        productos_actualizados = 0
+        productos_con_error = 0
+        resultados = []
+        
+        # Procesar productos
+        for producto in productos_sin_variant_id:
+            try:
+                # Consultar la API de Loyverse
+                item_url = f"{BASE_URL}/items/{producto.loyverse_id}"
+                response = requests.get(item_url, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Verificar si el producto tiene variantes
+                    if 'variants' in data and len(data['variants']) > 0:
+                        variant_id = data['variants'][0]['variant_id']
+                        
+                        # Actualizar el producto
+                        producto.variant_id = variant_id
+                        producto.save(update_fields=['variant_id'])
+                        
+                        resultados.append({
+                            'nombre': producto.nombre,
+                            'variant_id': variant_id,
+                            'status': 'actualizado'
+                        })
+                        productos_actualizados += 1
+                    else:
+                        resultados.append({
+                            'nombre': producto.nombre,
+                            'status': 'sin_variantes'
+                        })
+                        productos_con_error += 1
+                else:
+                    resultados.append({
+                        'nombre': producto.nombre,
+                        'status': 'error_api',
+                        'error': f"{response.status_code} - {response.text}"
+                    })
+                    productos_con_error += 1
+            
+            except Exception as e:
+                resultados.append({
+                    'nombre': producto.nombre,
+                    'status': 'error',
+                    'error': str(e)
+                })
+                productos_con_error += 1
+        
+        return JsonResponse({
+            'total': total_productos,
+            'actualizados': productos_actualizados,
+            'con_error': productos_con_error,
+            'resultados': resultados
+        }) 
