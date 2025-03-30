@@ -731,11 +731,10 @@ class LoyverseService:
         """
         Actualiza el inventario en Loyverse basado en los productos de una factura,
         sumando las unidades nuevas al inventario existente.
-        
-        NOTA: Esta es una solución temporal hasta implementar webhooks bidireccionales.
         """
         from .models import Factura, DetalleFactura, Producto
         import datetime
+        import sys
         
         print(f"📦 INICIANDO actualizar_inventario_desde_factura para factura ID: {factura_id}")
         sys.stdout.flush()
@@ -774,42 +773,59 @@ class LoyverseService:
                     })
                     continue
                 
-                # Primero obtenemos la información del producto para obtener el ID de la variante correcta
+                # Usar variant_id si está disponible, de lo contrario obtenerlo
+                variant_id = None
+                if producto.variant_id:
+                    variant_id = producto.variant_id
+                    print(f"📦 Usando variant_id almacenado: {variant_id}")
+                else:
+                    # Obtener variant_id desde la API de Loyverse
+                    try:
+                        # Obtener datos del producto para encontrar el ID de la variante correcta
+                        item_url = f"{self.BASE_URL}/items/{producto.loyverse_id}"
+                        print(f"📦 Obteniendo datos del producto en: {item_url}")
+                        sys.stdout.flush()
+                        item_response = requests.get(item_url, headers=self.headers)
+                        
+                        if item_response.status_code != 200:
+                            print(f"❌ Error al obtener datos del producto: {item_response.text}")
+                            sys.stdout.flush()
+                            update_results.append({
+                                "success": False,
+                                "product": producto.nombre,
+                                "error": f"Error obteniendo datos del producto: {item_response.text}"
+                            })
+                            continue
+                        
+                        # Obtener el ID de la primera variante (generalmente hay solo una)
+                        item_data = item_response.json()
+                        if not item_data.get('variants') or len(item_data['variants']) == 0:
+                            print(f"❌ No se encontraron variantes para el producto {producto.nombre}")
+                            sys.stdout.flush()
+                            update_results.append({
+                                "success": False,
+                                "product": producto.nombre,
+                                "error": "No se encontraron variantes para el producto"
+                            })
+                            continue
+                        
+                        # Obtener el ID de la variante y guardarlo para futuras consultas
+                        variant_id = item_data['variants'][0]['variant_id']
+                        producto.variant_id = variant_id
+                        producto.save(update_fields=['variant_id'])
+                        print(f"📦 ID de variante encontrado y guardado: {variant_id}")
+                        sys.stdout.flush()
+                    except Exception as e:
+                        print(f"❌ Error al obtener variant_id: {str(e)}")
+                        update_results.append({
+                            "success": False,
+                            "product": producto.nombre,
+                            "error": f"Error al obtener variant_id: {str(e)}"
+                        })
+                        continue
+                
+                # Consultar el inventario actual
                 try:
-                    # Obtener datos del producto para encontrar el ID de la variante correcta
-                    item_url = f"{self.BASE_URL}/items/{producto.loyverse_id}"
-                    print(f"📦 Obteniendo datos del producto en: {item_url}")
-                    sys.stdout.flush()
-                    item_response = requests.get(item_url, headers=self.headers)
-                    
-                    if item_response.status_code != 200:
-                        print(f"❌ Error al obtener datos del producto: {item_response.text}")
-                        sys.stdout.flush()
-                        update_results.append({
-                            "success": False,
-                            "product": producto.nombre,
-                            "error": f"Error obteniendo datos del producto: {item_response.text}"
-                        })
-                        continue
-                    
-                    # Obtener el ID de la primera variante (generalmente hay solo una)
-                    item_data = item_response.json()
-                    if not item_data.get('variants') or len(item_data['variants']) == 0:
-                        print(f"❌ No se encontraron variantes para el producto {producto.nombre}")
-                        sys.stdout.flush()
-                        update_results.append({
-                            "success": False,
-                            "product": producto.nombre,
-                            "error": "No se encontraron variantes para el producto"
-                        })
-                        continue
-                    
-                    # Obtener el ID de la variante (el primer elemento del array)
-                    variant_id = item_data['variants'][0]['variant_id']
-                    print(f"📦 ID de variante encontrado: {variant_id}")
-                    sys.stdout.flush()
-                    
-                    # Consultar el inventario actual
                     inventory_url = f"{self.BASE_URL}/inventory?variant_ids={variant_id}"
                     print(f"📦 Consultando inventario en: {inventory_url}")
                     sys.stdout.flush()
@@ -836,12 +852,6 @@ class LoyverseService:
                         cantidad = float(detalle.cantidad if detalle.cantidad else 0)
                         unidades = float(detalle.unidades_paquete if detalle.unidades_paquete else 1)
                         
-                        # Imprimir detalles del detalle de factura para depuración
-                        print(f"📦 Campos disponibles en detalle: {[field.name for field in detalle._meta.fields]}")
-                        sys.stdout.flush()
-                        print(f"📦 Detalle ID: {detalle.id}, Producto: {detalle.producto.nombre}, Cantidad: {detalle.cantidad}, Unidades: {detalle.unidades_paquete}")
-                        sys.stdout.flush()
-                        
                         cantidad_unidades = cantidad * unidades
                         print(f"📦 Cantidad: {cantidad}, Unidades por paquete: {unidades}")
                         sys.stdout.flush()
@@ -851,7 +861,7 @@ class LoyverseService:
                         
                         # Agregar a la lista de actualizaciones utilizando el ID de la VARIANTE
                         inventory_updates.append({
-                            "variant_id": variant_id,  # Usando el variant_id en lugar del producto.loyverse_id
+                            "variant_id": variant_id,
                             "store_id": store_id,
                             "stock_after": nuevo_stock
                         })
@@ -862,7 +872,7 @@ class LoyverseService:
                             "current_stock": current_stock,
                             "added_units": cantidad_unidades,
                             "new_stock": nuevo_stock,
-                            "variant_id": variant_id  # Guardar también el variant_id en los resultados
+                            "variant_id": variant_id
                         })
                     else:
                         print(f"❌ Error al consultar inventario: {inventory_response.text}")
@@ -872,7 +882,7 @@ class LoyverseService:
                             "error": f"Error consultando inventario: {inventory_response.text}"
                         })
                 except Exception as e:
-                    print(f"❌ Excepción al consultar inventario: {str(e)}")
+                    print(f"❌ Error al consultar inventario: {str(e)}")
                     update_results.append({
                         "success": False,
                         "product": producto.nombre,
@@ -908,10 +918,6 @@ class LoyverseService:
                         sys.stdout.flush()
                         productos_actualizados = len(inventory_updates)
                         
-                        # Imprimir la respuesta completa para depuración
-                        print(f"📦 Respuesta completa: {update_response.text}")
-                        sys.stdout.flush()
-                        
                         # Actualizar también en la base de datos local
                         for update in update_results:
                             if update["success"]:
@@ -925,29 +931,11 @@ class LoyverseService:
                                 except Producto.DoesNotExist:
                                     print(f"❌ No se encontró el producto localmente: {update['product']}")
                                     sys.stdout.flush()
-                                    pass
                     else:
                         print(f"❌ Error al actualizar inventario: {update_response.text}")
                         sys.stdout.flush()
-                        # Agregar el error de actualización a los resultados
-                        for update in inventory_updates:
-                            variant_id = update["variant_id"]
-                            try:
-                                # Buscar el producto por variant_id en los resultados
-                                producto_info = next((p for p in update_results if p.get("variant_id") == variant_id), None)
-                                product_name = producto_info["product"] if producto_info else "Desconocido"
-                                
-                                update_results.append({
-                                    "success": False,
-                                    "product": product_name,
-                                    "error": f"Error actualizando inventario: {update_response.text}"
-                                })
-                            except Exception:
-                                print(f"❌ No se pudo procesar el error para variant_id {variant_id}")
-                                sys.stdout.flush()
-                                pass
                 except Exception as e:
-                    print(f"❌ Excepción al actualizar inventario: {str(e)}")
+                    print(f"❌ Error al actualizar inventario en lote: {str(e)}")
                     sys.stdout.flush()
                     update_results.append({
                         "success": False,
@@ -957,14 +945,11 @@ class LoyverseService:
                 print("⚠️ No hay actualizaciones de inventario para enviar")
                 sys.stdout.flush()
             
-            resultado = {
+            return {
                 'success': True,
                 'productos_actualizados': productos_actualizados,
                 'update_results': update_results
             }
-            print(f"📦 Resultado final: {resultado}")
-            sys.stdout.flush()
-            return resultado
             
         except Factura.DoesNotExist:
             print(f"❌ No se encontró la factura con ID {factura_id}")
@@ -974,7 +959,7 @@ class LoyverseService:
                 'error': f'No se encontró la factura con ID {factura_id}'
             }
         except Exception as e:
-            print(f"❌ Excepción general: {str(e)}")
+            print(f"❌ Error general: {str(e)}")
             sys.stdout.flush()
             return {
                 'success': False,

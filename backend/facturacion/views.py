@@ -273,24 +273,22 @@ class FacturaViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def procesar_factura(self, request, pk=None):
         """
-        Procesa una factura existente para actualizar precios e inventario en Loyverse
-        
-        NOTA: Esta implementación combina la actualización de precios existente con
-        la nueva funcionalidad de actualización de inventario.
+        Procesa una factura existente para actualizar precios en Loyverse y 
+        actualizar el inventario sumando las unidades compradas.
         """
         import sys
         print(f"\n🔄 INICIANDO procesar_factura para ID: {pk}")
         sys.stdout.flush()
         service = LoyverseService()
         
-        # Actualizar precios (funcionalidad existente)
+        # Actualizar precios
         print(f"💲 Llamando a actualizar_precios_desde_factura")
         sys.stdout.flush()
         result_precios = service.actualizar_precios_desde_factura(pk)
         print(f"💲 Resultado de actualizar_precios_desde_factura: {result_precios['success']}")
         sys.stdout.flush()
         
-        # Actualizar inventario (nueva funcionalidad)
+        # Actualizar inventario
         print(f"📦 Llamando a actualizar_inventario_desde_factura")
         sys.stdout.flush()
         result_inventario = service.actualizar_inventario_desde_factura(pk)
