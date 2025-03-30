@@ -133,6 +133,12 @@ class LoyverseService:
                             'aplicar_iva': False  # Establecer aplicar_iva como False por defecto para productos de Loyverse
                         }
                         
+                        # Guardar el variant_id si está disponible
+                        if item.get('variants') and len(item['variants']) > 0:
+                            variant_id = item['variants'][0].get('variant_id')
+                            if variant_id:
+                                defaults['variant_id'] = variant_id
+                        
                         # Solo actualizar el precio si está habilitado y no hay facturas recientes
                         if actualizar_precios:
                             # Aplicar redondeo especial si es necesario
@@ -159,8 +165,13 @@ class LoyverseService:
                         
                     except Producto.DoesNotExist:
                         # Para productos nuevos, siempre establecer todos los valores
+                        variant_id = None
+                        if item.get('variants') and len(item['variants']) > 0:
+                            variant_id = item['variants'][0].get('variant_id')
+                            
                         nuevo_producto = Producto.objects.create(
                             loyverse_id=item['id'],
+                            variant_id=variant_id,
                             nombre=item['item_name'],
                             descripcion=item.get('description', ''),
                             precio_base=precio,

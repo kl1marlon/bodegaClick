@@ -2,6 +2,7 @@ from django.db import models
 
 class Producto(models.Model):
     loyverse_id = models.CharField(max_length=255, unique=True)
+    variant_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(null=True, blank=True)
     precio_base = models.DecimalField(max_digits=10, decimal_places=2)

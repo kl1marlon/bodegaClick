@@ -28,6 +28,7 @@ sys.path.append(os.path.join(settings.BASE_DIR))
 from sync_products import sync_products
 import logging
 from loyverse_sync.sync import sincronizar_desde_loyverse
+import requests
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -433,9 +434,12 @@ class WebhookReceiveView(APIView):
         store_id = level.get('store_id')
         in_stock = level.get('in_stock')
         
-        # Buscar el producto correspondiente
+        print(f"Procesando actualización de inventario para variant_id: {variant_id}")
+        
+        # Buscar el producto correspondiente por variant_id
         try:
-            producto = Producto.objects.get(loyverse_id=variant_id)
+            # Primero intentamos buscar por variant_id
+            producto = Producto.objects.get(variant_id=variant_id)
             
             # Guardar el stock anterior para comparar
             stock_anterior = producto.stock_actual
@@ -445,12 +449,58 @@ class WebhookReceiveView(APIView):
             producto.ultima_actualizacion_stock = datetime.datetime.now()
             producto.save()
             
-            print(f"Inventario actualizado para {producto.nombre}: {in_stock} unidades")
+            print(f"Inventario actualizado para {producto.nombre}: {stock_anterior} → {in_stock} unidades")
             
         except Producto.DoesNotExist:
-            # Si el producto no existe, sincronizar desde Loyverse
-            print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
-            service.fetch_products()
+            print(f"Producto con variant_id {variant_id} no encontrado. Realizando sincronización selectiva...")
+            
+            # En lugar de sincronizar todos los productos, buscamos solo este producto específico
+            try:
+                # Obtener información del producto desde Loyverse
+                item_url = f"{service.BASE_URL}/variants/{variant_id}"
+                response = requests.get(item_url, headers=service.headers)
+                
+                if response.status_code == 200:
+                    variant_data = response.json()
+                    item_id = variant_data.get('item_id')
+                    
+                    # Ahora buscamos el ítem para obtener toda la información
+                    item_url = f"{service.BASE_URL}/items/{item_id}"
+                    item_response = requests.get(item_url, headers=service.headers)
+                    
+                    if item_response.status_code == 200:
+                        item_data = item_response.json()
+                        
+                        # Intentar encontrar el producto por loyverse_id
+                        try:
+                            producto_existente = Producto.objects.get(loyverse_id=item_id)
+                            # Actualizar variant_id si no estaba registrado
+                            producto_existente.variant_id = variant_id
+                            producto_existente.stock_actual = in_stock
+                            producto_existente.ultima_actualizacion_stock = datetime.datetime.now()
+                            producto_existente.save()
+                            print(f"Producto actualizado con nuevo variant_id y stock: {producto_existente.nombre}")
+                        except Producto.DoesNotExist:
+                            # Crear nuevo producto con la información mínima necesaria
+                            nuevo_producto = Producto.objects.create(
+                                loyverse_id=item_id,
+                                variant_id=variant_id,
+                                nombre=item_data.get('item_name', 'Producto sin nombre'),
+                                precio_base=variant_data.get('default_price', 0),
+                                stock_actual=in_stock,
+                                ultima_actualizacion_stock=datetime.datetime.now(),
+                                fuente_actualizacion='loyverse',
+                                aplicar_iva=False
+                            )
+                            print(f"Nuevo producto creado desde webhook de inventario: {nuevo_producto.nombre}")
+                else:
+                    print(f"No se pudo obtener información del producto con variant_id {variant_id}. Error: {response.text}")
+                    # Solo en este caso hacemos una sincronización completa
+                    service.fetch_products(actualizar_precios=False)
+            except Exception as e:
+                print(f"Error al procesar variant_id {variant_id}: {str(e)}")
+                # En caso de error, hacemos sincronización completa pero sin actualizar precios
+                service.fetch_products(actualizar_precios=False)
     
     def _handle_items_update(self, data):
         """
