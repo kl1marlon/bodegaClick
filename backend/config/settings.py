@@ -54,6 +54,20 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.railway\.app$",
 ]
 
+# Permitir encabezados personalizados en solicitudes CORS
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-admin-token',  # Añadir este encabezado personalizado para la sincronización de inventario
+]
+
 # Configuración de CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://backend-production-a8d3.up.railway.app",

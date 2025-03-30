@@ -51,11 +51,15 @@ export const syncInventory = createAsyncThunk(
     try {
       console.log(`Iniciando sincronización de inventario desde Loyverse con opciones:`, opciones);
       
-      const response = await axios.post(`${API_URL}/sincronizar_inventario/`, {
+      // Token de administrador - Esto debería configurarse adecuadamente en producción
+      // Usando un valor temporal para pruebas
+      const adminToken = 'admin_secret_token_default';
+      
+      const response = await axios.post(`${API_URL}/sincronizar-inventario/`, {
         force: opciones.force !== undefined ? opciones.force : false
       }, {
         headers: {
-          'X-Admin-Token': process.env.REACT_APP_ADMIN_SECRET_TOKEN || 'secret-token-placeholder'
+          'X-Admin-Token': adminToken
         }
       });
       
