@@ -32,6 +32,7 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
+from django.db import connection
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -538,6 +539,26 @@ class ActualizarVariantIdsView(APIView):
         if token != settings.ADMIN_SECRET_TOKEN:
             return JsonResponse({'error': 'No autorizado'}, status=401)
         
+        # Primero, intentamos añadir la columna si no existe usando SQL directo
+        with connection.cursor() as cursor:
+            try:
+                # Verificar si la columna existe
+                cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='facturacion_producto' AND column_name='variant_id'
+                """)
+                column_exists = cursor.fetchone() is not None
+                
+                # Si la columna no existe, la creamos
+                if not column_exists:
+                    cursor.execute("ALTER TABLE facturacion_producto ADD COLUMN variant_id VARCHAR(255)")
+                    response_data = {'message': 'Columna variant_id añadida a la tabla facturacion_producto'}
+                    return JsonResponse(response_data)
+                
+            except Exception as e:
+                return JsonResponse({'error': f'Error al crear columna: {str(e)}'}, status=500)
+        
         # Configuración de la API
         BASE_URL = 'https://api.loyverse.com/v1.0'
         headers = {
@@ -607,4 +628,43 @@ class ActualizarVariantIdsView(APIView):
             'actualizados': productos_actualizados,
             'con_error': productos_con_error,
             'resultados': resultados
-        }) 
+        })
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CrearColumnaVariantIdView(APIView):
+    def post(self, request):
+        # Obtener token secreto de la solicitud para validación
+        token = request.headers.get('X-Admin-Token')
+        if token != settings.ADMIN_SECRET_TOKEN:
+            return JsonResponse({'error': 'No autorizado'}, status=401)
+        
+        # Usar SQL directo para añadir la columna
+        from django.db import connection
+        with connection.cursor() as cursor:
+            try:
+                # Verificar si la columna existe
+                cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='facturacion_producto' AND column_name='variant_id'
+                """)
+                column_exists = cursor.fetchone() is not None
+                
+                # Si la columna no existe, la creamos
+                if not column_exists:
+                    cursor.execute("ALTER TABLE facturacion_producto ADD COLUMN variant_id VARCHAR(255)")
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Columna variant_id añadida a la tabla facturacion_producto'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'La columna variant_id ya existe en la tabla facturacion_producto'
+                    })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al crear columna: {str(e)}'
+                }, status=500) 
