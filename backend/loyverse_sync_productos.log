@@ -52934,3 +52934,6 @@ LINE 1: ...ucto"."id", "facturacion_producto"."loyverse_id", "facturaci...
 2025-03-30 18:26:19,087 - INFO - /app/facturacion/admin.py changed, reloading.
 2025-03-30 18:27:13,170 - INFO - /app/facturacion/views.py changed, reloading.
 2025-03-30 18:27:24,822 - INFO - /app/config/urls.py changed, reloading.
+2025-03-30 18:34:04,808 - INFO - /app/facturacion/views.py changed, reloading.
+2025-03-30 18:34:23,817 - INFO - /app/facturacion/admin.py changed, reloading.
+2025-03-30 18:35:08,425 - INFO - /app/facturacion/admin.py changed, reloading.

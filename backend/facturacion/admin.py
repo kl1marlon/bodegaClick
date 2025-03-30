@@ -79,21 +79,37 @@ class ProductoAdmin(admin.ModelAdmin):
             output = StringIO()
             sys.stdout = output
             
-            call_command('sync_inventory')
+            try:
+                call_command('sync_inventory')
+            except Exception as e:
+                self.message_user(
+                    request, 
+                    f"Error al ejecutar el comando: {str(e)}", 
+                    messages.ERROR
+                )
+                return HttpResponseRedirect(reverse('admin:facturacion_producto_changelist'))
             
             # Restaurar stdout
             sys.stdout = stdout_backup
             
+            # Limpiar caracteres nulos que pueden causar errores
+            command_output = output.getvalue().replace('\x00', '')
+            
             # Extraer estadísticas
-            command_output = output.getvalue()
             total_procesados = 0
             actualizados = 0
             
             for line in command_output.split('\n'):
                 if 'Total productos procesados:' in line:
-                    total_procesados = line.split(':')[1].strip()
+                    try:
+                        total_procesados = line.split(':')[1].strip()
+                    except:
+                        total_procesados = "N/A"
                 elif 'Productos con stock actualizado:' in line:
-                    actualizados = line.split(':')[1].strip()
+                    try:
+                        actualizados = line.split(':')[1].strip()
+                    except:
+                        actualizados = "N/A"
             
             self.message_user(
                 request, 
@@ -117,21 +133,37 @@ class ProductoAdmin(admin.ModelAdmin):
             output = StringIO()
             sys.stdout = output
             
-            call_command('sync_inventory', force=True)
+            try:
+                call_command('sync_inventory', force=True)
+            except Exception as e:
+                self.message_user(
+                    request, 
+                    f"Error al ejecutar el comando: {str(e)}", 
+                    messages.ERROR
+                )
+                return HttpResponseRedirect(reverse('admin:facturacion_producto_changelist'))
             
             # Restaurar stdout
             sys.stdout = stdout_backup
             
+            # Limpiar caracteres nulos que pueden causar errores
+            command_output = output.getvalue().replace('\x00', '')
+            
             # Extraer estadísticas
-            command_output = output.getvalue()
             total_procesados = 0
             actualizados = 0
             
             for line in command_output.split('\n'):
                 if 'Total productos procesados:' in line:
-                    total_procesados = line.split(':')[1].strip()
+                    try:
+                        total_procesados = line.split(':')[1].strip()
+                    except:
+                        total_procesados = "N/A"
                 elif 'Productos con stock actualizado:' in line:
-                    actualizados = line.split(':')[1].strip()
+                    try:
+                        actualizados = line.split(':')[1].strip()
+                    except:
+                        actualizados = "N/A"
             
             self.message_user(
                 request, 

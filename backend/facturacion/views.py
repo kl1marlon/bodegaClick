@@ -691,32 +691,61 @@ class SincronizarInventarioView(APIView):
             sys.stdout = output
             
             # Ejecutar el comando con los argumentos correspondientes
-            if force:
-                call_command('sync_inventory', force=True)
-            else:
-                call_command('sync_inventory')
+            try:
+                if force:
+                    call_command('sync_inventory', force=True)
+                else:
+                    call_command('sync_inventory')
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al ejecutar el comando: {str(e)}'
+                }, status=500)
             
             # Restaurar stdout
             sys.stdout = stdout_backup
             
-            # Obtener la salida del comando
+            # Obtener la salida del comando y limpiar caracteres problemáticos
             command_output = output.getvalue()
+            # Eliminar caracteres nulos que podrían estar presentes
+            command_output = command_output.replace('\x00', '')
             
             # Analizar la salida para obtener estadísticas
             lines = command_output.strip().split('\n')
-            stats = {}
+            stats = {
+                'total': 0,
+                'actualizados': 0,
+                'variant_id_anadidos': 0,
+                'con_inventario': 0,
+                'con_error': 0
+            }
             
             for line in lines:
-                if 'Productos con stock actualizado:' in line:
-                    stats['actualizados'] = int(line.split(':')[1].strip())
-                elif 'Productos con variant_id añadido:' in line:
-                    stats['variant_id_anadidos'] = int(line.split(':')[1].strip())
-                elif 'Productos con información de inventario:' in line:
-                    stats['con_inventario'] = int(line.split(':')[1].strip())
+                if 'Total productos procesados:' in line:
+                    try:
+                        stats['total'] = int(line.split(':')[1].strip())
+                    except:
+                        pass
+                elif 'Productos con stock actualizado:' in line:
+                    try:
+                        stats['actualizados'] = int(line.split(':')[1].strip())
+                    except:
+                        pass
+                elif 'Productos con variant_id' in line:
+                    try:
+                        stats['variant_id_anadidos'] = int(line.split(':')[1].strip())
+                    except:
+                        pass
+                elif 'Productos con informacion de inventario:' in line:
+                    try:
+                        stats['con_inventario'] = int(line.split(':')[1].strip())
+                    except:
+                        pass
                 elif 'Productos con error:' in line:
-                    stats['con_error'] = int(line.split(':')[1].strip())
-                elif 'Total productos procesados:' in line:
-                    stats['total'] = int(line.split(':')[1].strip())
+                    try:
+                        stats['con_error'] = int(line.split(':')[1].strip())
+                    except:
+                        pass
             
             return JsonResponse({
                 'success': True,

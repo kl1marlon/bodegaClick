@@ -63,10 +63,24 @@
         .hidden {
             display: none;
         }
+        #tokenInput {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
     <h1>Sincronización de Inventario con Loyverse</h1>
+    
+    <div class="card">
+        <h2>Token de Seguridad</h2>
+        <p>Introduce el token de seguridad para sincronizar el inventario:</p>
+        <input type="text" id="tokenInput" value="admin-token" placeholder="Token de seguridad">
+    </div>
     
     <div class="card">
         <h2>Actualizar Productos Sin Stock</h2>
@@ -111,7 +125,7 @@
                 content += `Mensaje: ${data.message}\n\n`;
                 
                 if (data.detalles) {
-                    content += `🔍 DETALLES COMPLETOS (para técnicos):\n${data.detalles}`;
+                    content += `🔍 DETALLES:\n${data.detalles}`;
                 }
                 
                 resultDiv.style.backgroundColor = '#f1f8e9';
@@ -120,11 +134,16 @@
             resultDiv.textContent = content;
         }
         
-        // Token de seguridad - IMPORTANTE: Este valor debe ser igual al configurado en settings.ADMIN_SECRET_TOKEN
-        const adminToken = 'tu-token-admin-seguro';
-        
         // Función para sincronizar
         async function sincronizar(force = false) {
+            const tokenInput = document.getElementById('tokenInput');
+            const adminToken = tokenInput.value.trim();
+            
+            if (!adminToken) {
+                showResult({ error: "El token de seguridad es obligatorio" }, true);
+                return;
+            }
+            
             const spinner = document.getElementById(force ? 'spinner2' : 'spinner1');
             const resultDiv = document.getElementById('result');
             spinner.classList.remove('hidden');
@@ -140,7 +159,13 @@
                     body: JSON.stringify({ force: force })
                 });
                 
-                const data = await response.json();
+                // Intentar obtener el JSON de respuesta
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    throw new Error(`Error al procesar la respuesta: ${e.toString()}`);
+                }
                 
                 if (!response.ok) {
                     throw new Error(data.error || 'Error desconocido');
