@@ -2,6 +2,10 @@ FROM node:16-alpine as builder
 
 WORKDIR /app
 
+# Recibir variable de entorno durante la construcción
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+
 # Copiar solo package.json para instalar dependencias
 # Esto permite mejor caché de Docker
 COPY package.json ./
@@ -14,6 +18,9 @@ COPY public ./public
 COPY src ./src
 COPY .env* ./
 COPY *.js ./
+
+# Mostrar el valor de la variable para depuración
+RUN echo "Construyendo con REACT_APP_API_URL=$REACT_APP_API_URL"
 
 # Construir la aplicación
 RUN npm run build
@@ -34,10 +41,12 @@ COPY nginx.conf /etc/nginx/conf.d/
 ENV PORT=80
 EXPOSE 80
 
-# Crear un script de entrada más simple con shebang adecuado
+# Crear un script de entrada que genere un archivo de configuración dinámico
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'sed -i "s/RAILWAY_PORT/$PORT/g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
     echo 'sed -i "s|RAILWAY_BACKEND_URL|$BACKEND_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
+    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
+    echo 'echo "Configuración generada con BACKEND_URL=$BACKEND_URL"' >> /entrypoint.sh && \
     echo 'nginx -g "daemon off;"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 

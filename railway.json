@@ -14,11 +14,16 @@
       "name": "frontend",
       "path": "./frontend",
       "envs": {
-        "REACT_APP_API_URL": "${{backend.RAILWAY_PUBLIC_URL}}/api",
+        "REACT_APP_API_URL": "${{backend.RAILWAY_PUBLIC_URL}}",
         "BACKEND_URL": "${{backend.RAILWAY_PUBLIC_URL}}"
       },
       "persistent_folders": [],
-      "depends_on": ["backend"]
+      "depends_on": ["backend"],
+      "healthcheck": {
+        "path": "/config.js",
+        "interval": 10,
+        "timeout": 5
+      }
     }
   ]
 } 

@@ -1,7 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+// Usar la configuración dinámica si está disponible
+const getApiUrl = () => {
+  if (window.ENV && window.ENV.API_URL) {
+    return window.ENV.API_URL;
+  }
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+};
+
+const API_URL = getApiUrl();
 
 export const fetchFacturas = createAsyncThunk(
   'facturas/fetchFacturas',

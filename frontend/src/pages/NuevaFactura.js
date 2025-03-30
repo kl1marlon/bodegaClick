@@ -37,7 +37,14 @@ import {
 } from '../utils/calculosPrecios';
 
 // Usar la misma URL base que en el resto de la aplicación
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const getApiUrl = () => {
+  if (window.ENV && window.ENV.API_URL) {
+    return window.ENV.API_URL;
+  }
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+};
+
+const API_URL = getApiUrl();
 
 const NuevaFactura = () => {
   const dispatch = useDispatch();
