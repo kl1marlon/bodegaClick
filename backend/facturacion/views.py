@@ -680,35 +680,42 @@ class SincronizarInventarioView(APIView):
         force = request.data.get('force', False)
         
         try:
-            # Importamos el comando directamente
-            from django.core.management import call_command
-            from io import StringIO
+            import subprocess
             import sys
+            import os
             
-            # Capturar la salida del comando
-            stdout_backup = sys.stdout
-            output = StringIO()
-            sys.stdout = output
+            # Preparar el comando
+            command = [sys.executable, 'manage.py', 'sync_inventory']
+            if force:
+                command.append('--force')
             
-            # Ejecutar el comando con los argumentos correspondientes
+            # Ejecutar el comando como proceso separado
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Directorio del proyecto
+            )
+            
+            # Obtener la salida
+            stdout, stderr = process.communicate()
+            
+            # Decodificar la salida, ignorando caracteres problemáticos
             try:
-                if force:
-                    call_command('sync_inventory', force=True)
-                else:
-                    call_command('sync_inventory')
+                command_output = stdout.decode('utf-8', errors='ignore')
+                error_output = stderr.decode('utf-8', errors='ignore')
             except Exception as e:
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error al ejecutar el comando: {str(e)}'
+                    'error': f'Error al decodificar la salida del comando: {str(e)}'
                 }, status=500)
             
-            # Restaurar stdout
-            sys.stdout = stdout_backup
-            
-            # Obtener la salida del comando y limpiar caracteres problemáticos
-            command_output = output.getvalue()
-            # Eliminar caracteres nulos que podrían estar presentes
-            command_output = command_output.replace('\x00', '')
+            # Verificar si hubo errores
+            if process.returncode != 0:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al ejecutar el comando. Código de salida: {process.returncode}. Mensaje: {error_output}'
+                }, status=500)
             
             # Analizar la salida para obtener estadísticas
             lines = command_output.strip().split('\n')
@@ -755,9 +762,12 @@ class SincronizarInventarioView(APIView):
             })
             
         except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
             return JsonResponse({
                 'success': False,
-                'error': f'Error al sincronizar inventario: {str(e)}'
+                'error': f'Error al sincronizar inventario: {str(e)}',
+                'traceback': tb
             }, status=500)
 
 # Vista para renderizar la página HTML de sincronización de inventario

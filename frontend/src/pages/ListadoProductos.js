@@ -532,35 +532,39 @@ const ListadoProductos = () => {
     console.log("Iniciando sincronización de inventario con opciones:", opcionesSincronizacionInventario);
     
     dispatch(syncInventory(opcionesSincronizacionInventario))
+      .unwrap()
       .then((result) => {
-        if (result.error) {
-          console.error("Error en la sincronización de inventario:", result.error.message);
-          setSnackbar({
-            open: true,
-            message: `Error al sincronizar inventario: ${result.error.message}`,
-            severity: 'error'
-          });
-        } else {
-          console.log("Sincronización de inventario completada exitosamente:", result.payload);
-          
-          // Mostrar mensaje de éxito con los detalles recibidos
-          const estadisticas = result.payload.estadisticas || {};
-          const mensaje = `
-            Sincronización de inventario completada:
-            - Total productos: ${estadisticas.total || 0}
-            - Actualizados: ${estadisticas.actualizados || 0}
-            - Con Variant ID añadidos: ${estadisticas.variant_id_anadidos || 0}
-            - Productos con error: ${estadisticas.con_error || 0}
-          `;
-          
-          setSnackbar({
-            open: true,
-            message: mensaje,
-            severity: 'success'
-          });
-          
-          dispatch(fetchProductos()); // Refrescar la lista de productos
-        }
+        console.log("Sincronización de inventario completada exitosamente:", result);
+        
+        // Mostrar mensaje de éxito con los detalles recibidos
+        const estadisticas = result.estadisticas || {};
+        const mensaje = `
+          Sincronización de inventario completada:
+          - Total productos: ${estadisticas.total || 0}
+          - Actualizados: ${estadisticas.actualizados || 0}
+          - Con Variant ID añadidos: ${estadisticas.variant_id_anadidos || 0}
+          - Productos con error: ${estadisticas.con_error || 0}
+        `;
+        
+        setSnackbar({
+          open: true,
+          message: mensaje,
+          severity: 'success'
+        });
+        
+        dispatch(fetchProductos()); // Refrescar la lista de productos
+      })
+      .catch((error) => {
+        console.error("Error en la sincronización de inventario:", error.message);
+        
+        // Extraer mensaje de error detallado
+        const mensajeError = typeof error === 'string' ? error : error.message || 'Error desconocido';
+        
+        setSnackbar({
+          open: true,
+          message: `Error al sincronizar inventario: ${mensajeError}`,
+          severity: 'error'
+        });
       })
       .finally(() => {
         setSincronizandoInventario(false);

@@ -51,14 +51,15 @@ export const syncInventory = createAsyncThunk(
     try {
       console.log(`Iniciando sincronización de inventario desde Loyverse con opciones:`, opciones);
       
-      // Token de administrador - Esto debería configurarse adecuadamente en producción
-      // Usando un valor temporal para pruebas
+      // Token de administrador - Usando el valor predeterminado que coincide con la configuración del backend
       const adminToken = 'admin_secret_token_default';
       
+      // Asegurarnos de que la URL coincida con la ruta definida en el backend
       const response = await axios.post(`${API_URL}/sincronizar-inventario/`, {
         force: opciones.force !== undefined ? opciones.force : false
       }, {
         headers: {
+          'Content-Type': 'application/json',
           'X-Admin-Token': adminToken
         }
       });
@@ -67,7 +68,13 @@ export const syncInventory = createAsyncThunk(
       return response.data;
     } catch (error) {
       console.error('Error en sincronización de inventario:', error.response?.data || error.message);
-      throw error;
+      // Si hay un error detallado, lo incluimos en el mensaje
+      const errorMessage = 
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        error.message || 
+        'Error desconocido';
+      throw new Error(errorMessage);
     }
   }
 );
