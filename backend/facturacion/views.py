@@ -412,43 +412,63 @@ class WebhookReceiveView(APIView):
         """
         Maneja la actualización de inventario
         """
-        inventory_levels = data.get('inventory_levels', [])
+        inventory_data = data.get('inventory_levels', [])
         service = LoyverseService()
         
-        for level in inventory_levels:
-            variant_id = level.get('variant_id')
-            store_id = level.get('store_id')
-            in_stock = level.get('in_stock')
+        # Si inventory_levels es un objeto único (no una lista)
+        if isinstance(inventory_data, dict):
+            self._process_inventory_item(inventory_data, service)
+        # Si inventory_levels es una lista de objetos
+        elif isinstance(inventory_data, list):
+            for level in inventory_data:
+                self._process_inventory_item(level, service)
+        else:
+            print(f"Formato de inventory_levels inesperado: {type(inventory_data)}")
             
-            # Buscar el producto correspondiente
-            try:
-                producto = Producto.objects.get(loyverse_id=variant_id)
-                
-                # Guardar el stock anterior para comparar
-                stock_anterior = producto.stock_actual
-                
-                # Actualizar el stock del producto
-                producto.stock_actual = in_stock
-                producto.ultima_actualizacion_stock = datetime.datetime.now()
-                producto.save()
-                
-                print(f"Inventario actualizado para {producto.nombre}: {in_stock} unidades")
-                
-            except Producto.DoesNotExist:
-                # Si el producto no existe, sincronizar desde Loyverse
-                print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
-                service.fetch_products()
-                
+    def _process_inventory_item(self, level, service):
+        """
+        Procesa un item individual de inventario
+        """
+        variant_id = level.get('variant_id')
+        store_id = level.get('store_id')
+        in_stock = level.get('in_stock')
+        
+        # Buscar el producto correspondiente
+        try:
+            producto = Producto.objects.get(loyverse_id=variant_id)
+            
+            # Guardar el stock anterior para comparar
+            stock_anterior = producto.stock_actual
+            
+            # Actualizar el stock del producto
+            producto.stock_actual = in_stock
+            producto.ultima_actualizacion_stock = datetime.datetime.now()
+            producto.save()
+            
+            print(f"Inventario actualizado para {producto.nombre}: {in_stock} unidades")
+            
+        except Producto.DoesNotExist:
+            # Si el producto no existe, sincronizar desde Loyverse
+            print(f"Producto con ID {variant_id} no encontrado. Sincronizando productos...")
+            service.fetch_products()
+    
     def _handle_items_update(self, data):
         """
         Maneja la actualización de productos
         """
-        items = data.get('items', [])
+        items_data = data.get('items', [])
         service = LoyverseService()
         
-        if items:
-            # Sincronizar productos desde Loyverse
-            print(f"Recibida actualización de {len(items)} productos. Sincronizando...")
+        # Si items es un objeto único (no una lista)
+        if isinstance(items_data, dict):
+            print(f"Recibida actualización de producto con ID: {items_data.get('id')}")
+            service.fetch_products()
+        # Si items es una lista de objetos
+        elif isinstance(items_data, list):
+            print(f"Recibida actualización de {len(items_data)} productos. Sincronizando...")
+            service.fetch_products()
+        else:
+            print(f"Formato de items inesperado: {type(items_data)}")
             service.fetch_products()
 
     # También aceptamos solicitudes GET para pruebas
