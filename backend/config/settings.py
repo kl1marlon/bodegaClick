@@ -44,9 +44,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    # Añadir dominio de Railway para el frontend
+    "https://*.railway.app",
 ]
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:3000$",
+    # Permitir todos los dominios de Railway
+    r"^https://.*\.railway\.app$",
 ]
 
 ROOT_URLCONF = 'config.urls'

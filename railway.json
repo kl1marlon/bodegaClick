@@ -14,7 +14,8 @@
       "name": "frontend",
       "path": "./frontend",
       "envs": {
-        "REACT_APP_API_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}/api"
+        "REACT_APP_API_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}/api",
+        "BACKEND_URL": "${{backend.RAILWAY_SERVICE_BACKEND_URL}}"
       }
     }
   ]

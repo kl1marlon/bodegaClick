@@ -34,5 +34,5 @@ COPY nginx.conf /etc/nginx/conf.d/
 ENV PORT=80
 EXPOSE 80
 
-# Usar un script más simple y directo para evitar problemas de reemplazo
+# Usar un script más robusto para la sustitución de variables
 CMD ["/bin/sh", "-c", "sed -i 's/RAILWAY_PORT/'$PORT'/g' /etc/nginx/conf.d/nginx.conf && sed -i 's|RAILWAY_BACKEND_URL|'$BACKEND_URL'|g' /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"] 
