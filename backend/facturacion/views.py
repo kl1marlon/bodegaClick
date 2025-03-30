@@ -665,4 +665,74 @@ class CrearColumnaVariantIdView(APIView):
                 return JsonResponse({
                     'success': False,
                     'error': f'Error al crear columna: {str(e)}'
-                }, status=500) 
+                }, status=500)
+
+# Nuevo endpoint para sincronizar inventario
+@method_decorator(csrf_exempt, name='dispatch')
+class SincronizarInventarioView(APIView):
+    def post(self, request):
+        # Obtener token secreto de la solicitud para validación
+        token = request.headers.get('X-Admin-Token')
+        if token != settings.ADMIN_SECRET_TOKEN:
+            return JsonResponse({'error': 'No autorizado'}, status=401)
+        
+        # Parámetros de la solicitud
+        force = request.data.get('force', False)
+        
+        try:
+            # Importamos el comando directamente
+            from django.core.management import call_command
+            from io import StringIO
+            import sys
+            
+            # Capturar la salida del comando
+            stdout_backup = sys.stdout
+            output = StringIO()
+            sys.stdout = output
+            
+            # Ejecutar el comando con los argumentos correspondientes
+            if force:
+                call_command('sync_inventory', force=True)
+            else:
+                call_command('sync_inventory')
+            
+            # Restaurar stdout
+            sys.stdout = stdout_backup
+            
+            # Obtener la salida del comando
+            command_output = output.getvalue()
+            
+            # Analizar la salida para obtener estadísticas
+            lines = command_output.strip().split('\n')
+            stats = {}
+            
+            for line in lines:
+                if 'Productos con stock actualizado:' in line:
+                    stats['actualizados'] = int(line.split(':')[1].strip())
+                elif 'Productos con variant_id añadido:' in line:
+                    stats['variant_id_anadidos'] = int(line.split(':')[1].strip())
+                elif 'Productos con información de inventario:' in line:
+                    stats['con_inventario'] = int(line.split(':')[1].strip())
+                elif 'Productos con error:' in line:
+                    stats['con_error'] = int(line.split(':')[1].strip())
+                elif 'Total productos procesados:' in line:
+                    stats['total'] = int(line.split(':')[1].strip())
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Sincronización de inventario completada',
+                'estadisticas': stats,
+                'detalles': command_output
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al sincronizar inventario: {str(e)}'
+            }, status=500)
+
+# Vista para renderizar la página HTML de sincronización de inventario
+class SincronizarInventarioHtmlView(APIView):
+    def get(self, request):
+        from django.shortcuts import render
+        return render(request, 'sincronizar_inventario.html') 

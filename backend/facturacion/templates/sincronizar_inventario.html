@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronización de Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+        }
+        .button.warning {
+            background-color: #e67e22;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.3);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sincronización de Inventario con Loyverse</h1>
+    
+    <div class="card">
+        <h2>Actualizar Productos Sin Stock</h2>
+        <p>Esta opción solo actualizará los productos que actualmente tienen <strong>stock = 0</strong>.</p>
+        <button id="btnSincronizar" class="button">Sincronizar Solo Productos Sin Stock</button>
+        <span id="spinner1" class="spinner hidden"></span>
+    </div>
+    
+    <div class="card">
+        <h2>Actualizar TODOS los Productos</h2>
+        <p>Esta opción actualizará <strong>TODOS los productos</strong>, incluso los que ya tienen stock.</p>
+        <button id="btnSincronizarTodos" class="button warning">Sincronizar TODOS los Productos</button>
+        <span id="spinner2" class="spinner hidden"></span>
+    </div>
+    
+    <div id="result" class="hidden"></div>
+    
+    <script>
+        // Función para mostrar resultado
+        function showResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden');
+            
+            // Formatear los datos de manera legible
+            let content = '';
+            
+            if (isError) {
+                content = `ERROR: ${JSON.stringify(data, null, 2)}`;
+                resultDiv.style.backgroundColor = '#ffebee';
+            } else {
+                // Crear un resumen bonito
+                content = `✅ SINCRONIZACIÓN COMPLETADA\n\n`;
+                
+                if (data.estadisticas) {
+                    content += `📊 ESTADÍSTICAS:\n`;
+                    content += `- Productos procesados: ${data.estadisticas.total || 0}\n`;
+                    content += `- Productos actualizados: ${data.estadisticas.actualizados || 0}\n`;
+                    content += `- Productos con nuevo variant_id: ${data.estadisticas.variant_id_anadidos || 0}\n`;
+                    content += `- Productos con errores: ${data.estadisticas.con_error || 0}\n\n`;
+                }
+                
+                content += `Mensaje: ${data.message}\n\n`;
+                
+                if (data.detalles) {
+                    content += `🔍 DETALLES COMPLETOS (para técnicos):\n${data.detalles}`;
+                }
+                
+                resultDiv.style.backgroundColor = '#f1f8e9';
+            }
+            
+            resultDiv.textContent = content;
+        }
+        
+        // Token de seguridad - IMPORTANTE: Este valor debe ser igual al configurado en settings.ADMIN_SECRET_TOKEN
+        const adminToken = 'tu-token-admin-seguro';
+        
+        // Función para sincronizar
+        async function sincronizar(force = false) {
+            const spinner = document.getElementById(force ? 'spinner2' : 'spinner1');
+            const resultDiv = document.getElementById('result');
+            spinner.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/api/sincronizar-inventario/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': adminToken
+                    },
+                    body: JSON.stringify({ force: force })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+                
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.toString() }, true);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('btnSincronizar').addEventListener('click', () => sincronizar(false));
+        document.getElementById('btnSincronizarTodos').addEventListener('click', () => sincronizar(true));
+    </script>
+</body>
+</html> 

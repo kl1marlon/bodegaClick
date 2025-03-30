@@ -1,0 +1,21 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools %}
+    <div style="margin-bottom: 20px;">
+        <h3 style="margin-bottom: 10px;">Sincronización de Inventario</h3>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'admin:sincronizar-inventario' %}" class="button" style="background-color: #28a745; color: white;">
+                Sincronizar Productos Sin Stock
+            </a>
+            <a href="{% url 'admin:sincronizar-inventario-forzado' %}" class="button" style="background-color: #fd7e14; color: white;">
+                Sincronizar TODOS los Productos
+            </a>
+        </div>
+        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+            <b>Sincronizar Productos Sin Stock:</b> Solo actualiza productos con stock = 0.<br>
+            <b>Sincronizar TODOS los Productos:</b> Actualiza todos los productos, incluso los que ya tienen stock.
+        </p>
+    </div>
+    {{ block.super }}
+{% endblock %} 

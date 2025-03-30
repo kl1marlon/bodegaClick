@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from facturacion.views import ProductoViewSet, TasaCambioViewSet, FacturaViewSet, WebhookViewSet, WebhookReceiveView, ActualizarVariantIdsView, CrearColumnaVariantIdView
+from facturacion.views import ProductoViewSet, TasaCambioViewSet, FacturaViewSet, WebhookViewSet, WebhookReceiveView, ActualizarVariantIdsView, CrearColumnaVariantIdView, SincronizarInventarioView, SincronizarInventarioHtmlView
 from django.http import HttpResponse
 import logging
 import sys
@@ -82,4 +82,6 @@ urlpatterns = [
     path('ws/notificaciones/', websocket_dummy_view, name='websocket-dummy'),
     path('api/actualizar-variant-ids/', ActualizarVariantIdsView.as_view(), name='actualizar_variant_ids'),
     path('api/crear-columna-variant-id/', CrearColumnaVariantIdView.as_view(), name='crear_columna_variant_id'),
+    path('api/sincronizar-inventario/', SincronizarInventarioView.as_view(), name='sincronizar_inventario'),
+    path('sincronizar-inventario/', SincronizarInventarioHtmlView.as_view(), name='sincronizar_inventario_html'),
 ] 
