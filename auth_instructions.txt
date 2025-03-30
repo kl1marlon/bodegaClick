@@ -1,0 +1,20 @@
+
+===== INFORMACIÓN PARA AUTORIZACIÓN OAUTH =====
+
+1. Copia y pega esta URL en tu navegador:
+
+https://api.loyverse.com/oauth/authorize?client_id=7AX7yBLKTYDmuBOse47W&redirect_uri=https%3A%2F%2Fbackend-production-a8d3.up.railway.app%2Foauth-callback&response_type=code&scope=inventory_levels.read+items.read+webhooks.write+items.write&state=tCjliECLh2kcFMVqERr4aw
+
+2. Después de autorizar, recibirás una redirección a: https://backend-production-a8d3.up.railway.app/oauth-callback
+
+3. De esa URL, necesitarás extraer manualmente el parámetro 'code'
+
+4. Ejemplo: Si recibes https://backend-production-a8d3.up.railway.app/oauth-callback?code=ABC123&state=xyz, el código es 'ABC123'
+
+5. Conserva el valor 'state': tCjliECLh2kcFMVqERr4aw
+
+6. Ejecuta el siguiente comando para obtener el token (reemplaza TU_CODIGO):
+
+python backend/webhook/get_token.py --code TU_CODIGO --state tCjliECLh2kcFMVqERr4aw --redirect_url https://backend-production-a8d3.up.railway.app/oauth-callback
+
+===============================================
