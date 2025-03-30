@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='producto',
-            name='aplicar_iva',
-            field=models.BooleanField(default=False, null=True),
-        ),
-        migrations.AddField(
-            model_name='producto',
             name='es_precio_variable',
             field=models.BooleanField(default=False),
         ),
