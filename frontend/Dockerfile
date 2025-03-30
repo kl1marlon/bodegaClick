@@ -34,5 +34,5 @@ COPY nginx.conf /etc/nginx/conf.d/
 ENV PORT=80
 EXPOSE 80
 
-# Eliminar el script de entrada personalizado y usar bash directamente
-CMD ["/bin/sh", "-c", "sed -i \"s|listen 80|listen $PORT|g\" /etc/nginx/conf.d/nginx.conf && sed -i \"s|\\${BACKEND_URL}|$BACKEND_URL|g\" /etc/nginx/conf.d/nginx.conf && nginx -g \"daemon off;\""] 
+# Usar un script más simple y directo para evitar problemas de reemplazo
+CMD ["/bin/sh", "-c", "sed -i 's/RAILWAY_PORT/'$PORT'/g' /etc/nginx/conf.d/nginx.conf && sed -i 's|RAILWAY_BACKEND_URL|'$BACKEND_URL'|g' /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"] 
