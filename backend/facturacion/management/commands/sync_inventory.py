@@ -87,6 +87,12 @@ class Command(BaseCommand):
                     productos_con_error += 1
                     continue
             
+            # Si no se pudo obtener un variant_id, saltar al siguiente producto
+            if not variant_id:
+                self.stdout.write(f"No se pudo obtener variant_id para {producto.nombre}, saltando consulta de inventario.")
+                productos_con_error += 1
+                continue
+
             # Paso 2: Consultar inventario
             try:
                 inventory_url = f"{BASE_URL}/inventory?variant_ids={variant_id}"
@@ -99,35 +105,44 @@ class Command(BaseCommand):
                     inventory_levels = inventory_data.get('inventory_levels', [])
                     
                     current_stock = 0
+                    stock_found = False
                     for level in inventory_levels:
                         if level.get('store_id') == store_id and level.get('variant_id') == variant_id:
                             current_stock = level.get('in_stock', 0)
+                            stock_found = True
                             break
                     
-                    producto.stock_actual = current_stock
-                    producto.ultima_actualizacion_stock = datetime.datetime.now()
-                    producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
-                    
-                    self.stdout.write(f"Stock actualizado: {current_stock} unidades")
-                    productos_actualizados += 1
-                    productos_con_inventory += 1
+                    if stock_found:
+                        producto.stock_actual = current_stock
+                        producto.ultima_actualizacion_stock = datetime.datetime.now()
+                        producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
+                        
+                        self.stdout.write(f"Stock actualizado: {current_stock} unidades")
+                        productos_actualizados += 1
+                        productos_con_inventory += 1
+                    else:
+                        self.stdout.write(f"No se encontró información de inventario para la tienda {store_id} y variante {variant_id}")
+                        # No contamos esto como error si la respuesta fue 200
                 else:
-                    self.stdout.write(f"Error consultando inventario: {inventory_response.status_code}")
+                    self.stdout.write(f"Error consultando inventario: {inventory_response.status_code} - {inventory_response.text}")
                     productos_con_error += 1
             
             except Exception as e:
                 self.stdout.write(f"Error consultando inventario: {str(e)}")
                 productos_con_error += 1
             
-            # Esperar entre peticiones
-            if (i + 1) % 5 == 0:
+            # Esperar entre peticiones para evitar rate limiting
+            if (i + 1) % 5 == 0: # Pausa cada 5 productos
                 self.stdout.write(f"Esperando 1 segundo... ({i+1}/{total_productos})")
                 time.sleep(1)
+            elif (i + 1) % 2 == 0: # Pausa más corta cada 2 productos
+                 time.sleep(0.2)
+
         
         # Resumen final
-        self.stdout.write("=== RESUMEN DE SINCRONIZACION DE INVENTARIO ===")
+        self.stdout.write("\n=== RESUMEN DE SINCRONIZACION DE INVENTARIO ===")
         self.stdout.write(f"Total productos procesados: {total_productos}")
         self.stdout.write(f"Productos con stock actualizado: {productos_actualizados}")
         self.stdout.write(f"Productos con variant_id anadido: {productos_sin_variant}")
-        self.stdout.write(f"Productos con informacion de inventario: {productos_con_inventory}")
-        self.stdout.write(f"Productos con error: {productos_con_error}") 
+        self.stdout.write(f"Productos con informacion de inventario encontrada: {productos_con_inventory}")
+        self.stdout.write(f"Productos con error (API o procesamiento): {productos_con_error}") 
