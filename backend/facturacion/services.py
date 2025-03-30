@@ -36,14 +36,6 @@ class LoyverseService:
         from datetime import timedelta
         from loyverse_sync.products import aplicar_redondeo_especial
         
-        # Verificar si existen facturas recientes (últimos 2 días)
-        dos_dias_atras = timezone.now() - timedelta(days=2)
-        facturas_recientes = Factura.objects.filter(created_at__gte=dos_dias_atras).exists()
-        
-        if facturas_recientes and actualizar_precios:
-            print("Existen facturas recientes (últimos 2 días). Se preservarán los precios actuales.")
-            actualizar_precios = False
-        
         # Obtener las categorías para mapear IDs a nombres
         categories_dict = {}
         try:
@@ -199,7 +191,6 @@ class LoyverseService:
             'created': products_created,
             'updated': products_updated,
             'prices_unchanged': prices_unchanged,
-            'facturas_recientes': facturas_recientes,
             'total_pages': page,
             'total_processed': total_items_processed
         }
