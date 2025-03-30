@@ -37,6 +37,7 @@ EXPOSE 80
 # Script de inicio para Railway
 RUN echo '#!/bin/sh\n\
 sed -i "s|listen 80|listen $PORT|g" /etc/nginx/conf.d/nginx.conf\n\
+sed -i "s|\${BACKEND_URL}|$BACKEND_URL|g" /etc/nginx/conf.d/nginx.conf\n\
 nginx -g "daemon off;"\n'\
 > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
