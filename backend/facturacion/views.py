@@ -680,85 +680,16 @@ class SincronizarInventarioView(APIView):
         force = request.data.get('force', False)
         
         try:
-            import subprocess
-            import sys
-            import os
+            from facturacion.management.commands.sync_inventory import Command
             
-            # Preparar el comando
-            command = [sys.executable, 'manage.py', 'sync_inventory']
-            if force:
-                command.append('--force')
-            
-            # Ejecutar el comando como proceso separado
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Directorio del proyecto
-            )
-            
-            # Obtener la salida
-            stdout, stderr = process.communicate()
-            
-            # Decodificar la salida, ignorando caracteres problemáticos
-            try:
-                command_output = stdout.decode('utf-8', errors='ignore')
-                error_output = stderr.decode('utf-8', errors='ignore')
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Error al decodificar la salida del comando: {str(e)}'
-                }, status=500)
-            
-            # Verificar si hubo errores
-            if process.returncode != 0:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Error al ejecutar el comando. Código de salida: {process.returncode}. Mensaje: {error_output}'
-                }, status=500)
-            
-            # Analizar la salida para obtener estadísticas
-            lines = command_output.strip().split('\n')
-            stats = {
-                'total': 0,
-                'actualizados': 0,
-                'variant_id_anadidos': 0,
-                'con_inventario': 0,
-                'con_error': 0
-            }
-            
-            for line in lines:
-                if 'Total productos procesados:' in line:
-                    try:
-                        stats['total'] = int(line.split(':')[1].strip())
-                    except:
-                        pass
-                elif 'Productos con stock actualizado:' in line:
-                    try:
-                        stats['actualizados'] = int(line.split(':')[1].strip())
-                    except:
-                        pass
-                elif 'Productos con variant_id' in line:
-                    try:
-                        stats['variant_id_anadidos'] = int(line.split(':')[1].strip())
-                    except:
-                        pass
-                elif 'Productos con informacion de inventario:' in line:
-                    try:
-                        stats['con_inventario'] = int(line.split(':')[1].strip())
-                    except:
-                        pass
-                elif 'Productos con error:' in line:
-                    try:
-                        stats['con_error'] = int(line.split(':')[1].strip())
-                    except:
-                        pass
+            # Ejecutar comando directamente
+            cmd = Command()
+            estadisticas = cmd.handle(force=force)
             
             return JsonResponse({
                 'success': True,
                 'message': 'Sincronización de inventario completada',
-                'estadisticas': stats,
-                'detalles': command_output
+                'estadisticas': estadisticas
             })
             
         except Exception as e:

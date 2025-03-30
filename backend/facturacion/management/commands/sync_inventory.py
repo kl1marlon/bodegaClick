@@ -145,4 +145,12 @@ class Command(BaseCommand):
         self.stdout.write(f"Productos con stock actualizado: {productos_actualizados}")
         self.stdout.write(f"Productos con variant_id anadido: {productos_sin_variant}")
         self.stdout.write(f"Productos con informacion de inventario encontrada: {productos_con_inventory}")
-        self.stdout.write(f"Productos con error (API o procesamiento): {productos_con_error}") 
+        self.stdout.write(f"Productos con error (API o procesamiento): {productos_con_error}")
+        
+        # Devolver estadísticas para mostrar en el frontend
+        return {
+            'total': total_productos,
+            'actualizados': productos_actualizados,
+            'variant_id_anadidos': productos_sin_variant,
+            'con_error': productos_con_error
+        } 
