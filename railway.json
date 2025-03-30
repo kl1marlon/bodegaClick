@@ -7,7 +7,7 @@
       "envs": {
         "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
         "DEBUG": "False",
-        "ALLOWED_HOSTS": ".railway.app"
+        "ALLOWED_HOSTS": ".railway.app,backend-production-a8d3.up.railway.app"
       }
     },
     {

@@ -5,6 +5,7 @@ from facturacion.views import ProductoViewSet, TasaCambioViewSet, FacturaViewSet
 from django.http import HttpResponse
 import logging
 import sys
+from django.middleware.common import CommonMiddleware
 
 # Suprimir completamente los logs para ws/notificaciones
 class NoWSLoggingFilter(logging.Filter):
@@ -42,24 +43,14 @@ class SilenceOutput:
         self.null_output.close()
 
 
-class SilentMiddleware:
+class SilentMiddleware(CommonMiddleware):
     """
     Middleware que intercepta las peticiones a ws/notificaciones y las maneja silenciosamente
     """
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        # Si la petición es para ws/notificaciones, devolver una respuesta silenciosa sin logging
-        if request.path == '/ws/notificaciones/':
-            # try:
-            #     with SilenceOutput():
-            #         return HttpResponse(status=200)
-            # except:
-            #     # En caso de error con los archivos, simplemente devolver la respuesta
-            return HttpResponse(status=200)
-        # Para el resto de las peticiones, comportamiento normal
-        return self.get_response(request)
+    def process_request(self, request):
+        if request.path.startswith('/ws/notificaciones/'):
+            return None
+        return super().process_request(request)
 
 def websocket_dummy_view(request):
     """
@@ -68,6 +59,10 @@ def websocket_dummy_view(request):
     """
     return HttpResponse(status=200)
 
+# Vista simple para la ruta raíz
+def index(request):
+    return HttpResponse("Backend BodegaClick funcionando correctamente", content_type="text/plain")
+
 router = DefaultRouter()
 router.register(r'productos', ProductoViewSet)
 router.register(r'tasas-cambio', TasaCambioViewSet)
@@ -75,6 +70,7 @@ router.register(r'facturas', FacturaViewSet)
 router.register(r'webhooks', WebhookViewSet)
 
 urlpatterns = [
+    path('', index, name='index'),  # Añadir vista para la ruta raíz
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('webhook/', WebhookReceiveView.as_view(), name='webhook-receive'),
