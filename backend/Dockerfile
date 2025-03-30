@@ -26,6 +26,7 @@ COPY . .
 
 # Script de inicio para Railway
 RUN echo '#!/bin/bash\n\
+python manage.py makemigrations\n\
 python manage.py migrate\n\
 python manage.py collectstatic --no-input\n\
 gunicorn config.wsgi:application --bind 0.0.0.0:$PORT\n'\
