@@ -52915,3 +52915,4 @@ django.db.utils.ProgrammingError: column facturacion_producto.variant_id does no
 LINE 1: ...ucto"."id", "facturacion_producto"."loyverse_id", "facturaci...
                                                              ^
 
+2025-03-30 16:50:03,577 - INFO - /app/config/settings.py changed, reloading.

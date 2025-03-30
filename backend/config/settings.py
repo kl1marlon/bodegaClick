@@ -54,6 +54,12 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.railway\.app$",
 ]
 
+# Configuración de CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://backend-production-a8d3.up.railway.app",
+    "https://*.railway.app",
+]
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
