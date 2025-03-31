@@ -46,12 +46,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    # Añadir dominio de Railway para el frontend
+    "https://bodegaclick-production.up.railway.app",
     "https://*.railway.app",
 ]
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:3000$",
-    # Permitir todos los dominios de Railway
+    r"^https://bodegaclick-production\.up\.railway\.app$",
     r"^https://.*\.railway\.app$",
 ]
 
@@ -67,6 +67,12 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     'x-admin-token',  # Añadir este encabezado personalizado para la sincronización de inventario
+]
+
+# Exponer headers en respuestas CORS
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'content-disposition',
 ]
 
 # Configuración de CSRF

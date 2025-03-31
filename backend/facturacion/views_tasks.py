@@ -6,7 +6,7 @@ from django.core.cache import cache
 from celery.result import AsyncResult
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -18,10 +18,17 @@ from .tasks.sync_tasks import (
 )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
+@csrf_exempt
 def iniciar_tarea(request):
     """Inicia una nueva tarea asíncrona"""
+    # Verificar token de administrador si se trata de tareas sensibles
     task_type = request.data.get('type')
+    if task_type in ['sync_inventory', 'sync_prices']:
+        token = request.headers.get('X-Admin-Token')
+        if token != settings.ADMIN_SECRET_TOKEN:
+            return Response({'error': 'No autorizado'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     if not task_type:
         return Response(
             {'error': 'Se requiere el tipo de tarea'},
@@ -49,56 +56,33 @@ def iniciar_tarea(request):
     })
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def estado_tarea(request, task_id):
     """Consulta el estado de una tarea"""
-    # Primero intentar obtener el progreso desde Redis
-    progress_data = TaskProgressManager.get_progress(task_id)
-    
-    if progress_data:
-        return Response(progress_data)
-    
-    # Si no hay datos en Redis, consultar a Celery
-    result = AsyncResult(task_id)
-    
-    if result.state == 'PENDING':
-        response_data = {
-            'task_id': task_id,
-            'status': 'PENDING',
-            'message': 'La tarea está pendiente'
-        }
-    elif result.state == 'STARTED':
-        response_data = {
-            'task_id': task_id,
-            'status': 'STARTED',
-            'message': 'La tarea está en proceso'
-        }
-    elif result.state == 'SUCCESS':
-        response_data = {
-            'task_id': task_id,
-            'status': 'SUCCESS',
-            'result': result.result
-        }
-    elif result.state == 'FAILURE':
-        response_data = {
-            'task_id': task_id,
-            'status': 'FAILURE',
-            'error': str(result.result) if result.result else 'Error desconocido'
-        }
-    elif result.state == 'REVOKED':
-        response_data = {
-            'task_id': task_id,
-            'status': 'REVOKED',
-            'message': 'La tarea fue cancelada'
-        }
-    else:
-        response_data = {
-            'task_id': task_id,
-            'status': result.state,
-            'message': 'Estado desconocido'
-        }
-    
-    return Response(response_data)
+    try:
+        task_result = AsyncResult(task_id)
+        
+        # Obtener información del progreso desde Redis
+        progress_data = TaskProgressManager.get_progress(task_id)
+        
+        if progress_data:
+            # Datos de progreso disponibles en Redis
+            return Response(progress_data)
+        else:
+            # Fallback a estado básico de Celery
+            task_status = task_result.status
+            task_result_value = task_result.result if task_result.ready() else None
+            
+            return Response({
+                'task_id': task_id,
+                'status': task_status,
+                'result': task_result_value
+            })
+    except Exception as e:
+        return Response(
+            {'error': f'Error al consultar tarea: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -163,4 +147,18 @@ def listar_tareas(request):
     return Response({
         'count': len(tasks),
         'tasks': tasks
+    })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def test_cors(request):
+    """Endpoint simple para probar configuración CORS"""
+    return Response({
+        'success': True,
+        'message': 'La configuración CORS está funcionando correctamente',
+        'headers_received': {
+            'origin': request.headers.get('origin', 'No origin header'),
+            'host': request.headers.get('host', 'No host header'),
+            'x-admin-token': 'Presente' if request.headers.get('x-admin-token') else 'No presente'
+        }
     }) 

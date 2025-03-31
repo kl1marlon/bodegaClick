@@ -74,7 +74,7 @@ def websocket_dummy_view(request):
 
 # Vista simple para la ruta raíz
 def index(request):
-    return HttpResponse("Backend BodegaClick funcionando correctamente", content_type="text/plain")
+    return HttpResponse("<h1>API de Facturación</h1><p>Bienvenido al API de facturación. La documentación está disponible en /api/</p>")
 
 router = DefaultRouter()
 router.register(r'productos', ProductoViewSet)
@@ -99,5 +99,5 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     
     # Incluir las URLs de facturación para tareas asíncronas
-    path('', include('facturacion.urls')),
+    path('api/', include('facturacion.urls')),
 ] 

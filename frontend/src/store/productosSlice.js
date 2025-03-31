@@ -54,9 +54,12 @@ export const syncInventory = createAsyncThunk(
       // Token de administrador - Usando el valor predeterminado que coincide con la configuración del backend
       const adminToken = 'admin_secret_token_default';
       
-      // Asegurarnos de que la URL coincida con la ruta definida en el backend
-      const response = await axios.post(`${API_URL}/sincronizar-inventario/`, {
-        force: opciones.force !== undefined ? opciones.force : false
+      // Usar el nuevo endpoint de tareas asíncronas
+      const response = await axios.post(`${API_URL}/tareas/iniciar/`, {
+        type: 'sync_inventory',
+        params: {
+          force: opciones.force !== undefined ? opciones.force : false
+        }
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +67,7 @@ export const syncInventory = createAsyncThunk(
         }
       });
       
-      console.log('Respuesta de sincronización de inventario:', response.data);
+      console.log('Respuesta de iniciar tarea de sincronización:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error en sincronización de inventario:', error);
@@ -108,6 +111,30 @@ export const updateProductoTipoTasa = createAsyncThunk(
     } catch (error) {
       console.error('Error al actualizar tipo_tasa:', error.response?.data || error.message);
       throw error;
+    }
+  }
+);
+
+export const testCorsConnection = createAsyncThunk(
+  'productos/testCorsConnection',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Probando conexión CORS con el backend...');
+      
+      // Token de administrador para probar los encabezados
+      const adminToken = 'admin_secret_token_default';
+      
+      const response = await axios.get(`${API_URL}/test-cors/`, {
+        headers: {
+          'X-Admin-Token': adminToken
+        }
+      });
+      
+      console.log('Respuesta de prueba CORS:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en prueba CORS:', error);
+      return rejectWithValue(error.message || 'Error desconocido en la prueba CORS');
     }
   }
 );
@@ -158,6 +185,16 @@ const productosSlice = createSlice({
         if (index !== -1) {
           state.items[index] = action.payload;
         }
+      })
+      .addCase(testCorsConnection.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(testCorsConnection.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(testCorsConnection.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || action.error.message;
       });
   },
 });
