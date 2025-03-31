@@ -114,7 +114,7 @@ const ListadoProductos = () => {
   // Estado para diálogo de sincronización de inventario
   const [syncInventoryDialogOpen, setSyncInventoryDialogOpen] = useState(false);
   const [sincronizandoInventario, setSincronizandoInventario] = useState(false);
-  const [opcionesSincronizacionInventario, setOpcionesSincronizacionInventario] = useState({
+  const [opcionesInventario, setOpcionesInventario] = useState({
     force: false,
   });
   
@@ -544,7 +544,7 @@ const ListadoProductos = () => {
     
     console.log("Iniciando sincronización de inventario");
     
-    dispatch(syncInventory({ force: opcionesSincronizacionInventario.force }))
+    dispatch(syncInventory({ force: opcionesInventario.force }))
       .then((result) => {
         if (result.error) {
           console.error("Error al iniciar sincronización de inventario:", result.error.message);
@@ -1758,8 +1758,8 @@ const ListadoProductos = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={opcionesSincronizacionInventario.force}
-                    onChange={(e) => setOpcionesSincronizacionInventario(prev => ({
+                    checked={opcionesInventario.force}
+                    onChange={(e) => setOpcionesInventario(prev => ({
                       ...prev,
                       force: e.target.checked
                     }))}
