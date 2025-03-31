@@ -136,8 +136,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Esperando 1 segundo... ({i+1}/{total_productos})")
                 time.sleep(1)
             elif (i + 1) % 2 == 0: # Pausa más corta cada 2 productos
-                 time.sleep(0.2)
-
+                time.sleep(0.2)
         
         # Resumen final
         self.stdout.write("\n=== RESUMEN DE SINCRONIZACION DE INVENTARIO ===")

@@ -47,7 +47,7 @@ export const syncFromLoyverse = createAsyncThunk(
 
 export const syncInventory = createAsyncThunk(
   'productos/syncInventory',
-  async (opciones = {}) => {
+  async (opciones = {}, { rejectWithValue }) => {
     try {
       console.log(`Iniciando sincronización de inventario desde Loyverse con opciones:`, opciones);
       
@@ -67,14 +67,32 @@ export const syncInventory = createAsyncThunk(
       console.log('Respuesta de sincronización de inventario:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error en sincronización de inventario:', error.response?.data || error.message);
-      // Si hay un error detallado, lo incluimos en el mensaje
-      const errorMessage = 
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        error.message || 
-        'Error desconocido';
-      throw new Error(errorMessage);
+      console.error('Error en sincronización de inventario:', error);
+      
+      // Extraer mensaje de error detallado para mostrar al usuario
+      let errorMessage = 'Error desconocido en la sincronización de inventario';
+      
+      if (error.response) {
+        // Error con respuesta del servidor
+        const responseData = error.response.data;
+        
+        if (responseData.error) {
+          errorMessage = responseData.error;
+        } else if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (responseData.traceback) {
+          // Si hay un traceback, extraer la última línea que suele contener el mensaje de error
+          const lastLine = responseData.traceback.split('\n').filter(Boolean).pop();
+          errorMessage = lastLine || errorMessage;
+        }
+        
+        console.error('Detalle del error:', responseData);
+      } else if (error.message) {
+        // Error sin respuesta del servidor (network error, timeout, etc.)
+        errorMessage = error.message;
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );

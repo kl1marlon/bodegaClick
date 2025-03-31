@@ -680,11 +680,34 @@ class SincronizarInventarioView(APIView):
         force = request.data.get('force', False)
         
         try:
-            from facturacion.management.commands.sync_inventory import Command
+            # Importamos el módulo directamente aquí para evitar problemas de carga
+            import importlib.util
+            import sys
+            import os
             
-            # Ejecutar comando directamente
-            cmd = Command()
-            estadisticas = cmd.handle(force=force)
+            # Ruta al archivo sync_inventory.py
+            comando_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'facturacion', 'management', 'commands', 'sync_inventory.py'
+            )
+            
+            # Importar el módulo dinámicamente
+            module_name = 'facturacion.management.commands.sync_inventory'
+            spec = importlib.util.spec_from_file_location(module_name, comando_path)
+            
+            if not spec or not spec.loader:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'No se pudo cargar el módulo sync_inventory desde {comando_path}'
+                }, status=500)
+                
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+            
+            # Crear una instancia del comando y ejecutarla
+            comando = module.Command()
+            estadisticas = comando.handle(force=force)
             
             return JsonResponse({
                 'success': True,
