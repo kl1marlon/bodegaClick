@@ -6,8 +6,8 @@ from .sync_tasks import (
     TaskProgressManager,
     TASK_STATUS_STARTED,
     TASK_STATUS_PROGRESS,
-    TASK_STATUS_COMPLETED,
-    TASK_STATUS_FAILED,
+    TASK_STATUS_SUCCESS,
+    TASK_STATUS_FAILURE,
     TASK_STATUS_REVOKED
 )
 
@@ -17,7 +17,7 @@ __all__ = [
     'TaskProgressManager',
     'TASK_STATUS_STARTED',
     'TASK_STATUS_PROGRESS', 
-    'TASK_STATUS_COMPLETED',
-    'TASK_STATUS_FAILED',
+    'TASK_STATUS_SUCCESS',
+    'TASK_STATUS_FAILURE',
     'TASK_STATUS_REVOKED'
 ] 
