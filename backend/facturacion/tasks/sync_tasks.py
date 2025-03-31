@@ -189,13 +189,13 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
                 
                 # Loguear la estructura de los datos para depuración
                 logger.info(f"Estructura de la respuesta: {list(data.keys())} (Tarea: {task_id})")
-                inventory_items = data.get('inventory', [])
+                inventory_items = data.get('inventory_levels', [])
                 
                 # Loguear los primeros items (si hay) para ver su estructura
                 if inventory_items:
-                    logger.info(f"Ejemplo primer item: {inventory_items[0]} (Tarea: {task_id})")
+                    logger.info(f"Ejemplo primer item de inventory_levels: {inventory_items[0]} (Tarea: {task_id})")
                 else:
-                    logger.warning(f"No se encontraron items en la respuesta del endpoint inventory (Tarea: {task_id})")
+                    logger.warning(f"No se encontraron items en inventory_levels (Tarea: {task_id})")
                 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Error al consultar endpoint inventory: {e} (Tarea: {task_id})")
@@ -204,7 +204,7 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
                     logger.error(f"Detalles del error inventory/: Status {e.response.status_code}, Contenido: {e.response.text[:500]} (Tarea: {task_id})")
                 
                 # Si falló el endpoint de inventory, intentamos con el endpoint de items como fallback
-                logger.warning(f"Intentando endpoint alternativo items/ como fallback (Tarea: {task_id})")
+                logger.warning(f"Intentando endpoint alternativo items/ como fallback porque inventory_levels falló (Tarea: {task_id})")
                 
                 try:
                     request_url = "https://api.loyverse.com/v1.0/items"
