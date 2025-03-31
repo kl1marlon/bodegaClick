@@ -7,7 +7,6 @@ import logging
 import sys
 from django.middleware.common import CommonMiddleware
 from django.views.decorators.csrf import csrf_exempt
-from django.middleware.common import MiddlewareNotUsed
 
 # Desactivar temporalmente CSRF para el admin
 admin.site.login = csrf_exempt(admin.site.login)
