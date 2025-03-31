@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+import logging
 
 from .tasks.sync_tasks import (
     sincronizar_inventario,
@@ -59,28 +60,77 @@ def iniciar_tarea(request):
 @permission_classes([AllowAny])
 def estado_tarea(request, task_id):
     """Consulta el estado de una tarea"""
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Recibida solicitud de estado para tarea {task_id}")
+    
     try:
-        task_result = AsyncResult(task_id)
+        # Intentar obtener información del progreso desde Redis
+        try:
+            progress_data = TaskProgressManager.get_progress(task_id)
+            logger.info(f"Datos de progreso desde Redis para tarea {task_id}: {progress_data is not None}")
+        except Exception as redis_error:
+            logger.error(f"Error al obtener datos de Redis para tarea {task_id}: {str(redis_error)}")
+            progress_data = None
         
-        # Obtener información del progreso desde Redis
-        progress_data = TaskProgressManager.get_progress(task_id)
-        
+        # Si tenemos datos de progreso en Redis, los devolvemos
         if progress_data:
-            # Datos de progreso disponibles en Redis
+            logger.info(f"Devolviendo datos de progreso desde Redis para tarea {task_id}")
             return Response(progress_data)
-        else:
-            # Fallback a estado básico de Celery
+        
+        # Si no hay datos en Redis, intentamos con Celery
+        try:
+            task_result = AsyncResult(task_id)
             task_status = task_result.status
             task_result_value = task_result.result if task_result.ready() else None
             
-            return Response({
+            logger.info(f"Estado de Celery para tarea {task_id}: {task_status}")
+            
+            # Construir respuesta basada en el estado de Celery
+            response_data = {
                 'task_id': task_id,
                 'status': task_status,
                 'result': task_result_value
-            })
+            }
+            
+            # Para tareas completadas, formatear la respuesta similar a TaskProgressManager
+            if task_status == 'SUCCESS' and isinstance(task_result_value, dict):
+                response_data.update({
+                    'current': task_result_value.get('processed_items', 0),
+                    'total': task_result_value.get('total_items', 0),
+                    'percentage': 100,  # Si es SUCCESS, se ha completado
+                    'metadata': {}
+                })
+            elif task_status == 'FAILURE':
+                response_data.update({
+                    'error': str(task_result_value),
+                    'percentage': 0
+                })
+            
+            return Response(response_data)
+            
+        except Exception as celery_error:
+            logger.error(f"Error al obtener estado desde Celery para tarea {task_id}: {str(celery_error)}")
+            
+            # Último recurso: Consultar en la base de datos si hay registros relacionados con esta tarea
+            # Aquí podrías añadir una consulta a la base de datos si guardas información sobre tareas completadas
+            
+            # Devolver un estado genérico por defecto
+            return Response({
+                'task_id': task_id,
+                'status': 'UNKNOWN',
+                'message': 'No se pudo determinar el estado de la tarea',
+                'error': 'Error de comunicación con el servicio de tareas'
+            }, status=status.HTTP_200_OK)  # Devolvemos 200 aunque sea desconocido, para no interrumpir la UI
+            
     except Exception as e:
+        logger.exception(f"Error general al consultar estado de tarea {task_id}: {str(e)}")
         return Response(
-            {'error': f'Error al consultar tarea: {str(e)}'},
+            {
+                'task_id': task_id,
+                'status': 'ERROR',
+                'error': f'Error al consultar tarea: {str(e)}'
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

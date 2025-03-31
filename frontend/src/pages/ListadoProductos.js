@@ -560,37 +560,82 @@ const ListadoProductos = () => {
           // Guardamos el ID de la tarea para poder consultar su progreso
           const taskId = result.payload.task_id;
           
+          // Variable para controlar el intervalId dentro de las funciones
+          let intervalId;
+          
+          // Contador de errores para detener después de varios fallos consecutivos
+          let errorCount = 0;
+          
           // Función para consultar el progreso de la tarea
           const consultarProgresoTarea = async () => {
             try {
-              const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+              // Intento de consulta con reintentos
+              let retries = 3;
+              let response;
+              let error;
               
-              if (!response.ok) {
-                throw new Error(`Error al consultar estado: ${response.status}`);
+              for (let i = 0; i < retries; i++) {
+                try {
+                  console.log(`Intento ${i+1} de consulta de progreso para tarea ${taskId}`);
+                  response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+                  
+                  if (response.ok) {
+                    break; // Salir del bucle si la respuesta es exitosa
+                  } else {
+                    // Guardar el error pero seguir intentando
+                    error = new Error(`Error al consultar estado: ${response.status}`);
+                    console.warn(`Intento ${i+1} falló con status ${response.status}. ${retries - i - 1} intentos restantes.`);
+                    
+                    // Si no es el último intento, esperar antes de reintentar
+                    if (i < retries - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo
+                    }
+                  }
+                } catch (fetchError) {
+                  // Guardar el error de red pero seguir intentando
+                  error = fetchError;
+                  console.warn(`Error de red en intento ${i+1}: ${fetchError.message}. ${retries - i - 1} intentos restantes.`);
+                  
+                  // Si no es el último intento, esperar antes de reintentar
+                  if (i < retries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo
+                  }
+                }
+              }
+              
+              // Si después de todos los intentos no tenemos una respuesta válida
+              if (!response || !response.ok) {
+                throw error || new Error("No se pudo consultar el estado después de varios intentos");
               }
               
               const data = await response.json();
               console.log("Estado de la tarea:", data);
               
-              // Actualizar el snackbar con la información del progreso
-              setSnackbar({
-                open: true,
-                message: `Sincronizando inventario: ${data.percentage}% completado (${data.current}/${data.total})`,
-                severity: 'info',
-                autoHideDuration: 3000, // Duración corta para que se actualice pronto
-              });
+              // Interpretar diferentes tipos de respuestas
+              const status = data.status || 'UNKNOWN';
+              let percentage = data.percentage || 0;
+              let current = data.current || 0;
+              let total = data.total || 0;
               
-              // Si la tarea está completada o ha fallado, detenemos la consulta
-              if (data.status === 'SUCCESS') {
+              // Si tenemos resultado pero no porcentaje (formatos diferentes)
+              if (status === 'SUCCESS' && data.result && !data.percentage) {
+                const result = data.result;
+                current = result.processed_items || 0;
+                total = result.total_items || 0;
+                percentage = total > 0 ? Math.floor((current / total) * 100) : 100;
+              }
+              
+              // Actualizar el snackbar con la información del progreso
+              if (status === 'SUCCESS') {
                 setSnackbar({
                   open: true,
-                  message: `Sincronización completada: ${data.current} productos actualizados`,
+                  message: `Sincronización completada: ${current} productos actualizados`,
                   severity: 'success'
                 });
                 setSincronizando(false);
                 dispatch(fetchProductos()); // Refrescar la lista de productos
                 clearInterval(intervalId);
-              } else if (data.status === 'FAILURE') {
+              } else if (status === 'FAILURE' || status === 'ERROR') {
                 setSnackbar({
                   open: true,
                   message: `Error en la sincronización: ${data.error || 'Error desconocido'}`,
@@ -598,16 +643,40 @@ const ListadoProductos = () => {
                 });
                 setSincronizando(false);
                 clearInterval(intervalId);
+              } else {
+                // En progreso o cualquier otro estado
+                setSnackbar({
+                  open: true,
+                  message: `Sincronizando inventario: ${percentage}% completado (${current}/${total})`,
+                  severity: 'info',
+                  autoHideDuration: 3000, // Duración corta para que se actualice pronto
+                });
               }
             } catch (error) {
               console.error("Error consultando progreso:", error);
-              // Si hay error al consultar, no detenemos el intervalo, puede ser temporal
+              // No mostramos el error al usuario en cada consulta fallida
+              // para no sobrecargar la interfaz con notificaciones de error
+              
+              // Incrementar contador de errores
+              errorCount++;
+              
+              // Si hay demasiados errores consecutivos, detener la consulta
+              if (errorCount > 5) {
+                console.error("Demasiados errores consecutivos. Deteniendo consulta de progreso.");
+                setSnackbar({
+                  open: true,
+                  message: "No se pudo obtener el progreso de la sincronización. La tarea podría seguir en curso.",
+                  severity: 'warning'
+                });
+                setSincronizando(false);
+                clearInterval(intervalId);
+              }
             }
           };
           
           // Consultar inmediatamente y luego cada 2 segundos
           consultarProgresoTarea();
-          const intervalId = setInterval(consultarProgresoTarea, 2000);
+          intervalId = setInterval(consultarProgresoTarea, 2000);
           
           // Almacenar el ID del intervalo para poder limpiarlo después
           setIntervalos(prev => [...prev, intervalId]);

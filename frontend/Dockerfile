@@ -22,8 +22,9 @@ COPY *.js ./
 # Mostrar el valor de la variable para depuración
 RUN echo "Construyendo con REACT_APP_API_URL=$REACT_APP_API_URL"
 
-# Construir la aplicación
-RUN CI=false npm run build
+# Construir la aplicación (CI=false para ignorar warnings)
+ENV CI=false
+RUN npm run build || (cat /app/npm-debug.log && exit 1)
 
 # Etapa de producción con imagen más ligera
 FROM nginx:alpine

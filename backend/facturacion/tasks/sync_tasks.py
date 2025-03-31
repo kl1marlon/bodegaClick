@@ -230,40 +230,61 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
                         # Ahora obtenemos todos los productos usando paginación
                         cursor = None
                         page_size = 250 # Máximo permitido por la API
+                        max_items = 0  # Por defecto sin límite, podría definirse como parámetro más adelante
+                        items_iteration = 0
+                        
+                        logger.info(f"Iniciando paginación con cursor. Tamaño de página: {page_size}, límite máximo: {max_items if max_items > 0 else 'sin límite'} (Tarea: {task_id})")
                         
                         while True:
+                            items_iteration += 1
                             # Preparar parámetros de la petición
-                            params = {"limit": page_size}
+                            request_params = {"limit": page_size}
                             if cursor:
-                                params["cursor"] = cursor
+                                request_params["cursor"] = cursor
                                 
                             # Hacer la petición para obtener este lote
+                            logger.info(f"Solicitando lote #{items_iteration} con params: {request_params} (Tarea: {task_id})")
                             items_response = requests.get(
                                 request_url,
                                 headers=headers,
-                                params=params,
+                                params=request_params,
                                 timeout=30
                             )
                             items_response.raise_for_status()
                             items_data = items_response.json()
                             items = items_data.get('items', [])
                             
-                            logger.info(f"Obtenidos {len(items)} productos del lote, cursor: {cursor or 'inicial'} (Tarea: {task_id})")
+                            batch_count = len(items)
+                            logger.info(f"Lote #{items_iteration}: Obtenidos {batch_count} productos, cursor: {cursor or 'inicial'} (Tarea: {task_id})")
                             
                             # Añadir los items a nuestra lista completa
                             all_items.extend(items)
+                            total_so_far = len(all_items)
+                            
+                            logger.info(f"Total acumulado: {total_so_far} productos después del lote #{items_iteration} (Tarea: {task_id})")
                             
                             # Verificar si hay más páginas
                             cursor = items_data.get('cursor')
+                            
+                            # Verificar límites de paginación
                             if not cursor:
-                                logger.info(f"Fin de la paginación, total obtenido: {len(all_items)} productos (Tarea: {task_id})")
+                                logger.info(f"Fin natural de la paginación, no hay más cursor. Total: {total_so_far} productos (Tarea: {task_id})")
                                 break
+                            
+                            # Control de límite máximo si se especificó
+                            if max_items > 0 and total_so_far >= max_items:
+                                logger.info(f"Alcanzado el límite máximo configurado de {max_items} productos. Deteniendo paginación. (Tarea: {task_id})")
+                                break
+                            
+                            # Si obtuvimos menos items que el tamaño de página, probablemente estamos en la última página
+                            if batch_count < page_size:
+                                logger.info(f"El lote tiene menos items ({batch_count}) que el tamaño de página ({page_size}). Probablemente última página. (Tarea: {task_id})")
                             
                             # Importante: pequeña pausa para no sobrecargar la API
                             time.sleep(0.5)
                         
                         # Ahora procesamos todos los items obtenidos
-                        logger.info(f"Total de productos obtenidos: {len(all_items)} (Tarea: {task_id})")
+                        logger.info(f"Paginación completada. Total de productos obtenidos: {len(all_items)} en {items_iteration} lotes (Tarea: {task_id})")
                         
                         if all_items:
                             # Crear entradas de inventario manualmente para cada producto
