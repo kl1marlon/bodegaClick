@@ -150,24 +150,128 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
         }
 
         logger.info(f"Obteniendo cantidad total de inventario de Loyverse (Tarea: {task_id})")
+        
         # Obtener el número total de productos para actualizar el progreso
+        inventory_items = []
+        
         try:
-            response = requests.get(
-                "https://api.loyverse.com/v1.0/inventory",
-                headers=headers,
-                timeout=15 # Añadir timeout a la petición
-            )
-            response.raise_for_status()
-            data = response.json()
-            inventory_items = data.get('inventory', [])
+            # Primero, intentemos ver cuál es el token para depurar (ocultando la mayoría)
+            token_preview = f"{settings.LOYVERSE_API_TOKEN[:5]}...{settings.LOYVERSE_API_TOKEN[-5:]}" if len(settings.LOYVERSE_API_TOKEN) > 10 else "[token_corto]"
+            logger.info(f"Usando token Loyverse: {token_preview} (Tarea: {task_id})")
+            
+            # Configuración de la API de Loyverse
+            headers = {
+                "Authorization": f"Bearer {settings.LOYVERSE_API_TOKEN}",
+                "Content-Type": "application/json"
+            }
+            
+            # Primer intento: obtener datos del endpoint de inventario
+            try:
+                # Hacemos la petición a la API
+                request_url = "https://api.loyverse.com/v1.0/inventory"
+                logger.info(f"Haciendo petición a: {request_url} (Tarea: {task_id})")
+                
+                response = requests.get(
+                    request_url,
+                    headers=headers,
+                    timeout=15 # Añadir timeout a la petición
+                )
+                
+                # Loguear detalles de la respuesta
+                logger.info(f"Respuesta API status: {response.status_code} (Tarea: {task_id})")
+                
+                # Si no es 200, mostrar el error
+                if response.status_code != 200:
+                    logger.error(f"Error en respuesta API: {response.text} (Tarea: {task_id})")
+                    
+                response.raise_for_status()
+                data = response.json()
+                
+                # Loguear la estructura de los datos para depuración
+                logger.info(f"Estructura de la respuesta: {list(data.keys())} (Tarea: {task_id})")
+                inventory_items = data.get('inventory', [])
+                
+                # Loguear los primeros items (si hay) para ver su estructura
+                if inventory_items:
+                    logger.info(f"Ejemplo primer item: {inventory_items[0]} (Tarea: {task_id})")
+                else:
+                    logger.warning(f"No se encontraron items en la respuesta del endpoint inventory (Tarea: {task_id})")
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Error al consultar endpoint inventory: {e} (Tarea: {task_id})")
+                # Mostrar más detalles del error si es posible
+                if hasattr(e, 'response') and e.response:
+                    logger.error(f"Detalles del error inventory/: Status {e.response.status_code}, Contenido: {e.response.text[:500]} (Tarea: {task_id})")
+                
+                # Si falló el endpoint de inventory, intentamos con el endpoint de items como fallback
+                logger.warning(f"Intentando endpoint alternativo items/ como fallback (Tarea: {task_id})")
+                
+                try:
+                    request_url = "https://api.loyverse.com/v1.0/items"
+                    logger.info(f"Haciendo petición a: {request_url} (Tarea: {task_id})")
+                    
+                    # Al principio sólo pedimos cantidad para saber cuántos hay en total
+                    count_response = requests.get(
+                        request_url,
+                        headers=headers,
+                        params={"limit": 1},
+                        timeout=15
+                    )
+                    count_response.raise_for_status()
+                    count_data = count_response.json()
+                    total_count = count_data.get('count', 0)
+                    
+                    logger.info(f"Total de productos encontrados en endpoint items/: {total_count} (Tarea: {task_id})")
+                    
+                    if total_count > 0:
+                        # Ahora obtenemos todos los productos en lotes
+                        items_response = requests.get(
+                            request_url,
+                            headers=headers,
+                            params={"limit": min(250, total_count)},  # Máximo 250 o el total si es menor
+                            timeout=30
+                        )
+                        items_response.raise_for_status()
+                        items_data = items_response.json()
+                        items = items_data.get('items', [])
+                        
+                        logger.info(f"Obtenidos {len(items)} productos del endpoint items/ (Tarea: {task_id})")
+                        
+                        if items:
+                            # Crear entradas de inventario manualmente para cada producto
+                            for item in items:
+                                variants = item.get('variants', [])
+                                logger.debug(f"Producto {item.get('item_name')} tiene {len(variants)} variantes (Tarea: {task_id})")
+                                
+                                for variant in variants:
+                                    variant_id = variant.get('id')
+                                    # Para cada variante y tienda, creamos una entrada de inventario
+                                    # Asumimos un valor predeterminado de stock si no está disponible
+                                    inventory_items.append({
+                                        'variant_id': variant_id,
+                                        'store_id': settings.LOYVERSE_STORE_ID,  # Usar ID de la tienda configurada
+                                        'in_stock': variant.get('inventory', {}).get('in_stock', 0),
+                                        'updated_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
+                                    })
+                            
+                            logger.info(f"Creadas {len(inventory_items)} entradas de inventario a partir de items/ (Tarea: {task_id})")
+                            
+                            # Log para depuración
+                            if inventory_items:
+                                logger.info(f"Ejemplo primer item construido: {inventory_items[0]} (Tarea: {task_id})")
+                    
+                except requests.exceptions.RequestException as items_e:
+                    logger.error(f"También falló el endpoint items/: {items_e} (Tarea: {task_id})")
+                    if hasattr(items_e, 'response') and items_e.response:
+                        logger.error(f"Detalles del error items/: Status {items_e.response.status_code}, Contenido: {items_e.response.text[:500]} (Tarea: {task_id})")
+            
+            # Sea cual sea el método que funcionó, continuamos con el procesamiento
             total_items = len(inventory_items)
-        except requests.exceptions.RequestException as e:
-             logger.error(f"Error obteniendo el inventario de Loyverse: {e} (Tarea: {task_id})")
-             # Podemos fallar aquí o continuar con un total desconocido (0)
-             total_items = 0 # O manejar el error de forma diferente
-             # Si fallamos aquí:
-             # raise ConnectionError(f"No se pudo obtener el inventario de Loyverse: {e}") from e
-
+            
+        except Exception as general_e:
+            # Capturar cualquier otro error inesperado
+            logger.exception(f"Error general obteniendo datos de inventario: {general_e} (Tarea: {task_id})")
+            total_items = 0
 
         logger.info(f"Total de items de inventario encontrados: {total_items} (Tarea: {task_id})")
 

@@ -206,6 +206,7 @@ LOGGING = {
 # Loyverse API Configuration
 LOYVERSE_API_TOKEN = os.environ.get('LOYVERSE_API_TOKEN', '')
 LOYVERSE_MERCHANT_ID = os.environ.get('LOYVERSE_MERCHANT_ID', '')
+LOYVERSE_STORE_ID = os.environ.get('LOYVERSE_STORE_ID', '8aa31f38-96ee-4887-ad51-0362dfa034e6')  # ID de la tienda principal, usado para operaciones de inventario
 LOYVERSE_WEBHOOK_SECRET = os.environ.get('LOYVERSE_WEBHOOK_SECRET', '')
 ADMIN_SECRET_TOKEN = os.environ.get('ADMIN_SECRET_TOKEN', 'admin_secret_token_default')
 if not LOYVERSE_API_TOKEN:
