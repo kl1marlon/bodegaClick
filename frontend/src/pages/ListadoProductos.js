@@ -77,6 +77,9 @@ const ListadoProductos = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [categorias, setCategorias] = useState([]);
   
+  // Estado para filtro de productos sin precio
+  const [mostrarSinPrecio, setMostrarSinPrecio] = useState(false);
+  
   // Estado para tasas de cambio
   const [tasaBCV, setTasaBCV] = useState(null);
   const [tasaParalelo, setTasaParalelo] = useState(null);
@@ -205,10 +208,17 @@ const ListadoProductos = () => {
         );
       }
       
+      // Filtrar productos sin precio_base_usd
+      if (mostrarSinPrecio) {
+        filtered = filtered.filter(producto => 
+          !producto.precio_base_usd || producto.precio_base_usd === 0 || producto.precio_base_usd === '0'
+        );
+      }
+      
       setProductosFiltrados(filtered);
       setPage(0); // Resetear a la primera página cuando cambia el filtro
     }
-  }, [searchTerm, categoriaSeleccionada, productos]);
+  }, [searchTerm, categoriaSeleccionada, productos, mostrarSinPrecio]);
   
   // Manejadores para la paginación
   const handleChangePage = (event, newPage) => {
@@ -262,6 +272,7 @@ const ListadoProductos = () => {
   const resetearFiltros = () => {
     setSearchTerm('');
     setCategoriaSeleccionada('');
+    setMostrarSinPrecio(false);
   };
   
   // Función para calcular el precio en USD desde BS
@@ -795,7 +806,7 @@ const ListadoProductos = () => {
       
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={2}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -807,7 +818,33 @@ const ListadoProductos = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={2}>
+          <Card elevation={2} sx={{ 
+            borderRadius: 2, 
+            height: '100%',
+            border: '1px solid #fee2e2',
+            bgcolor: '#fef2f2',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: 3,
+              bgcolor: '#fee2e2'
+            }
+          }}
+          onClick={() => setMostrarSinPrecio(!mostrarSinPrecio)}
+          >
+            <CardContent>
+              <Typography variant="h6" color="error" gutterBottom>
+                Sin Precio USD
+              </Typography>
+              <Typography variant="h3" component="div" color="error">
+                {productos.filter(p => !p.precio_base_usd || p.precio_base_usd === 0 || p.precio_base_usd === '0').length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={2}>
           <Card 
             elevation={2} 
             sx={{ 
@@ -838,7 +875,7 @@ const ListadoProductos = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={2}>
           <Card 
             elevation={2} 
             sx={{ 
@@ -869,13 +906,13 @@ const ListadoProductos = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={4}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 Resultados búsqueda
               </Typography>
-              <Typography variant="h3" component="div" color={searchTerm || categoriaSeleccionada ? 'secondary' : 'primary'}>
+              <Typography variant="h3" component="div" color={searchTerm || categoriaSeleccionada || mostrarSinPrecio ? 'secondary' : 'primary'}>
                 {productosFiltrados.length}
               </Typography>
             </CardContent>
@@ -894,7 +931,7 @@ const ListadoProductos = () => {
         }}
       >
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               label="Buscar Productos"
@@ -924,7 +961,7 @@ const ListadoProductos = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
               <InputLabel id="categoria-select-label">Filtrar por Categoría</InputLabel>
               <Select
@@ -956,6 +993,24 @@ const ListadoProductos = () => {
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={mostrarSinPrecio}
+                  onChange={(e) => setMostrarSinPrecio(e.target.checked)}
+                  color="error"
+                />
+              }
+              label="Mostrar solo productos sin precio USD"
+              sx={{ 
+                border: mostrarSinPrecio ? '1px solid #ef4444' : '1px solid #e2e8f0',
+                borderRadius: 1,
+                padding: '8px 12px',
+                bgcolor: mostrarSinPrecio ? '#fef2f2' : 'transparent'
+              }}
+            />
           </Grid>
           <Grid item xs={12} md={2}>
             <Button
@@ -1000,25 +1055,33 @@ const ListadoProductos = () => {
           </Box>
         ) : (
           <>
-            {categoriaSeleccionada && (
+            {(categoriaSeleccionada || mostrarSinPrecio) && (
               <Box sx={{ 
                 p: 2, 
-                bgcolor: '#e0f2fe', 
+                bgcolor: mostrarSinPrecio ? '#fee2e2' : '#e0f2fe', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between',
-                borderBottom: '1px solid #bae6fd'
+                borderBottom: '1px solid',
+                borderColor: mostrarSinPrecio ? '#fecaca' : '#bae6fd'
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FilterListIcon color="primary" />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
-                    Categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
-                  </Typography>
+                  <FilterListIcon color={mostrarSinPrecio ? "error" : "primary"} />
+                  {categoriaSeleccionada && (
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1' }}>
+                      Categoría: <span style={{ color: '#0284c7' }}>{categoriaSeleccionada}</span>
+                    </Typography>
+                  )}
+                  {mostrarSinPrecio && (
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#b91c1c', ml: categoriaSeleccionada ? 2 : 0 }}>
+                      Solo productos sin precio USD
+                    </Typography>
+                  )}
                 </Box>
                 <Button
                   size="small"
                   variant="outlined"
-                  color="primary"
+                  color={mostrarSinPrecio ? "error" : "primary"}
                   onClick={resetearFiltros}
                   sx={{ 
                     borderRadius: 1,
