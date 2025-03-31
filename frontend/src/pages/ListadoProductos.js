@@ -211,7 +211,7 @@ const ListadoProductos = () => {
       // Filtrar productos sin precio_base_usd
       if (mostrarSinPrecio) {
         filtered = filtered.filter(producto => 
-          !producto.precio_base_usd || producto.precio_base_usd === 0 || producto.precio_base_usd === '0'
+          !producto.precio_base_usd || Number(producto.precio_base_usd) === 0
         );
       }
       
@@ -839,7 +839,7 @@ const ListadoProductos = () => {
                 Sin Precio USD
               </Typography>
               <Typography variant="h3" component="div" color="error">
-                {productos.filter(p => !p.precio_base_usd || p.precio_base_usd === 0 || p.precio_base_usd === '0').length}
+                {productos.filter(p => !p.precio_base_usd || Number(p.precio_base_usd) === 0).length}
               </Typography>
             </CardContent>
           </Card>
