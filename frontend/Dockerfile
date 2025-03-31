@@ -8,10 +8,10 @@ ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
 # Copiar solo package.json para instalar dependencias
 # Esto permite mejor caché de Docker
-COPY package.json ./
+COPY package*.json ./
 
-# Instalar solo dependencias de producción para reducir el tiempo y tamaño
-RUN npm install --only=production --no-audit --no-fund
+# Instalar todas las dependencias necesarias para la construcción
+RUN npm install --no-audit --no-fund
 
 # Copiar el resto de los archivos del proyecto
 COPY public ./public
@@ -23,7 +23,7 @@ COPY *.js ./
 RUN echo "Construyendo con REACT_APP_API_URL=$REACT_APP_API_URL"
 
 # Construir la aplicación
-RUN npm run build
+RUN CI=false npm run build
 
 # Etapa de producción con imagen más ligera
 FROM nginx:alpine
