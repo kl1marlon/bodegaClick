@@ -149,27 +149,27 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
             "Content-Type": "application/json"
         }
 
-        logger.info(f"Obteniendo cantidad total de productos de Loyverse (Tarea: {task_id})")
+        logger.info(f"Obteniendo cantidad total de inventario de Loyverse (Tarea: {task_id})")
         # Obtener el número total de productos para actualizar el progreso
         try:
             response = requests.get(
-                "https://api.loyverse.com/v1.0/items",
+                "https://api.loyverse.com/v1.0/inventory",
                 headers=headers,
-                params={"limit": 1},
                 timeout=15 # Añadir timeout a la petición
             )
             response.raise_for_status()
             data = response.json()
-            total_items = data.get('count', 0)
+            inventory_items = data.get('inventory', [])
+            total_items = len(inventory_items)
         except requests.exceptions.RequestException as e:
-             logger.error(f"Error obteniendo el total de items de Loyverse: {e} (Tarea: {task_id})")
+             logger.error(f"Error obteniendo el inventario de Loyverse: {e} (Tarea: {task_id})")
              # Podemos fallar aquí o continuar con un total desconocido (0)
              total_items = 0 # O manejar el error de forma diferente
              # Si fallamos aquí:
-             # raise ConnectionError(f"No se pudo obtener el total de items de Loyverse: {e}") from e
+             # raise ConnectionError(f"No se pudo obtener el inventario de Loyverse: {e}") from e
 
 
-        logger.info(f"Total de productos encontrados: {total_items} (Tarea: {task_id})")
+        logger.info(f"Total de items de inventario encontrados: {total_items} (Tarea: {task_id})")
 
         # Si no hay items, terminar temprano
         if total_items == 0:
@@ -186,141 +186,70 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
             status=TaskStatus.PROGRESS
         )
 
-        # Configuración de la sincronización
+        # Procesamos directamente los items de inventario que ya obtuvimos
         processed_items = 0
-        batch_size = 50  # Ajustar según necesidad y límites de API
-        cursor = None
-
-        # Procesar en lotes
-        while True:
-            # Verificar si la tarea ha sido cancelada (USANDO MÉTODO)
+        
+        # ----------------------------------------------------------
+        # ----- INICIO: LÓGICA DE PROCESAMIENTO DE CADA ITEM -----
+        # ----------------------------------------------------------
+        for item in inventory_items:
+            # Verificar si la tarea ha sido cancelada
             if self.request.is_revoked:
-                logger.warning(f"Tarea de sincronización cancelada por el usuario (ID: {task_id})")
-                # Usar el nuevo método para marcar como revocada
+                logger.warning(f"Tarea cancelada durante procesamiento de inventario (ID: {task_id})")
                 TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
                 return {"success": False, "message": "Tarea cancelada por el usuario"}
 
-            # Parámetros para la petición
-            params = {"limit": batch_size}
-            if cursor:
-                params["cursor"] = cursor
+            variant_id = item.get('variant_id')
+            store_id = item.get('store_id')
+            in_stock = item.get('in_stock')
+            updated_at = item.get('updated_at')
+            
+            logger.debug(f"Procesando item de inventario - Variant ID: {variant_id}, Store: {store_id}, Stock: {in_stock} (Tarea: {task_id})")
 
-            # Hacer petición a la API con manejo de reintentos
-            max_retries = 3
-            retry_count = 0
-            response = None # Inicializar response
-
-            logger.debug(f"Obteniendo lote de productos, cursor={cursor}, batch_size={batch_size} (Tarea: {task_id})")
-
-            while retry_count < max_retries:
-                try:
-                    response = requests.get(
-                        "https://api.loyverse.com/v1.0/items",
-                        headers=headers,
-                        params=params,
-                        timeout=30 # Timeout más largo para obtener lotes
-                    )
-                    response.raise_for_status() # Lanza excepción para 4xx/5xx
-                    break # Salir del bucle de reintentos si la petición fue exitosa
-                except requests.exceptions.Timeout:
-                    retry_count += 1
-                    logger.warning(f"Timeout en petición (intento {retry_count+1}/{max_retries}). Reintentando... (Tarea: {task_id})")
-                except requests.exceptions.RequestException as e:
-                    retry_count += 1
-                    wait_time = 2 ** retry_count # Backoff exponencial
-                    logger.warning(f"Error en petición (intento {retry_count}/{max_retries}): {e}. Reintentando en {wait_time} segundos. (Tarea: {task_id})")
-
-                    if retry_count >= max_retries:
-                        logger.error(f"Máximo número de reintentos alcanzado para obtener lote. (Tarea: {task_id})")
-                        raise # Relanzar la última excepción para que la tarea falle
-                    time.sleep(wait_time)
-
-            if response is None: # Si todos los reintentos fallaron sin excepción específica (poco probable pero seguro)
-                 raise ConnectionError("No se pudo obtener respuesta de la API de Loyverse tras varios intentos.")
-
-            # Procesar los datos recibidos
-            data = response.json()
-            items = data.get('items', [])
-            logger.info(f"Recibidos {len(items)} productos en este lote (Tarea: {task_id})")
-
-            if not items and cursor: # Si no vienen items pero había cursor, algo raro pasó o terminó justo
-                 logger.warning(f"Se recibió un lote vacío con cursor={cursor}. Asumiendo fin de paginación. (Tarea: {task_id})")
-                 break
-
-
-            # ----------------------------------------------------------
-            # ----- INICIO: LÓGICA DE PROCESAMIENTO DE CADA ITEM -----
-            # ----------------------------------------------------------
-            for item in items:
-                 # Verificar revocación también dentro del bucle interno por si el lote es grande
-                 if self.request.is_revoked:
-                    logger.warning(f"Tarea cancelada durante procesamiento de lote (ID: {task_id})")
-                    TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
-                    return {"success": False, "message": "Tarea cancelada por el usuario"}
-
-                 item_id = item.get('id')
-                 item_name = item.get('item_name', 'N/A')
-                 logger.debug(f"Procesando item ID: {item_id}, Nombre: {item_name} (Tarea: {task_id})")
-
-                 # Aquí iría la lógica para buscar el producto en tu BD,
-                 # obtener su variant_id si no lo tienes,
-                 # consultar el inventario de esa variante,
-                 # y actualizar tu modelo Producto en PostgreSQL.
-                 # Ejemplo simplificado:
-                 try:
-                     # producto = Producto.objects.get(loyverse_id=item_id)
-                     # variant_id = obtener_variant_id(item, headers) # Función auxiliar
-                     # stock_actual = obtener_stock_loyverse(variant_id, headers) # Función auxiliar
-                     # producto.stock_actual = stock_actual
-                     # producto.ultima_actualizacion_stock = datetime.datetime.now(datetime.timezone.utc)
-                     # producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
-                     time.sleep(0.05) # Simular trabajo con la BD y otras APIs
-                     pass # Reemplazar con lógica real
-
-                 except Exception as item_error:
-                     logger.error(f"Error procesando item {item_id} ({item_name}): {item_error}. Saltando item. (Tarea: {task_id})")
-                     # Considerar si saltar el item o fallar la tarea completa
-
-                 # Actualizar contador
-                 processed_items += 1
-
-                 # Actualizar progreso en Redis cada N items o al final del lote/tarea
-                 # para no sobrecargar Redis en cada item
-                 if processed_items % 10 == 0 or processed_items == total_items or items.index(item) == len(items) - 1:
-                     progress_perc = int((processed_items / total_items) * 100) if total_items > 0 else 0
-                     logger.debug(f"Progreso: {processed_items}/{total_items} ({progress_perc}%) (Tarea: {task_id})")
-                     TaskProgressManager.set_progress(
-                         task_id=task_id,
-                         current=processed_items,
-                         total=total_items,
-                         status=TaskStatus.PROGRESS,
-                         metadata={"last_processed_item_id": item_id} # Metadato útil
-                     )
-            # ----------------------------------------------------------
-            # ----- FIN: LÓGICA DE PROCESAMIENTO DE CADA ITEM -----
-            # ----------------------------------------------------------
-
-
-            # Verificar si hay más páginas
-            cursor = data.get('cursor')
-            if not cursor:
-                logger.info(f"No hay más productos para procesar (cursor nulo), finalizando (Tarea: {task_id})")
-                break
-
-        # Asegurarse de que el progreso final sea 100% si todo salió bien
-        if processed_items != total_items:
-             logger.warning(f"El número de items procesados ({processed_items}) no coincide con el total inicial ({total_items}). Ajustando progreso final. (Tarea: {task_id})")
-             # Podrías ajustar el total aquí si crees que cambió, o solo marcar 100%
-             TaskProgressManager.set_progress(task_id, processed_items, processed_items, status=TaskStatus.PROGRESS) # Ajusta total al procesado
-
+            # Aquí iría la lógica real para actualizar tu modelo Producto en PostgreSQL
+            try:
+                # Ejemplo de lógica real (comentada):
+                # producto = Producto.objects.filter(variant_id=variant_id).first()
+                # if producto:
+                #     producto.stock_actual = in_stock
+                #     producto.ultima_actualizacion_stock = datetime.datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                #     producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
+                #     logger.debug(f"Actualizado stock del producto {producto.nombre} a {in_stock}")
+                # else:
+                #     logger.warning(f"No se encontró producto con variant_id={variant_id} en la BD local")
+                
+                # Simular trabajo para pruebas
+                time.sleep(0.05)
+                
+            except Exception as item_error:
+                logger.error(f"Error procesando item de inventario {variant_id}: {item_error}. Saltando item. (Tarea: {task_id})")
+                # Considerar si saltar el item o fallar la tarea completa
+            
+            # Actualizar contador
+            processed_items += 1
+            
+            # Actualizar progreso en Redis cada N items para no sobrecargar
+            if processed_items % 10 == 0 or processed_items == total_items:
+                progress_perc = int((processed_items / total_items) * 100) if total_items > 0 else 0
+                logger.debug(f"Progreso: {processed_items}/{total_items} ({progress_perc}%) (Tarea: {task_id})")
+                TaskProgressManager.set_progress(
+                    task_id=task_id,
+                    current=processed_items,
+                    total=total_items,
+                    status=TaskStatus.PROGRESS,
+                    metadata={"last_processed_variant_id": variant_id}
+                )
+        # ----------------------------------------------------------
+        # ----- FIN: LÓGICA DE PROCESAMIENTO DE CADA ITEM -----
+        # ----------------------------------------------------------
 
         # Marcar como completada
         result = {
             "success": True,
             "processed_items": processed_items,
-            "total_items": total_items # O podrías devolver processed_items como total final
+            "total_items": total_items
         }
-        logger.info(f"Sincronización completada: {processed_items}/{total_items} productos procesados (Tarea: {task_id})")
+        logger.info(f"Sincronización de inventario completada: {processed_items}/{total_items} productos procesados (Tarea: {task_id})")
         TaskProgressManager.set_completed(task_id, result)
         return result
 
