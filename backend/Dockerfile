@@ -35,7 +35,12 @@ python manage.py migrate --fake facturacion\n\
 # Luego realizar migraciones normales para otras apps\n\
 python manage.py migrate\n\
 python manage.py collectstatic --no-input\n\
-gunicorn config.wsgi:application --bind 0.0.0.0:$PORT\n'\
+# Iniciar el servidor Django o el worker Celery según la variable de entorno\n\
+if [ "$PROCESS_TYPE" = "worker" ]; then\n\
+  celery -A config worker --loglevel=info\n\
+else\n\
+  gunicorn config.wsgi:application --bind 0.0.0.0:$PORT\n\
+fi\n'\
 > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE $PORT

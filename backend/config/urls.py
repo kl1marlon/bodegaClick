@@ -7,6 +7,7 @@ import logging
 import sys
 from django.middleware.common import CommonMiddleware
 from django.views.decorators.csrf import csrf_exempt
+from django.middleware.common import MiddlewareNotUsed
 
 # Desactivar temporalmente CSRF para el admin
 admin.site.login = csrf_exempt(admin.site.login)
@@ -48,10 +49,18 @@ class SilenceOutput:
         self.null_output.close()
 
 
+# Middleware para silenciar rutas específicas en los logs
 class SilentMiddleware(CommonMiddleware):
     """
     Middleware que intercepta las peticiones a ws/notificaciones y las maneja silenciosamente
     """
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        self.silent_paths = ['/ws/notificaciones']
+        
+    def __call__(self, request):
+        return self.get_response(request)
+        
     def process_request(self, request):
         if request.path.startswith('/ws/notificaciones/'):
             return None
@@ -74,6 +83,10 @@ router.register(r'tasas-cambio', TasaCambioViewSet)
 router.register(r'facturas', FacturaViewSet)
 router.register(r'webhooks', WebhookViewSet)
 
+# Ruta de health check para Railway
+def health_check(request):
+    return HttpResponse("OK")
+
 urlpatterns = [
     path('', index, name='index'),  # Añadir vista para la ruta raíz
     path('admin/', admin.site.urls),
@@ -84,4 +97,8 @@ urlpatterns = [
     path('api/crear-columna-variant-id/', CrearColumnaVariantIdView.as_view(), name='crear_columna_variant_id'),
     path('api/sincronizar-inventario/', SincronizarInventarioView.as_view(), name='sincronizar_inventario'),
     path('sincronizar-inventario/', SincronizarInventarioHtmlView.as_view(), name='sincronizar_inventario_html'),
+    path('health/', health_check, name='health_check'),
+    
+    # Incluir las URLs de facturación para tareas asíncronas
+    path('', include('facturacion.urls')),
 ] 
