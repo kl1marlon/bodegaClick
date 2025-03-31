@@ -14,11 +14,7 @@ from .tasks.sync_tasks import (
     sincronizar_inventario,
     sincronizar_precios,
     TaskProgressManager,
-    TASK_STATUS_STARTED,
-    TASK_STATUS_PROGRESS,
-    TASK_STATUS_SUCCESS,
-    TASK_STATUS_FAILURE,
-    TASK_STATUS_REVOKED
+    TaskStatus
 )
 
 @api_view(['POST'])
@@ -107,7 +103,7 @@ def control_tarea(request, task_id):
         # También actualizar el estado en Redis si está disponible
         progress_data = TaskProgressManager.get_progress(task_id)
         if progress_data:
-            progress_data['status'] = TASK_STATUS_REVOKED
+            progress_data['status'] = TaskStatus.REVOKED.value
             progress_data['message'] = 'Tarea cancelada por el usuario'
             cache.set(TaskProgressManager._get_progress_key(task_id), progress_data, timeout=86400)
         

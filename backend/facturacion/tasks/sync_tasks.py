@@ -194,7 +194,7 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
         # Procesar en lotes
         while True:
             # Verificar si la tarea ha sido cancelada (USANDO MÉTODO)
-            if self.request.is_revoked():
+            if self.request.is_revoked:
                 logger.warning(f"Tarea de sincronización cancelada por el usuario (ID: {task_id})")
                 # Usar el nuevo método para marcar como revocada
                 TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
@@ -253,7 +253,7 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
             # ----------------------------------------------------------
             for item in items:
                  # Verificar revocación también dentro del bucle interno por si el lote es grande
-                 if self.request.is_revoked():
+                 if self.request.is_revoked:
                     logger.warning(f"Tarea cancelada durante procesamiento de lote (ID: {task_id})")
                     TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
                     return {"success": False, "message": "Tarea cancelada por el usuario"}
@@ -379,7 +379,7 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
         # Simulación de procesamiento
         for i in range(total_items):
             # Verificar si la tarea ha sido cancelada (USANDO MÉTODO)
-            if self.request.is_revoked():
+            if self.request.is_revoked:
                 logger.warning(f"Tarea de sincronización de precios cancelada por el usuario (ID: {task_id})")
                 TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
                 return {"success": False, "message": "Tarea cancelada por el usuario"}
