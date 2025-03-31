@@ -38,7 +38,8 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  Slider
+  Slider,
+  Checkbox
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -98,11 +99,10 @@ const ListadoProductos = () => {
   
   // Estado para opciones de sincronización
   const [opcionesSincronizacion, setOpcionesSincronizacion] = useState({
-    actualizar_precios: true,
-    categorias: [],
-    tipo_tasa: '',
-    productos_ids: [],
-    tamaño_lote: 20
+    tipo: 'todos',
+    incluir_precios: true, 
+    actualizar_existentes: true,
+    categorias: []
   });
   
   // Estado para diálogo de selección de productos específicos
@@ -124,6 +124,9 @@ const ListadoProductos = () => {
     message: '',
     severity: 'info'
   });
+  
+  // Estado para almacenar referencias a intervalos
+  const [intervalos, setIntervalos] = useState([]);
   
   // Cargar productos y tasas al montar el componente
   useEffect(() => {
@@ -362,7 +365,17 @@ const ListadoProductos = () => {
   // Manejar cambio en opciones de sincronización
   const handleChangeOpcionesSincronizacion = (event) => {
     const { name, value, checked, type } = event.target;
+    
     setOpcionesSincronizacion(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+  
+  const handleChangeOpcionesInventario = (event) => {
+    const { name, value, checked, type } = event.target;
+    
+    setOpcionesInventario(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
@@ -526,50 +539,105 @@ const ListadoProductos = () => {
   
   // Función para iniciar la sincronización de inventario
   const iniciarSincronizacionInventario = () => {
-    setSincronizandoInventario(true);
+    setSincronizando(true);
     cerrarSyncInventoryDialog();
     
-    console.log("Iniciando sincronización de inventario con opciones:", opcionesSincronizacionInventario);
+    console.log("Iniciando sincronización de inventario");
     
-    dispatch(syncInventory(opcionesSincronizacionInventario))
-      .unwrap()
+    dispatch(syncInventory({ force: opcionesSincronizacionInventario.force }))
       .then((result) => {
-        console.log("Sincronización de inventario completada exitosamente:", result);
-        
-        // Mostrar mensaje de éxito con los detalles recibidos
-        const estadisticas = result.estadisticas || {};
-        const mensaje = `
-          Sincronización de inventario completada:
-          - Total productos: ${estadisticas.total || 0}
-          - Actualizados: ${estadisticas.actualizados || 0}
-          - Con Variant ID añadidos: ${estadisticas.variant_id_anadidos || 0}
-          - Productos con error: ${estadisticas.con_error || 0}
-        `;
-        
-        setSnackbar({
-          open: true,
-          message: mensaje,
-          severity: 'success'
-        });
-        
-        dispatch(fetchProductos()); // Refrescar la lista de productos
+        if (result.error) {
+          console.error("Error al iniciar sincronización de inventario:", result.error.message);
+          setSnackbar({
+            open: true,
+            message: `Error al iniciar sincronización: ${result.error.message}`,
+            severity: 'error'
+          });
+          setSincronizando(false);
+        } else {
+          console.log("Sincronización de inventario completada exitosamente:", result.payload);
+          
+          // Guardamos el ID de la tarea para poder consultar su progreso
+          const taskId = result.payload.task_id;
+          
+          // Función para consultar el progreso de la tarea
+          const consultarProgresoTarea = async () => {
+            try {
+              const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+              
+              if (!response.ok) {
+                throw new Error(`Error al consultar estado: ${response.status}`);
+              }
+              
+              const data = await response.json();
+              console.log("Estado de la tarea:", data);
+              
+              // Actualizar el snackbar con la información del progreso
+              setSnackbar({
+                open: true,
+                message: `Sincronizando inventario: ${data.percentage}% completado (${data.current}/${data.total})`,
+                severity: 'info',
+                autoHideDuration: 3000, // Duración corta para que se actualice pronto
+              });
+              
+              // Si la tarea está completada o ha fallado, detenemos la consulta
+              if (data.status === 'SUCCESS') {
+                setSnackbar({
+                  open: true,
+                  message: `Sincronización completada: ${data.current} productos actualizados`,
+                  severity: 'success'
+                });
+                setSincronizando(false);
+                dispatch(fetchProductos()); // Refrescar la lista de productos
+                clearInterval(intervalId);
+              } else if (data.status === 'FAILURE') {
+                setSnackbar({
+                  open: true,
+                  message: `Error en la sincronización: ${data.error || 'Error desconocido'}`,
+                  severity: 'error'
+                });
+                setSincronizando(false);
+                clearInterval(intervalId);
+              }
+            } catch (error) {
+              console.error("Error consultando progreso:", error);
+              // Si hay error al consultar, no detenemos el intervalo, puede ser temporal
+            }
+          };
+          
+          // Consultar inmediatamente y luego cada 2 segundos
+          consultarProgresoTarea();
+          const intervalId = setInterval(consultarProgresoTarea, 2000);
+          
+          // Almacenar el ID del intervalo para poder limpiarlo después
+          setIntervalos(prev => [...prev, intervalId]);
+          
+          // Limpiar el intervalo después de 5 minutos por seguridad
+          setTimeout(() => {
+            clearInterval(intervalId);
+            // Si aún está sincronizando después de 5 minutos, asumimos que algo salió mal
+            setSincronizando(false);
+          }, 5 * 60 * 1000);
+        }
       })
       .catch((error) => {
-        console.error("Error en la sincronización de inventario:", error.message);
-        
-        // Extraer mensaje de error detallado
-        const mensajeError = typeof error === 'string' ? error : error.message || 'Error desconocido';
-        
+        console.error("Error inesperado en sincronización:", error);
+        setSincronizando(false);
         setSnackbar({
           open: true,
-          message: `Error al sincronizar inventario: ${mensajeError}`,
+          message: `Error inesperado: ${error.message || 'Error desconocido'}`,
           severity: 'error'
         });
-      })
-      .finally(() => {
-        setSincronizandoInventario(false);
       });
   };
+  
+  // Efecto de limpieza al desmontar el componente
+  useEffect(() => {
+    return () => {
+      // Limpiar todos los intervalos al desmontar
+      intervalos.forEach(intervalo => clearInterval(intervalo));
+    };
+  }, [intervalos]);
   
   return (
     <Box sx={{ 
@@ -1461,12 +1529,12 @@ const ListadoProductos = () => {
                 <Select
                   labelId="tipo-tasa-select-label"
                   id="tipo-tasa-select"
-                  value={opcionesSincronizacion.tipo_tasa}
+                  value={opcionesSincronizacion.tipo}
                   onChange={handleChangeOpcionesSincronizacion}
-                  name="tipo_tasa"
+                  name="tipo"
                   label="Filtrar por Tipo de Tasa"
                 >
-                  <MenuItem value="">Todas las tasas</MenuItem>
+                  <MenuItem value="todos">Todas las tasas</MenuItem>
                   <MenuItem value="BCV">Solo productos con tasa BCV</MenuItem>
                   <MenuItem value="PARALELO">Solo productos con tasa Paralelo</MenuItem>
                 </Select>

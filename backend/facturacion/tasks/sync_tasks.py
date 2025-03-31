@@ -224,22 +224,50 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
                     logger.info(f"Total de productos encontrados en endpoint items/: {total_count} (Tarea: {task_id})")
                     
                     if total_count > 0:
-                        # Ahora obtenemos todos los productos en lotes
-                        items_response = requests.get(
-                            request_url,
-                            headers=headers,
-                            params={"limit": min(250, total_count)},  # Máximo 250 o el total si es menor
-                            timeout=30
-                        )
-                        items_response.raise_for_status()
-                        items_data = items_response.json()
-                        items = items_data.get('items', [])
+                        # Inicializar lista para todos los items
+                        all_items = []
                         
-                        logger.info(f"Obtenidos {len(items)} productos del endpoint items/ (Tarea: {task_id})")
+                        # Ahora obtenemos todos los productos usando paginación
+                        cursor = None
+                        page_size = 250 # Máximo permitido por la API
                         
-                        if items:
+                        while True:
+                            # Preparar parámetros de la petición
+                            params = {"limit": page_size}
+                            if cursor:
+                                params["cursor"] = cursor
+                                
+                            # Hacer la petición para obtener este lote
+                            items_response = requests.get(
+                                request_url,
+                                headers=headers,
+                                params=params,
+                                timeout=30
+                            )
+                            items_response.raise_for_status()
+                            items_data = items_response.json()
+                            items = items_data.get('items', [])
+                            
+                            logger.info(f"Obtenidos {len(items)} productos del lote, cursor: {cursor or 'inicial'} (Tarea: {task_id})")
+                            
+                            # Añadir los items a nuestra lista completa
+                            all_items.extend(items)
+                            
+                            # Verificar si hay más páginas
+                            cursor = items_data.get('cursor')
+                            if not cursor:
+                                logger.info(f"Fin de la paginación, total obtenido: {len(all_items)} productos (Tarea: {task_id})")
+                                break
+                            
+                            # Importante: pequeña pausa para no sobrecargar la API
+                            time.sleep(0.5)
+                        
+                        # Ahora procesamos todos los items obtenidos
+                        logger.info(f"Total de productos obtenidos: {len(all_items)} (Tarea: {task_id})")
+                        
+                        if all_items:
                             # Crear entradas de inventario manualmente para cada producto
-                            for item in items:
+                            for item in all_items:
                                 variants = item.get('variants', [])
                                 logger.debug(f"Producto {item.get('item_name')} tiene {len(variants)} variantes (Tarea: {task_id})")
                                 
@@ -253,7 +281,7 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
                                         'in_stock': variant.get('inventory', {}).get('in_stock', 0),
                                         'updated_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
                                     })
-                            
+                        
                             logger.info(f"Creadas {len(inventory_items)} entradas de inventario a partir de items/ (Tarea: {task_id})")
                             
                             # Log para depuración
@@ -311,27 +339,33 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
             
             logger.info(f"Procesando item de inventario - Variant ID: {variant_id}, Store: {store_id}, Stock: {in_stock} (Tarea: {task_id})")
 
-            # Aquí iría la lógica real para actualizar tu modelo Producto en PostgreSQL
+            # Actualizar en la base de datos
             try:
-                # Ejemplo de lógica real (comentada):
-                # from facturacion.models import Producto
-                # producto = Producto.objects.filter(variant_id=variant_id).first()
-                # if producto:
-                #     # Log para ver qué producto estamos actualizando
-                #     logger.info(f"Actualizando producto en BD: ID={producto.id}, Nombre={producto.nombre}, Stock anterior={producto.stock_actual}, Nuevo stock={in_stock} (Tarea: {task_id})")
-                #     producto.stock_actual = in_stock
-                #     producto.ultima_actualizacion_stock = datetime.datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
-                #     producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
-                # else:
-                #     logger.warning(f"No se encontró producto con variant_id={variant_id} en la BD local (Tarea: {task_id})")
-                
-                # Simular trabajo para pruebas
-                time.sleep(0.05)
-                logger.info(f"Simulando actualización de stock para variant_id={variant_id}, in_stock={in_stock} (Tarea: {task_id})")
-                
+                from facturacion.models import Producto
+                producto = Producto.objects.filter(variant_id=variant_id).first()
+                if producto:
+                    # Log para ver qué producto estamos actualizando
+                    logger.info(f"Actualizando producto en BD: ID={producto.id}, Nombre={producto.nombre}, Stock anterior={producto.stock_actual}, Nuevo stock={in_stock} (Tarea: {task_id})")
+                    producto.stock_actual = in_stock
+                    if updated_at:
+                        try:
+                            producto.ultima_actualizacion_stock = datetime.datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        except (ValueError, TypeError) as date_error:
+                            logger.warning(f"Error al parsear fecha {updated_at}: {date_error}. Usando fecha actual. (Tarea: {task_id})")
+                            producto.ultima_actualizacion_stock = datetime.datetime.now(datetime.timezone.utc)
+                    else:
+                        producto.ultima_actualizacion_stock = datetime.datetime.now(datetime.timezone.utc)
+                    
+                    # Actualizar fuente de actualización
+                    producto.fuente_actualizacion = 'loyverse'
+                    
+                    producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock', 'fuente_actualizacion'])
+                    logger.info(f"Producto con ID={producto.id} actualizado correctamente. Nuevo stock={in_stock} (Tarea: {task_id})")
+                else:
+                    logger.warning(f"No se encontró producto con variant_id={variant_id} en la BD local (Tarea: {task_id})")
             except Exception as item_error:
                 logger.error(f"Error procesando item de inventario {variant_id}: {item_error}. Saltando item. (Tarea: {task_id})")
-                # Considerar si saltar el item o fallar la tarea completa
+                # Consideramos saltar el item y continuar con los demás
             
             # Actualizar contador
             processed_items += 1
