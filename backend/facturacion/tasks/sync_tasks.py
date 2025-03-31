@@ -298,9 +298,10 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
         # ----------------------------------------------------------
         for item in inventory_items:
             # Verificar si la tarea ha sido cancelada
-            if self.request.is_revoked:
+            # Mejor usar estado almacenado en Redis para evitar problemas con is_revoked
+            task_status = TaskProgressManager.get_progress(task_id)
+            if task_status and task_status.get('status') == TaskStatus.REVOKED.value:
                 logger.warning(f"Tarea cancelada durante procesamiento de inventario (ID: {task_id})")
-                TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
                 return {"success": False, "message": "Tarea cancelada por el usuario"}
 
             variant_id = item.get('variant_id')
@@ -308,22 +309,25 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
             in_stock = item.get('in_stock')
             updated_at = item.get('updated_at')
             
-            logger.debug(f"Procesando item de inventario - Variant ID: {variant_id}, Store: {store_id}, Stock: {in_stock} (Tarea: {task_id})")
+            logger.info(f"Procesando item de inventario - Variant ID: {variant_id}, Store: {store_id}, Stock: {in_stock} (Tarea: {task_id})")
 
             # Aquí iría la lógica real para actualizar tu modelo Producto en PostgreSQL
             try:
                 # Ejemplo de lógica real (comentada):
+                # from facturacion.models import Producto
                 # producto = Producto.objects.filter(variant_id=variant_id).first()
                 # if producto:
+                #     # Log para ver qué producto estamos actualizando
+                #     logger.info(f"Actualizando producto en BD: ID={producto.id}, Nombre={producto.nombre}, Stock anterior={producto.stock_actual}, Nuevo stock={in_stock} (Tarea: {task_id})")
                 #     producto.stock_actual = in_stock
                 #     producto.ultima_actualizacion_stock = datetime.datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                 #     producto.save(update_fields=['stock_actual', 'ultima_actualizacion_stock'])
-                #     logger.debug(f"Actualizado stock del producto {producto.nombre} a {in_stock}")
                 # else:
-                #     logger.warning(f"No se encontró producto con variant_id={variant_id} en la BD local")
+                #     logger.warning(f"No se encontró producto con variant_id={variant_id} en la BD local (Tarea: {task_id})")
                 
                 # Simular trabajo para pruebas
                 time.sleep(0.05)
+                logger.info(f"Simulando actualización de stock para variant_id={variant_id}, in_stock={in_stock} (Tarea: {task_id})")
                 
             except Exception as item_error:
                 logger.error(f"Error procesando item de inventario {variant_id}: {item_error}. Saltando item. (Tarea: {task_id})")
@@ -411,10 +415,11 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
 
         # Simulación de procesamiento
         for i in range(total_items):
-            # Verificar si la tarea ha sido cancelada (USANDO MÉTODO)
-            if self.request.is_revoked:
+            # Verificar si la tarea ha sido cancelada
+            # Mejor usar estado almacenado en Redis para evitar problemas con is_revoked
+            task_status = TaskProgressManager.get_progress(task_id)
+            if task_status and task_status.get('status') == TaskStatus.REVOKED.value:
                 logger.warning(f"Tarea de sincronización de precios cancelada por el usuario (ID: {task_id})")
-                TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
                 return {"success": False, "message": "Tarea cancelada por el usuario"}
 
             # Simular trabajo

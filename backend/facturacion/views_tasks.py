@@ -100,12 +100,8 @@ def control_tarea(request, task_id):
     if action == 'cancel':
         result.revoke(terminate=True)
         
-        # También actualizar el estado en Redis si está disponible
-        progress_data = TaskProgressManager.get_progress(task_id)
-        if progress_data:
-            progress_data['status'] = TaskStatus.REVOKED.value
-            progress_data['message'] = 'Tarea cancelada por el usuario'
-            cache.set(TaskProgressManager._get_progress_key(task_id), progress_data, timeout=86400)
+        # Usar el método set_revoked para actualizar el estado de forma consistente
+        TaskProgressManager.set_revoked(task_id, "Tarea cancelada por el usuario")
         
         return Response({
             'success': True,
