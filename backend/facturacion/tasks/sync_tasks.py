@@ -108,6 +108,7 @@ def sincronizar_inventario(self, force=False):
         dict: Resultado de la sincronización
     """
     task_id = self.request.id
+    logger.info(f"Iniciando tarea de sincronización de inventario (ID: {task_id}), force={force}")
     
     # Inicializar progreso
     TaskProgressManager.set_progress(
@@ -124,6 +125,7 @@ def sincronizar_inventario(self, force=False):
             "Content-Type": "application/json"
         }
         
+        logger.info(f"Obteniendo cantidad total de productos de Loyverse (Tarea: {task_id})")
         # Obtener el número total de productos para actualizar el progreso
         response = requests.get(
             "https://api.loyverse.com/v1.0/items",
@@ -134,6 +136,7 @@ def sincronizar_inventario(self, force=False):
         
         data = response.json()
         total_items = data.get('count', 0)
+        logger.info(f"Total de productos encontrados: {total_items} (Tarea: {task_id})")
         
         # Actualizar el total
         TaskProgressManager.set_progress(
@@ -151,7 +154,8 @@ def sincronizar_inventario(self, force=False):
         # Procesar en lotes
         while True:
             # Verificar si la tarea ha sido cancelada
-            if self.is_aborted():
+            if self.request.is_revoked():
+                logger.warning(f"Tarea de sincronización cancelada por el usuario (ID: {task_id})")
                 TaskProgressManager.set_progress(
                     task_id=task_id,
                     current=processed_items,
@@ -170,6 +174,8 @@ def sincronizar_inventario(self, force=False):
             retry_count = 0
             success = False
             
+            logger.debug(f"Obteniendo lote de productos, cursor={cursor}, batch_size={batch_size} (Tarea: {task_id})")
+            
             while retry_count < max_retries and not success:
                 try:
                     response = requests.get(
@@ -182,7 +188,7 @@ def sincronizar_inventario(self, force=False):
                 except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
                     retry_count += 1
                     wait_time = 2 ** retry_count  # Backoff exponencial
-                    logger.warning(f"Error en petición (intento {retry_count}): {e}. Reintentando en {wait_time} segundos.")
+                    logger.warning(f"Error en petición (intento {retry_count}): {e}. Reintentando en {wait_time} segundos. (Tarea: {task_id})")
                     
                     if retry_count >= max_retries:
                         raise
@@ -192,6 +198,7 @@ def sincronizar_inventario(self, force=False):
             # Procesar los datos recibidos
             data = response.json()
             items = data.get('items', [])
+            logger.info(f"Recibidos {len(items)} productos en este lote (Tarea: {task_id})")
             
             # Procesar cada producto
             for item in items:
@@ -206,6 +213,8 @@ def sincronizar_inventario(self, force=False):
                 
                 # Actualizar progreso cada 10 productos o cuando sea el último
                 if processed_items % 10 == 0 or processed_items == total_items:
+                    progress_perc = int((processed_items / total_items) * 100) if total_items > 0 else 0
+                    logger.debug(f"Progreso: {processed_items}/{total_items} ({progress_perc}%) (Tarea: {task_id})")
                     TaskProgressManager.set_progress(
                         task_id=task_id,
                         current=processed_items,
@@ -217,6 +226,7 @@ def sincronizar_inventario(self, force=False):
             # Verificar si hay más páginas
             cursor = data.get('cursor')
             if not cursor:
+                logger.info(f"No hay más productos para procesar, finalizando (Tarea: {task_id})")
                 break
         
         # Marcar como completada
@@ -225,17 +235,18 @@ def sincronizar_inventario(self, force=False):
             "processed_items": processed_items,
             "total_items": total_items
         }
+        logger.info(f"Sincronización completada: {processed_items}/{total_items} productos (Tarea: {task_id})")
         TaskProgressManager.set_completed(task_id, result)
         return result
         
     except SoftTimeLimitExceeded:
         error_msg = "La tarea excedió el tiempo límite permitido"
-        logger.error(error_msg)
+        logger.error(f"{error_msg} (Tarea: {task_id})")
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg}
     except Exception as e:
         error_msg = f"Error durante la sincronización: {str(e)}"
-        logger.exception(error_msg)
+        logger.exception(f"{error_msg} (Tarea: {task_id})")
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg}
 
@@ -255,6 +266,8 @@ def sincronizar_precios(self, opciones=None):
     task_id = self.request.id
     opciones = opciones or {}
     
+    logger.info(f"Iniciando tarea de sincronización de precios (ID: {task_id}), opciones={opciones}")
+    
     # Inicializar progreso
     TaskProgressManager.set_progress(
         task_id=task_id,
@@ -268,6 +281,8 @@ def sincronizar_precios(self, opciones=None):
         # Por ahora es una simulación
         
         total_items = 200  # Simulado
+        logger.info(f"Total de productos a procesar: {total_items} (Tarea: {task_id})")
+        
         TaskProgressManager.set_progress(
             task_id=task_id,
             current=0,
@@ -278,7 +293,8 @@ def sincronizar_precios(self, opciones=None):
         # Simulación de procesamiento
         for i in range(total_items):
             # Verificar si la tarea ha sido cancelada
-            if self.is_aborted():
+            if self.request.is_revoked():
+                logger.warning(f"Tarea de sincronización de precios cancelada por el usuario (ID: {task_id})")
                 TaskProgressManager.set_progress(
                     task_id=task_id,
                     current=i,
@@ -292,6 +308,8 @@ def sincronizar_precios(self, opciones=None):
             
             # Actualizar progreso cada 10 items
             if i % 10 == 0 or i == total_items - 1:
+                progress_perc = int(((i + 1) / total_items) * 100) if total_items > 0 else 0
+                logger.debug(f"Progreso: {i + 1}/{total_items} ({progress_perc}%) (Tarea: {task_id})")
                 TaskProgressManager.set_progress(
                     task_id=task_id,
                     current=i + 1,
@@ -306,16 +324,17 @@ def sincronizar_precios(self, opciones=None):
             "total_items": total_items,
             "options": opciones
         }
+        logger.info(f"Sincronización de precios completada: {total_items}/{total_items} productos (Tarea: {task_id})")
         TaskProgressManager.set_completed(task_id, result)
         return result
         
     except SoftTimeLimitExceeded:
         error_msg = "La tarea excedió el tiempo límite permitido"
-        logger.error(error_msg)
+        logger.error(f"{error_msg} (Tarea: {task_id})")
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg}
     except Exception as e:
         error_msg = f"Error durante la sincronización de precios: {str(e)}"
-        logger.exception(error_msg)
+        logger.exception(f"{error_msg} (Tarea: {task_id})")
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg} 
