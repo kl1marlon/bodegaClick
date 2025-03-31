@@ -154,7 +154,7 @@ def sincronizar_inventario(self, force=False):
         # Procesar en lotes
         while True:
             # Verificar si la tarea ha sido cancelada
-            if self.request.is_revoked():
+            if self.request.is_revoked:
                 logger.warning(f"Tarea de sincronización cancelada por el usuario (ID: {task_id})")
                 TaskProgressManager.set_progress(
                     task_id=task_id,
@@ -293,7 +293,7 @@ def sincronizar_precios(self, opciones=None):
         # Simulación de procesamiento
         for i in range(total_items):
             # Verificar si la tarea ha sido cancelada
-            if self.request.is_revoked():
+            if self.request.is_revoked:
                 logger.warning(f"Tarea de sincronización de precios cancelada por el usuario (ID: {task_id})")
                 TaskProgressManager.set_progress(
                     task_id=task_id,
