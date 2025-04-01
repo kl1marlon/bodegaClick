@@ -65,20 +65,27 @@ def estado_tarea(request, task_id):
     logger.info(f"Recibida solicitud de estado para tarea {task_id}")
     
     try:
-        # Intentar obtener información del progreso desde Redis
+        # Priorizar el resultado final almacenado en Redis
+        try:
+            result_data = TaskProgressManager.get_result(task_id)
+            if result_data:
+                logger.info(f"Encontrado resultado final en Redis para tarea {task_id}: {result_data['status']}")
+                # Devolver el resultado final directamente
+                return Response(result_data)
+        except Exception as redis_error:
+            logger.error(f"Error al obtener resultado final de Redis para tarea {task_id}: {str(redis_error)}")
+        
+        # Si no hay resultado final, intentar con el progreso de Redis
         try:
             progress_data = TaskProgressManager.get_progress(task_id)
-            logger.info(f"Datos de progreso desde Redis para tarea {task_id}: {progress_data is not None}")
+            if progress_data:
+                logger.info(f"Encontrado progreso en Redis para tarea {task_id}: {progress_data['status']}")
+                return Response(progress_data)
         except Exception as redis_error:
-            logger.error(f"Error al obtener datos de Redis para tarea {task_id}: {str(redis_error)}")
-            progress_data = None
+            logger.error(f"Error al obtener datos de progreso de Redis para tarea {task_id}: {str(redis_error)}")
         
-        # Si tenemos datos de progreso en Redis, los devolvemos
-        if progress_data:
-            logger.info(f"Devolviendo datos de progreso desde Redis para tarea {task_id}")
-            return Response(progress_data)
-        
-        # Si no hay datos en Redis, intentamos con Celery
+        # Como último recurso, consultar a Celery directamente
+        logger.info(f"Consultando estado a Celery para tarea {task_id}")
         try:
             task_result = AsyncResult(task_id)
             task_status = task_result.status
@@ -101,27 +108,46 @@ def estado_tarea(request, task_id):
                     'percentage': 100,  # Si es SUCCESS, se ha completado
                     'metadata': {}
                 })
+                
+                # Guardar en Redis para futuras consultas (callback simulado)
+                try:
+                    TaskProgressManager.set_completed(task_id, task_result_value)
+                    logger.info(f"Resultado de tarea {task_id} guardado en Redis desde Celery")
+                except Exception as cache_error:
+                    logger.error(f"Error al guardar resultado en Redis: {str(cache_error)}")
+                
             elif task_status == 'FAILURE':
+                error_str = str(task_result_value)
                 response_data.update({
-                    'error': str(task_result_value),
+                    'error': error_str,
                     'percentage': 0
                 })
+                
+                # Guardar error en Redis para futuras consultas
+                try:
+                    TaskProgressManager.set_failed(task_id, error_str)
+                    logger.info(f"Error de tarea {task_id} guardado en Redis desde Celery")
+                except Exception as cache_error:
+                    logger.error(f"Error al guardar error en Redis: {str(cache_error)}")
             
             return Response(response_data)
             
         except Exception as celery_error:
             logger.error(f"Error al obtener estado desde Celery para tarea {task_id}: {str(celery_error)}")
             
-            # Último recurso: Consultar en la base de datos si hay registros relacionados con esta tarea
-            # Aquí podrías añadir una consulta a la base de datos si guardas información sobre tareas completadas
+            # Devolver un estado basado en la información disponible a través de TaskProgressManager
+            final_response = TaskProgressManager.get_task_status(task_id)
             
-            # Devolver un estado genérico por defecto
-            return Response({
-                'task_id': task_id,
-                'status': 'UNKNOWN',
-                'message': 'No se pudo determinar el estado de la tarea',
-                'error': 'Error de comunicación con el servicio de tareas'
-            }, status=status.HTTP_200_OK)  # Devolvemos 200 aunque sea desconocido, para no interrumpir la UI
+            if final_response['status'] == 'UNKNOWN':
+                # Si realmente no hay información, devolver un mensaje genérico
+                return Response({
+                    'task_id': task_id,
+                    'status': 'UNKNOWN',
+                    'message': 'No se pudo determinar el estado de la tarea',
+                    'error': 'Error de comunicación con el servicio de tareas'
+                }, status=status.HTTP_200_OK)  # Devolvemos 200 aunque sea desconocido, para no interrumpir la UI
+            
+            return Response(final_response)
             
     except Exception as e:
         logger.exception(f"Error general al consultar estado de tarea {task_id}: {str(e)}")

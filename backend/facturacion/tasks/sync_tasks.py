@@ -2,12 +2,13 @@ import logging
 import time
 import datetime
 import enum
+import json
 from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
 import requests
 from django.conf import settings
 from django.core.cache import cache
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +22,23 @@ class TaskStatus(enum.Enum):
 
 class TaskProgressManager:
     """
-    Clase utilitaria para gestionar el progreso de tareas asíncronas en Redis.
-    Permite guardar y consultar el estado y progreso de las tareas.
+    Clase utilitaria para gestionar el progreso y resultados de tareas asíncronas en Redis.
+    Permite guardar y consultar el estado, progreso y resultados finales de las tareas.
     """
+
+    # Duración de almacenamiento de datos en Redis
+    PROGRESS_TTL = 7200  # 2 horas para datos de progreso
+    RESULT_TTL = 86400   # 24 horas para resultados finales
 
     @staticmethod
     def _get_progress_key(task_id: str) -> str:
         """Obtiene la clave para almacenar el progreso de una tarea en Redis"""
         return f"task_progress:{task_id}"
+    
+    @staticmethod
+    def _get_result_key(task_id: str) -> str:
+        """Obtiene la clave para almacenar el resultado final de una tarea en Redis"""
+        return f"task_result:{task_id}"
 
     @classmethod
     def set_progress(cls, task_id: str, current: int, total: int, status: TaskStatus = TaskStatus.PROGRESS, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -57,8 +67,8 @@ class TaskProgressManager:
             'metadata': metadata or {}
         }
 
-        # Almacenar en Redis por 24 horas (86400 segundos)
-        cache.set(cls._get_progress_key(task_id), progress_data, timeout=86400)
+        # Almacenar en Redis con TTL configurado
+        cache.set(cls._get_progress_key(task_id), progress_data, timeout=cls.PROGRESS_TTL)
 
         logger.debug(f"Progreso actualizado: Tarea {task_id} - {current}/{total} ({percentage}%) Status: {status.value}")
         return progress_data
@@ -70,8 +80,27 @@ class TaskProgressManager:
 
     @classmethod
     def set_completed(cls, task_id: str, result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Marca una tarea como completada con éxito"""
+        """
+        Marca una tarea como completada con éxito y almacena su resultado
+        
+        Args:
+            task_id (str): ID de la tarea
+            result (dict, optional): Resultado de la tarea
+            
+        Returns:
+            dict: Datos de progreso actualizados
+        """
         progress_data = cls.get_progress(task_id) or {'task_id': task_id} # Asegurar que task_id esté
+        
+        result_data = {
+            'task_id': task_id,
+            'status': TaskStatus.SUCCESS.value,
+            'result': result or {},
+            'error': None,
+            'completed_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        
+        # Actualizar también la información de progreso
         progress_data.update({
             'status': TaskStatus.SUCCESS.value,
             'percentage': 100,
@@ -81,40 +110,130 @@ class TaskProgressManager:
             'error': None # Limpiar errores previos si los hubo
         })
 
-        cache.set(cls._get_progress_key(task_id), progress_data, timeout=86400)
-        logger.info(f"Tarea {task_id} completada con éxito")
+        # Guardar tanto el progreso como el resultado final
+        cache.set(cls._get_progress_key(task_id), progress_data, timeout=cls.PROGRESS_TTL)
+        cache.set(cls._get_result_key(task_id), result_data, timeout=cls.RESULT_TTL)
+        
+        logger.info(f"Tarea {task_id} completada con éxito. Resultado almacenado en Redis.")
         return progress_data
 
     @classmethod
     def set_failed(cls, task_id: str, error: Optional[Any] = None) -> Dict[str, Any]:
-        """Marca una tarea como fallida con el mensaje de error"""
+        """
+        Marca una tarea como fallida con el mensaje de error y almacena el error
+        
+        Args:
+            task_id (str): ID de la tarea
+            error (Any, optional): Error ocurrido
+            
+        Returns:
+            dict: Datos de progreso actualizados
+        """
         progress_data = cls.get_progress(task_id) or {'task_id': task_id}
+        
+        error_str = str(error) if error else "Error desconocido"
+        
+        result_data = {
+            'task_id': task_id,
+            'status': TaskStatus.FAILURE.value,
+            'result': None,
+            'error': error_str,
+            'completed_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        
+        # Actualizar también la información de progreso
         progress_data.update({
             'status': TaskStatus.FAILURE.value,
             'last_update': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'error': str(error) if error else "Error desconocido",
+            'error': error_str,
             'result': None # Limpiar resultados previos
         })
 
-        cache.set(cls._get_progress_key(task_id), progress_data, timeout=86400)
-        logger.error(f"Tarea {task_id} fallida: {error}")
+        # Guardar tanto el progreso como el resultado final
+        cache.set(cls._get_progress_key(task_id), progress_data, timeout=cls.PROGRESS_TTL)
+        cache.set(cls._get_result_key(task_id), result_data, timeout=cls.RESULT_TTL)
+        
+        logger.error(f"Tarea {task_id} fallida: {error_str}")
         return progress_data
 
     @classmethod
     def set_revoked(cls, task_id: str, message: str = "Tarea cancelada") -> Dict[str, Any]:
-        """Marca una tarea como revocada/cancelada"""
+        """
+        Marca una tarea como revocada/cancelada y almacena el resultado
+        
+        Args:
+            task_id (str): ID de la tarea
+            message (str): Mensaje de cancelación
+            
+        Returns:
+            dict: Datos de progreso actualizados
+        """
         progress_data = cls.get_progress(task_id) or {'task_id': task_id}
+        
+        result_data = {
+            'task_id': task_id,
+            'status': TaskStatus.REVOKED.value,
+            'result': None,
+            'error': message,
+            'completed_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        
+        # Actualizar también la información de progreso
         progress_data.update({
             'status': TaskStatus.REVOKED.value,
             'last_update': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'error': message, # Usar 'error' para el mensaje de cancelación o añadir campo 'message'
+            'error': message,
             'result': None
         })
 
-        cache.set(cls._get_progress_key(task_id), progress_data, timeout=86400)
+        # Guardar tanto el progreso como el resultado final
+        cache.set(cls._get_progress_key(task_id), progress_data, timeout=cls.PROGRESS_TTL)
+        cache.set(cls._get_result_key(task_id), result_data, timeout=cls.RESULT_TTL)
+        
         logger.warning(f"Tarea {task_id} revocada: {message}")
         return progress_data
-
+    
+    @classmethod
+    def get_result(cls, task_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Obtiene el resultado final de una tarea almacenado en Redis
+        
+        Args:
+            task_id (str): ID de la tarea
+            
+        Returns:
+            dict or None: Resultado de la tarea o None si no existe
+        """
+        return cache.get(cls._get_result_key(task_id))
+    
+    @classmethod
+    def get_task_status(cls, task_id: str) -> Dict[str, Any]:
+        """
+        Obtiene el estado completo de una tarea, priorizando el resultado final
+        si está disponible, o el progreso en otro caso
+        
+        Args:
+            task_id (str): ID de la tarea
+            
+        Returns:
+            dict: Estado completo de la tarea
+        """
+        # Primero intentar obtener el resultado final
+        result = cls.get_result(task_id)
+        if result:
+            return result
+        
+        # Si no hay resultado final, devolver el progreso
+        progress = cls.get_progress(task_id)
+        if progress:
+            return progress
+        
+        # Si no hay información disponible, devolver un estado desconocido
+        return {
+            'task_id': task_id,
+            'status': 'UNKNOWN',
+            'error': 'No se encontró información sobre esta tarea'
+        }
 
 # --- TAREAS CELERY ---
 
@@ -479,8 +598,19 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
         logger.info(f"Total de productos a procesar: {total_productos} (Tarea: {task_id})")
         
         if total_productos == 0:
-            logger.warning(f"No se encontraron productos para procesar (Tarea: {task_id})")
-            return {"success": False, "message": "No se encontraron productos para procesar"}
+            error_msg = "No se encontraron productos para procesar"
+            logger.warning(f"{error_msg} (Tarea: {task_id})")
+            
+            # Importante: Guardar resultado en Redis incluso cuando no hay productos
+            result = {
+                "success": False,
+                "message": error_msg,
+                "processed_items": 0,
+                "total_items": 0,
+                "options": opciones
+            }
+            TaskProgressManager.set_completed(task_id, result)
+            return result
         
         # Actualizar progreso con el total real
         TaskProgressManager.set_progress(
@@ -504,8 +634,21 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
             # Verificar si la tarea ha sido cancelada
             task_status = TaskProgressManager.get_progress(task_id)
             if task_status and task_status.get('status') == TaskStatus.REVOKED.value:
-                logger.warning(f"Tarea de sincronización cancelada por el usuario (Tarea: {task_id})")
-                return {"success": False, "message": "Tarea cancelada por el usuario"}
+                mensaje_cancelacion = "Tarea de sincronización cancelada por el usuario"
+                logger.warning(f"{mensaje_cancelacion} (Tarea: {task_id})")
+                
+                # Guardar estado de cancelación en Redis
+                result = {
+                    "success": False, 
+                    "message": mensaje_cancelacion,
+                    "processed_items": productos_procesados,
+                    "total_items": total_productos,
+                    "productos_actualizados": productos_actualizados,
+                    "productos_fallidos": productos_fallidos,
+                    "options": opciones
+                }
+                TaskProgressManager.set_revoked(task_id, mensaje_cancelacion)
+                return result
             
             # Obtener el siguiente lote de productos
             lote_productos = list(productos_query[i:i+tamaño_lote])
@@ -542,7 +685,7 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
             # Breve pausa para evitar sobrecargar la API
             time.sleep(1)
         
-        # Marcar como completada
+        # Marcar como completada y guardar resultado final en Redis
         result = {
             "success": exito_total,
             "processed_items": productos_procesados,
@@ -552,17 +695,23 @@ def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict
             "options": opciones
         }
         
-        logger.info(f"Sincronización de precios completada: {productos_procesados}/{total_productos} productos (Tarea: {task_id})")
+        logger.info(f"Sincronización de precios completada: {productos_procesados}/{total_productos} productos. Actualizados: {productos_actualizados}, Fallidos: {productos_fallidos} (Tarea: {task_id})")
+        
+        # Guardar resultado final en Redis usando el nuevo método mejorado
         TaskProgressManager.set_completed(task_id, result)
         return result
         
     except SoftTimeLimitExceeded:
         error_msg = "La tarea excedió el tiempo límite permitido"
         logger.error(f"{error_msg} (Tarea: {task_id})")
+        
+        # Guardar el error en Redis para que esté disponible cuando el frontend lo consulte
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg}
     except Exception as e:
         error_msg = f"Error inesperado durante la sincronización de precios: {str(e)}"
         logger.exception(f"{error_msg} (Tarea: {task_id})")
+        
+        # Guardar el error en Redis para que esté disponible cuando el frontend lo consulte
         TaskProgressManager.set_failed(task_id, error_msg)
         return {"success": False, "error": error_msg}
