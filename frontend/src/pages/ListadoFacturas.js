@@ -22,15 +22,20 @@ import {
   Collapse,
   TextField,
   MenuItem,
-  InputAdornment
+  InputAdornment,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SyncIcon from '@mui/icons-material/Sync';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import moment from 'moment';
 import 'moment/locale/es';
+import { formatApiError, getSolutionSuggestion } from '../utils/errorHandler';
 
 moment.locale('es');
 
@@ -62,7 +67,14 @@ const ListadoFacturas = () => {
 
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(fetchFacturas());
+      console.log('Iniciando carga de facturas...');
+      dispatch(fetchFacturas())
+        .then(result => {
+          console.log('Resultado de carga de facturas:', result);
+        })
+        .catch(error => {
+          console.error('Error capturado al cargar facturas:', error);
+        });
     }
   }, [status, dispatch]);
 
@@ -135,11 +147,63 @@ const ListadoFacturas = () => {
   }
 
   if (status === 'failed') {
+    console.error('Error en estado de facturas:', error);
+    
+    // Formatear el error para mostrar información más útil
+    const errorMessage = formatApiError(error, 'No se pudieron cargar las facturas');
+    const solutionSuggestion = getSolutionSuggestion(error);
+    
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography color="error" variant="h6">
-          Error al cargar las facturas: {error}
-        </Typography>
+        <Alert 
+          severity="error" 
+          variant="filled"
+          sx={{ mb: 3 }}
+          icon={<ErrorOutlineIcon fontSize="inherit" />}
+        >
+          <AlertTitle>Error al cargar las facturas</AlertTitle>
+          {errorMessage}
+        </Alert>
+        
+        {solutionSuggestion && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <AlertTitle>Sugerencia</AlertTitle>
+            {solutionSuggestion}
+          </Alert>
+        )}
+        
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Detalles técnicos
+          </Typography>
+          <Typography variant="body2" sx={{ 
+            fontFamily: 'monospace', 
+            backgroundColor: '#f5f5f5', 
+            p: 2, 
+            borderRadius: 1,
+            overflowX: 'auto'
+          }}>
+            {typeof error === 'object' ? JSON.stringify(error, null, 2) : error}
+          </Typography>
+          
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Button
+              startIcon={<RefreshIcon />}
+              variant="contained"
+              color="primary"
+              onClick={() => dispatch(fetchFacturas())}
+            >
+              Reintentar
+            </Button>
+            
+            <Button
+              variant="outlined"
+              onClick={() => window.location.reload()}
+            >
+              Recargar página
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     );
   }

@@ -16,6 +16,9 @@ export const fetchFacturas = createAsyncThunk(
   'facturas/fetchFacturas',
   async (filtros = {}, { rejectWithValue }) => {
     try {
+      // Diagnostico de la URL
+      console.log('URL de API usada:', API_URL);
+      
       // Construir params para filtros
       const params = new URLSearchParams();
       
@@ -30,10 +33,35 @@ export const fetchFacturas = createAsyncThunk(
         params.append('tipo_tasa', filtros.tipoTasa);
       }
       
-      const response = await axios.get(`${API_URL}/facturas/?${params.toString()}`);
+      const requestUrl = `${API_URL}/facturas/?${params.toString()}`;
+      console.log('Haciendo fetch a URL:', requestUrl);
+      
+      const response = await axios.get(requestUrl);
+      console.log('Respuesta recibida:', response.data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'No se pudieron cargar las facturas');
+      console.error('Error en fetchFacturas:', error);
+      console.error('Mensaje de error:', error.message);
+      console.error('Respuesta del servidor:', error.response);
+      
+      // Crear un mensaje de error más detallado
+      let errorMessage = 'No se pudieron cargar las facturas';
+      
+      if (error.response) {
+        // El servidor respondió con un código de error
+        errorMessage += ` - Status: ${error.response.status}`;
+        if (error.response.data && error.response.data.error) {
+          errorMessage += ` - ${error.response.data.error}`;
+        }
+      } else if (error.request) {
+        // La petición fue hecha pero no se recibió respuesta
+        errorMessage += ' - No se recibió respuesta del servidor';
+      } else {
+        // Algo salió mal en la configuración de la petición
+        errorMessage += ` - ${error.message}`;
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
