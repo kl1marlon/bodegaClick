@@ -6,6 +6,8 @@ import { esES } from '@mui/material/locale';
 import Layout from './components/Layout';
 import ListadoFacturas from './pages/ListadoFacturas';
 import DetalleFactura from './pages/DetalleFactura';
+import ListadoProductos from './pages/ListadoProductos';
+import NuevaFactura from './pages/NuevaFactura';
 // Importar otros componentes según sea necesario
 
 // Crear tema personalizado
@@ -42,7 +44,11 @@ function App() {
           
           {/* Rutas de Facturas */}
           <Route path="/facturas" element={<ListadoFacturas />} />
+          <Route path="/facturas/nueva" element={<NuevaFactura />} />
           <Route path="/facturas/:id" element={<DetalleFactura />} />
+          
+          {/* Ruta de Productos */}
+          <Route path="/productos" element={<ListadoProductos />} />
           
           {/* Ruta 404 - No encontrado */}
           <Route path="*" element={
