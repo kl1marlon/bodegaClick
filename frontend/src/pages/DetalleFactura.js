@@ -42,8 +42,8 @@ import {
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import moment from 'moment';
-import 'moment/locale/es';
 
+// Establecemos el locale directamente
 moment.locale('es');
 
 const DetalleFactura = () => {

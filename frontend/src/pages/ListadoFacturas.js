@@ -36,7 +36,6 @@ import GetAppIcon from '@mui/icons-material/GetApp';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import moment from 'moment';
-import 'moment/locale/es';
 
 moment.locale('es');
 

@@ -1,4 +1,4 @@
-FROM node:16-alpine as builder
+FROM node:16-alpine as build
 
 WORKDIR /app
 
@@ -8,16 +8,13 @@ ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
 # Copiar solo package.json para instalar dependencias
 # Esto permite mejor caché de Docker
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Instalar todas las dependencias necesarias para la construcción
-RUN npm install --no-audit --no-fund
+RUN npm ci
 
 # Copiar el resto de los archivos del proyecto
-COPY public ./public
-COPY src ./src
-COPY .env* ./
-COPY *.js ./
+COPY . .
 
 # Mostrar el valor de la variable para depuración
 RUN echo "Construyendo con REACT_APP_API_URL=$REACT_APP_API_URL"
@@ -27,16 +24,16 @@ ENV CI=false
 RUN npm run build || (cat /app/npm-debug.log && exit 1)
 
 # Etapa de producción con imagen más ligera
-FROM nginx:alpine
+FROM nginx:1.21-alpine
 
 # Eliminar archivos default de nginx
 RUN rm -rf /usr/share/nginx/html/* && rm /etc/nginx/conf.d/default.conf
 
 # Copiar solo los archivos de build necesarios
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
 
 # Copiar la configuración de nginx
-COPY nginx.conf /etc/nginx/conf.d/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Configurar variables para Railway
 ENV PORT=80
