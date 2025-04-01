@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { esES } from '@mui/material/locale';
@@ -35,28 +35,24 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Layout>
-          <Routes>
-            {/* Ruta principal redirige a facturas */}
-            <Route path="/" element={<Navigate to="/facturas" replace />} />
-            
-            {/* Rutas de Facturas */}
-            <Route path="/facturas" element={<ListadoFacturas />} />
-            <Route path="/facturas/:id" element={<DetalleFactura />} />
-            
-            {/* Otras rutas aquí */}
-            
-            {/* Ruta 404 - No encontrado */}
-            <Route path="*" element={
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <h2>Página no encontrada</h2>
-                <p>La página que estás buscando no existe o ha sido movida.</p>
-              </div>
-            } />
-          </Routes>
-        </Layout>
-      </Router>
+      <Layout>
+        <Routes>
+          {/* Ruta principal redirige a facturas */}
+          <Route path="/" element={<Navigate to="/facturas" replace />} />
+          
+          {/* Rutas de Facturas */}
+          <Route path="/facturas" element={<ListadoFacturas />} />
+          <Route path="/facturas/:id" element={<DetalleFactura />} />
+          
+          {/* Ruta 404 - No encontrado */}
+          <Route path="*" element={
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <h2>Página no encontrada</h2>
+              <p>La página que estás buscando no existe o ha sido movida.</p>
+            </div>
+          } />
+        </Routes>
+      </Layout>
     </ThemeProvider>
   );
 }

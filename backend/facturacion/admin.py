@@ -14,7 +14,7 @@ class DetalleFacturaInline(admin.TabularInline):
     extra = 0
 
 class FacturaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'fecha', 'moneda', 'monto_total', 'sincronizado_loyverse')
+    list_display = ('id', 'fecha', 'moneda', 'total_bs', 'total_usd', 'sincronizado_loyverse')
     list_filter = ('sincronizado_loyverse', 'fecha')
     search_fields = ('id',)
     readonly_fields = ('fecha',)
