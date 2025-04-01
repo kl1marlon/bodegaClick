@@ -56,9 +56,11 @@ import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory } from '../store/productosSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory, updateProducto } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
+import DialogoEditarProducto from '../components/factura/DialogoEditarProducto';
 
 const ListadoProductos = () => {
   const dispatch = useDispatch();
@@ -130,6 +132,11 @@ const ListadoProductos = () => {
   
   // Estado para almacenar referencias a intervalos
   const [intervalos, setIntervalos] = useState([]);
+  
+  // Estado para edición de producto
+  const [editProductoDialogOpen, setEditProductoDialogOpen] = useState(false);
+  const [productoEditando, setProductoEditando] = useState(null);
+  const [monedaEdicion, setMonedaEdicion] = useState('USD');
   
   // Cargar productos y tasas al montar el componente
   useEffect(() => {
@@ -719,6 +726,72 @@ const ListadoProductos = () => {
     };
   }, [intervalos]);
   
+  // Abrir diálogo para editar producto
+  const abrirEditarProductoDialog = (producto) => {
+    // Preparar datos del producto para editar con el formato
+    // que espera el DialogoEditarProducto
+    setProductoEditando({
+      producto: {
+        id: producto.id,
+        nombre: producto.nombre,
+        tipo_tasa: producto.tipo_tasa || 'PARALELO',
+        stock_actual: producto.stock_actual || 0
+      },
+      precio_compra_usd: producto.precio_base_usd || 0,
+      unidades_paquete: 1, // Valor por defecto
+      cantidad: 1, // Valor por defecto para cantidad
+      porcentajeGanancia: producto.porcentaje_ganancia || 30, // Valor por defecto o el del producto
+      aplicarIva: producto.aplica_iva || false
+    });
+    setMonedaEdicion('USD');
+    setEditProductoDialogOpen(true);
+  };
+  
+  // Cerrar diálogo de edición de producto
+  const cerrarEditarProductoDialog = () => {
+    setEditProductoDialogOpen(false);
+    setProductoEditando(null);
+  };
+  
+  // Manejar cambios en el producto editando
+  const handleProductoEditandoChange = (nuevoProductoEditando) => {
+    setProductoEditando(nuevoProductoEditando);
+  };
+  
+  // Guardar cambios en el producto
+  const guardarCambiosProducto = async () => {
+    if (!productoEditando) return;
+    
+    const productoActualizado = {
+      id: productoEditando.producto.id,
+      nombre: productoEditando.producto.nombre,
+      precio_base_usd: Number(productoEditando.precio_compra_usd),
+      porcentaje_ganancia: Number(productoEditando.porcentajeGanancia),
+      aplica_iva: productoEditando.aplicarIva,
+      tipo_tasa: productoEditando.producto.tipo_tasa,
+      stock_actual: Number(productoEditando.producto.stock_actual),
+      fuente_actualizacion: 'calculado' // Indicar que fue actualizado manualmente
+    };
+    
+    try {
+      await dispatch(updateProducto(productoActualizado)).unwrap();
+      dispatch(fetchProductos()); // Actualizar la lista de productos
+      setSnackbar({
+        open: true,
+        message: `Producto "${productoEditando.producto.nombre}" actualizado correctamente`,
+        severity: 'success'
+      });
+      cerrarEditarProductoDialog();
+    } catch (error) {
+      console.error("Error al actualizar el producto:", error);
+      setSnackbar({
+        open: true,
+        message: `Error al actualizar el producto: ${error.message}`,
+        severity: 'error'
+      });
+    }
+  };
+  
   return (
     <Box sx={{ 
       maxWidth: 1200, 
@@ -1109,7 +1182,7 @@ const ListadoProductos = () => {
                         Inventario
                       </Box>
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Actualización</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', backgroundColor: '#f1f5f9' }}>Acciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1263,25 +1336,17 @@ const ListadoProductos = () => {
                         </Tooltip>
                       </TableCell>
                       <TableCell
-                        align="right"
+                        align="center"
                         sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}
                       >
-                        <Tooltip 
-                          title={
-                            <Box>
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                Fuente: {getFuenteActualizacionText(producto.fuente_actualizacion)}
-                              </Typography>
-                              <Typography variant="body2">
-                                Actualización precio: {formatDate(producto.ultima_actualizacion_precio)}
-                              </Typography>
-                            </Box>
-                          } 
-                          arrow
-                        >
-                          <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                            {getFuenteActualizacionIcon(producto.fuente_actualizacion)}
-                          </Box>
+                        <Tooltip title="Editar producto">
+                          <IconButton 
+                            size="small" 
+                            color="primary"
+                            onClick={() => abrirEditarProductoDialog(producto)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -1977,6 +2042,18 @@ const ListadoProductos = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      
+      {/* Diálogo de edición de producto */}
+      <DialogoEditarProducto
+        open={editProductoDialogOpen}
+        onClose={cerrarEditarProductoDialog}
+        productoEditando={productoEditando}
+        onChange={handleProductoEditandoChange}
+        onSave={guardarCambiosProducto}
+        tasaCambio={tasaSeleccionadaProducto[productoEditando?.producto?.id] === 'BCV' ? tasaBCV : tasaParalelo}
+        moneda={monedaEdicion}
+        esEdicionCompleta={true}
+      />
     </Box>
   );
 };

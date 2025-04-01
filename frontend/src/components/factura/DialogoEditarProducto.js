@@ -11,7 +11,12 @@ import {
   Grid,
   Typography,
   Paper,
-  Box
+  Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider
 } from '@mui/material';
 import { 
   calcularPrecioVenta, 
@@ -34,9 +39,19 @@ import {
  * @param {function} props.onSave - Función para guardar los cambios
  * @param {Object} props.tasaCambio - Objeto con información de la tasa de cambio
  * @param {string} props.moneda - Moneda seleccionada ('USD' o 'BS')
+ * @param {boolean} props.esEdicionCompleta - Si se está editando desde ListadoProductos (más campos)
  * @returns {JSX.Element} - Componente de diálogo para editar productos
  */
-const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSave, tasaCambio, moneda }) => {
+const DialogoEditarProducto = ({ 
+  open, 
+  onClose, 
+  productoEditando, 
+  onChange, 
+  onSave, 
+  tasaCambio, 
+  moneda,
+  esEdicionCompleta = false
+}) => {
   // Manejar cambios en el formulario
   const handleChange = (field, value) => {
     // Si es un campo numérico, validar el formato
@@ -66,10 +81,22 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
       }
     }
     
-    onChange({
-      ...productoEditando,
-      [field]: value
-    });
+    // Si es un cambio en el producto mismo (para el modo edición completa)
+    if (field.startsWith('producto.')) {
+      const productoField = field.split('.')[1];
+      onChange({
+        ...productoEditando,
+        producto: {
+          ...productoEditando.producto,
+          [productoField]: value
+        }
+      });
+    } else {
+      onChange({
+        ...productoEditando,
+        [field]: value
+      });
+    }
   };
 
   // Calcular el precio de venta basado en los datos actuales
@@ -160,9 +187,12 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
       errores.push('Las unidades por paquete son obligatorias');
     }
     
-    // Validar cantidad
-    if (!productoEditando.cantidad || productoEditando.cantidad <= 0) {
-      errores.push('La cantidad debe ser mayor a 0');
+    // Solo validar cantidad si no es edición completa (modo factura)
+    if (!esEdicionCompleta) {
+      // Validar cantidad
+      if (!productoEditando.cantidad || productoEditando.cantidad <= 0) {
+        errores.push('La cantidad debe ser mayor a 0');
+      }
     }
     
     // Validar que los campos numéricos no tengan más de 2 decimales
@@ -199,7 +229,7 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
     <Dialog 
       open={open} 
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth={esEdicionCompleta ? "md" : "sm"}
       fullWidth
       PaperProps={{
         sx: {
@@ -222,6 +252,66 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
       </DialogTitle>
       <DialogContent sx={{ p: 3 }}>
         <Grid container spacing={3} sx={{ mt: 0 }}>
+          {esEdicionCompleta && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nombre del Producto"
+                value={productoEditando?.producto?.nombre || ''}
+                onChange={(e) => handleChange('producto.nombre', e.target.value)}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Grid>
+          )}
+          
+          {esEdicionCompleta && (
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Stock Actual"
+                type="number"
+                value={productoEditando?.producto?.stock_actual || 0}
+                onChange={(e) => handleChange('producto.stock_actual', Number(e.target.value))}
+                inputProps={{ min: 0, step: 0.01 }}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Grid>
+          )}
+          
+          {esEdicionCompleta && (
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="tipo-tasa-label">Tipo de Tasa</InputLabel>
+                <Select
+                  labelId="tipo-tasa-label"
+                  value={productoEditando?.producto?.tipo_tasa || 'PARALELO'}
+                  onChange={(e) => handleChange('producto.tipo_tasa', e.target.value)}
+                  label="Tipo de Tasa"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1
+                    }
+                  }}
+                >
+                  <MenuItem value="BCV">BCV</MenuItem>
+                  <MenuItem value="PARALELO">Paralelo</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+          
+          {esEdicionCompleta && <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>}
+          
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -238,7 +328,7 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               inputProps={{ min: 0, step: 0.01 }}
               variant="outlined"
               sx={{
-                mt: 2,
+                mt: esEdicionCompleta ? 0 : 2,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 1
                 }
@@ -267,28 +357,30 @@ const DialogoEditarProducto = ({ open, onClose, productoEditando, onChange, onSa
               }}
             />
           </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Cantidad a Facturar"
-              type="number"
-              value={productoEditando?.cantidad || ''}
-              onChange={(e) => handleChange('cantidad', Number(e.target.value))}
-              onBlur={(e) => {
-                // Formatear a 2 decimales al perder el foco
-                if (e.target.value) {
-                  handleChange('cantidad', parseFloat(parseFloat(e.target.value).toFixed(2)));
-                }
-              }}
-              inputProps={{ min: 0.01, step: 0.01 }}
-              variant="outlined"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1
-                }
-              }}
-            />
-          </Grid>
+          {!esEdicionCompleta && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Cantidad a Facturar"
+                type="number"
+                value={productoEditando?.cantidad || ''}
+                onChange={(e) => handleChange('cantidad', Number(e.target.value))}
+                onBlur={(e) => {
+                  // Formatear a 2 decimales al perder el foco
+                  if (e.target.value) {
+                    handleChange('cantidad', parseFloat(parseFloat(e.target.value).toFixed(2)));
+                  }
+                }}
+                inputProps={{ min: 0.01, step: 0.01 }}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Grid>
+          )}
           <Grid item xs={12}>
             <TextField
               fullWidth

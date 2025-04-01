@@ -115,6 +115,21 @@ export const updateProductoTipoTasa = createAsyncThunk(
   }
 );
 
+// Nueva función para actualizar datos completos de un producto
+export const updateProducto = createAsyncThunk(
+  'productos/updateProducto',
+  async (productoData) => {
+    try {
+      console.log('Actualizando producto con datos:', productoData);
+      const response = await axios.patch(`${API_URL}/productos/${productoData.id}/`, productoData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar producto:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+);
+
 export const testCorsConnection = createAsyncThunk(
   'productos/testCorsConnection',
   async (_, { rejectWithValue }) => {
@@ -184,6 +199,13 @@ const productosSlice = createSlice({
         const index = state.items.findIndex(producto => producto.id === action.payload.id);
         if (index !== -1) {
           state.items[index] = action.payload;
+        }
+      })
+      .addCase(updateProducto.fulfilled, (state, action) => {
+        const index = state.items.findIndex(producto => producto.id === action.payload.id);
+        if (index !== -1) {
+          // Actualizar el producto en el estado con los nuevos datos
+          state.items[index] = {...state.items[index], ...action.payload};
         }
       })
       .addCase(testCorsConnection.pending, (state) => {
