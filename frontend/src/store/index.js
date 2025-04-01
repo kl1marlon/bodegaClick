@@ -3,7 +3,7 @@ import productosReducer from './productosSlice';
 import tasasCambioReducer from './tasasCambioSlice';
 import facturasReducer from './facturasSlice';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     productos: productosReducer,
     tasasCambio: tasasCambioReducer,
