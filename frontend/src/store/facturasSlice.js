@@ -55,6 +55,18 @@ export const sincronizarFactura = createAsyncThunk(
   }
 );
 
+export const createFactura = createAsyncThunk(
+  'facturas/createFactura',
+  async (facturaData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/facturas/`, facturaData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Error al crear la factura');
+    }
+  }
+);
+
 // Slice de Redux
 const facturasSlice = createSlice({
   name: 'facturas',
@@ -65,6 +77,8 @@ const facturasSlice = createSlice({
     error: null,
     sincronizacionStatus: 'idle',
     sincronizacionError: null,
+    creacionStatus: 'idle',
+    creacionError: null,
   },
   reducers: {
     // Reducers adicionales si son necesarios
@@ -122,6 +136,20 @@ const facturasSlice = createSlice({
       .addCase(sincronizarFactura.rejected, (state, action) => {
         state.sincronizacionStatus = 'failed';
         state.sincronizacionError = action.payload || 'Error desconocido';
+      })
+      
+      // Manejar createFactura
+      .addCase(createFactura.pending, (state) => {
+        state.creacionStatus = 'loading';
+      })
+      .addCase(createFactura.fulfilled, (state, action) => {
+        state.creacionStatus = 'succeeded';
+        state.items = [action.payload, ...state.items]; // Añadir la nueva factura al principio
+        state.creacionError = null;
+      })
+      .addCase(createFactura.rejected, (state, action) => {
+        state.creacionStatus = 'failed';
+        state.creacionError = action.payload || 'Error desconocido';
       });
   },
 });
