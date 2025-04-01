@@ -1,22 +1,44 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { detectApiUrl } from '../utils/apiTest';
 
-// URLs base para las APIs
-const getApiUrl = () => {
+// Variable para almacenar la URL del API que funciona
+let WORKING_API_URL = null;
+
+// Función para obtener la URL de la API con verificación
+const getApiUrl = async () => {
+  // Si ya tenemos una URL que sabemos que funciona, usarla
+  if (WORKING_API_URL) {
+    return WORKING_API_URL;
+  }
+  
+  // Probar diferentes URLs hasta encontrar una que funcione
+  try {
+    console.log('Detectando URL de API...');
+    const result = await detectApiUrl();
+    if (result.success) {
+      console.log('✅ URL de API detectada:', result.url);
+      WORKING_API_URL = result.url;
+      return result.url;
+    }
+  } catch (error) {
+    console.error('Error al detectar URL de API:', error);
+  }
+  
+  // Fallback a métodos anteriores
   if (window.ENV && window.ENV.API_URL) {
     return window.ENV.API_URL;
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 };
 
-const API_URL = getApiUrl();
-
 // Thunks asíncronos
 export const fetchFacturas = createAsyncThunk(
   'facturas/fetchFacturas',
   async (filtros = {}, { rejectWithValue }) => {
     try {
-      // Diagnostico de la URL
+      // Obtener la URL de la API (ahora asíncrona)
+      const API_URL = await getApiUrl();
       console.log('URL de API usada:', API_URL);
       
       // Construir params para filtros
@@ -33,16 +55,41 @@ export const fetchFacturas = createAsyncThunk(
         params.append('tipo_tasa', filtros.tipoTasa);
       }
       
+      // Añadir timestamp para evitar caché
+      params.append('_', Date.now());
+      
       const requestUrl = `${API_URL}/facturas/?${params.toString()}`;
       console.log('Haciendo fetch a URL:', requestUrl);
       
-      const response = await axios.get(requestUrl);
+      // Configurar timeout y otros parámetros de la petición
+      const response = await axios.get(requestUrl, {
+        timeout: 10000, // 10 segundos de timeout
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
       console.log('Respuesta recibida:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error en fetchFacturas:', error);
       console.error('Mensaje de error:', error.message);
-      console.error('Respuesta del servidor:', error.response);
+      
+      // Diagnóstico detallado
+      if (error.response) {
+        console.error('Respuesta del servidor:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      } else if (error.request) {
+        console.error('Detalles de la petición:', {
+          url: error.request.url,
+          method: error.request.method,
+          timeout: error.request.timeout
+        });
+      }
       
       // Crear un mensaje de error más detallado
       let errorMessage = 'No se pudieron cargar las facturas';
@@ -70,6 +117,7 @@ export const fetchFacturaDetalle = createAsyncThunk(
   'facturas/fetchFacturaDetalle',
   async (id, { rejectWithValue }) => {
     try {
+      const API_URL = await getApiUrl();
       const response = await axios.get(`${API_URL}/facturas/${id}/`);
       return response.data;
     } catch (error) {
@@ -82,6 +130,7 @@ export const sincronizarFactura = createAsyncThunk(
   'facturas/sincronizarFactura',
   async (id, { rejectWithValue }) => {
     try {
+      const API_URL = await getApiUrl();
       const response = await axios.post(`${API_URL}/facturas/${id}/sincronizar/`);
       return response.data;
     } catch (error) {
@@ -94,6 +143,7 @@ export const createFactura = createAsyncThunk(
   'facturas/createFactura',
   async (facturaData, { rejectWithValue }) => {
     try {
+      const API_URL = await getApiUrl();
       const response = await axios.post(`${API_URL}/facturas/`, facturaData);
       return response.data;
     } catch (error) {

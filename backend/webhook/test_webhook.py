@@ -12,6 +12,7 @@ import hmac
 import hashlib
 import requests
 import sys
+import base64
 
 def simulate_webhook(url, event_type, secret, payload=None):
     """
@@ -30,6 +31,9 @@ def simulate_webhook(url, event_type, secret, payload=None):
     if not payload:
         if event_type == "inventory_levels.update":
             payload = {
+                "merchant_id": "5fk4f446-01d2-8787-4fd5-7b7b1995df85",
+                "type": "inventory_levels.update",
+                "created_at": "2025-03-28T12:00:00.000Z",
                 "inventory_levels": [
                     {
                         "store_id": "12345678-1234-1234-1234-1234567890ab",
@@ -41,11 +45,12 @@ def simulate_webhook(url, event_type, secret, payload=None):
             }
         elif event_type == "items.update":
             payload = {
+                "merchant_id": "5fk4f446-01d2-8787-4fd5-7b7b1995df85",
+                "type": "items.update",
+                "created_at": "2025-03-28T12:00:00.000Z",
                 "items": [
                     {
                         "id": "12345678-1234-1234-1234-1234567890ab",
-                        "name": "Producto de Prueba",
-                        "description": "Producto para probar webhook",
                         "updated_at": "2025-03-28T12:00:00.000Z"
                     }
                 ]
@@ -54,23 +59,26 @@ def simulate_webhook(url, event_type, secret, payload=None):
     # Convertir payload a JSON
     body = json.dumps(payload).encode('utf-8')
     
-    # Generar firma con HMAC-SHA1
-    signature = hmac.new(
-        secret.encode('utf-8'),
-        body,
-        hashlib.sha1
-    ).hexdigest()
+    # Generar firma con HMAC-SHA1 en base64 según la documentación de Loyverse
+    signature = base64.b64encode(
+        hmac.new(
+            secret.encode('utf-8'),
+            body,
+            hashlib.sha1
+        ).digest()
+    ).decode('utf-8')
     
     # Configurar headers
     headers = {
         "Content-Type": "application/json",
         "X-Loyverse-Event": event_type,
-        "X-Loyverse-Signature": signature
+        "X-Loyverse-Signature": signature,
+        "X-Loyverse-API-version": "v1.0"
     }
     
     print(f"\n🔹 Simulando webhook de tipo '{event_type}'")
     print(f"URL: {url}")
-    print(f"Signature: {signature}")
+    print(f"Firma (base64): {signature}")
     print(f"Payload: {json.dumps(payload, indent=2)}")
     
     try:

@@ -1,115 +1,132 @@
 /**
- * Utilidad para manejar errores HTTP y de red
+ * Utilidades para el manejo de errores en la aplicación
  */
 
 /**
- * Formatea un error para mostrar información relevante al usuario
- * @param {Error} error - El error capturado
- * @param {string} defaultMessage - Mensaje por defecto si no se puede determinar el error
- * @returns {string} - Mensaje de error formateado
+ * Formatea un error de API para mostrar un mensaje amigable al usuario
+ * @param {Object|string} error - El error a formatear
+ * @param {string} defaultMessage - Mensaje por defecto si no se puede extraer uno del error
+ * @returns {string} Mensaje de error formateado
  */
 export const formatApiError = (error, defaultMessage = 'Ocurrió un error inesperado') => {
-  if (!error) return defaultMessage;
-  
-  // Si es un error de axios con respuesta del servidor
-  if (error.response) {
-    const statusCode = error.response.status;
-    
-    // Manejar códigos de error comunes
-    switch (statusCode) {
-      case 400:
-        return 'Solicitud incorrecta. Verifique los datos enviados.';
-      case 401:
-        return 'No autorizado. Por favor inicie sesión nuevamente.';
-      case 403:
-        return 'Acceso prohibido. No tiene permisos para esta acción.';
-      case 404:
-        return 'Recurso no encontrado. La URL solicitada no existe.';
-      case 500:
-        return 'Error interno del servidor. Por favor intente más tarde.';
-      case 502:
-        return 'Error de puerta de enlace. Hay problemas de comunicación entre servidores.';
-      case 503:
-        return 'Servicio no disponible. El servidor está sobrecargado o en mantenimiento.';
-      default:
-        if (error.response.data && error.response.data.error) {
-          return `Error (${statusCode}): ${error.response.data.error}`;
-        }
-        return `Error de servidor (${statusCode}). Por favor intente más tarde.`;
-    }
-  }
-  
-  // Si la petición fue hecha pero no hubo respuesta
-  if (error.request) {
-    return 'No se recibió respuesta del servidor. Verifique su conexión a internet.';
-  }
-  
-  // Error en la configuración de la petición
-  if (error.message) {
-    if (error.message.includes('Network Error')) {
-      return 'Error de red. Verifique su conexión a internet.';
-    }
-    return error.message;
-  }
-  
-  // Si es un string simple
+  // Si el error es una cadena, devolverla directamente
   if (typeof error === 'string') {
     return error;
   }
-  
+
+  // Si hay un mensaje en error.payload (típico de Redux Toolkit rejectWithValue)
+  if (error.payload) {
+    return error.payload;
+  }
+
+  // Si hay un mensaje en error.response.data (respuesta de API)
+  if (error.response && error.response.data) {
+    if (typeof error.response.data === 'string') {
+      return error.response.data;
+    }
+    if (error.response.data.error) {
+      return error.response.data.error;
+    }
+    if (error.response.data.detail) {
+      return error.response.data.detail;
+    }
+  }
+
+  // Si tiene un message estándar
+  if (error.message) {
+    return error.message;
+  }
+
+  // Si no se pudo extraer un mensaje útil, usar el default
   return defaultMessage;
 };
 
 /**
- * Verifica si hay problemas de CORS
- * @param {Error} error - El error capturado
- * @returns {boolean} - true si parece ser un error de CORS
+ * Proporciona una sugerencia de solución basada en el tipo de error
+ * @param {Object|string} error - El error para el que se requiere sugerencia
+ * @returns {string|null} Sugerencia de solución o null si no hay sugerencia
  */
-export const isCorsError = (error) => {
-  if (!error) return false;
-  
-  // Mensajes comunes de error de CORS
-  const corsErrorPatterns = [
-    'Access-Control-Allow-Origin',
-    'CORS',
-    'cross-origin',
-    'Cross-Origin Request Blocked',
-    'from origin',
-    'has been blocked by CORS policy'
-  ];
-  
-  const errorMsg = error.message || '';
-  return corsErrorPatterns.some(pattern => errorMsg.includes(pattern));
+export const getSolutionSuggestion = (error) => {
+  if (typeof error === 'string') {
+    // Errores de conectividad
+    if (error.includes('No se recibió respuesta del servidor')) {
+      return `
+        1. Verifica tu conexión a Internet
+        2. La API podría estar caída - Verifica el estado del servicio de Railway
+        3. Intenta acceder directamente al API en: https://bodegaclick-production.up.railway.app/api/
+        4. Si estás en desarrollo local, verifica que el servidor backend esté funcionando
+      `;
+    }
+    // Errores de autenticación
+    if (error.includes('401') || error.includes('Unauthorized')) {
+      return 'Tu sesión podría haber expirado. Intenta recargar la página o iniciar sesión nuevamente.';
+    }
+    // Errores de permisos
+    if (error.includes('403') || error.includes('Forbidden')) {
+      return 'No tienes permisos suficientes para realizar esta acción. Contacta al administrador.';
+    }
+  } else if (error && error.message) {
+    // Errores de red específicos
+    if (error.message.includes('Network Error')) {
+      return `
+        Problema de red detectado:
+        1. Verifica tu conexión a Internet
+        2. Si estás usando VPN, prueba desactivándola
+        3. Comprueba si puedes acceder a otros sitios web
+        4. Verifica la URL de la API en la configuración
+      `;
+    }
+    // Errores de CORS
+    if (error.message.includes('CORS')) {
+      return `
+        Error de CORS (Cross-Origin Resource Sharing):
+        1. Verifica que los dominios frontend y backend estén correctamente configurados
+        2. En desarrollo local, asegúrate de que el servidor tenga CORS habilitado para tu dominio
+        3. Contacta al administrador del sistema si el problema persiste
+      `;
+    }
+    // Errores de timeout
+    if (error.message.includes('timeout')) {
+      return 'La solicitud tardó demasiado tiempo. El servidor podría estar sobrecargado o la conexión es lenta.';
+    }
+  }
+
+  // Si no coincide con ningún patrón específico
+  return null;
 };
 
 /**
- * Sugiere soluciones para errores comunes
- * @param {Error} error - El error capturado
- * @returns {string|null} - Sugerencia de solución o null si no hay sugerencias
+ * Verifica si un error es debido a problemas de red/conectividad
+ * @param {Object|string} error - El error a verificar
+ * @returns {boolean} true si es un error de conectividad
  */
-export const getSolutionSuggestion = (error) => {
-  if (!error) return null;
+export const isConnectivityError = (error) => {
+  if (!error) return false;
   
-  // Sugerencia para problemas de CORS
-  if (isCorsError(error)) {
-    return 'Este parece ser un problema de CORS. Verifique que el backend tenga configurados los encabezados CORS correctamente.';
+  if (typeof error === 'string') {
+    return (
+      error.includes('Network Error') ||
+      error.includes('No se recibió respuesta') ||
+      error.includes('Failed to fetch') ||
+      error.includes('timeout') ||
+      error.includes('connection')
+    );
   }
   
-  // Sugerencias para errores de red
-  if (error.message && error.message.includes('Network Error')) {
-    return 'Verifique su conexión a internet y asegúrese de que el servidor API esté funcionando.';
+  if (error.message) {
+    return (
+      error.message.includes('Network Error') ||
+      error.message.includes('Failed to fetch') ||
+      error.message.includes('timeout') ||
+      error.message.includes('connection')
+    );
   }
   
-  // Sugerencias para problemas de autenticación
-  if (error.response && [401, 403].includes(error.response.status)) {
-    return 'Intente cerrar sesión y volver a iniciar sesión para renovar sus credenciales.';
-  }
-  
-  return null;
+  return false;
 };
 
 export default {
   formatApiError,
-  isCorsError,
-  getSolutionSuggestion
+  getSolutionSuggestion,
+  isConnectivityError
 }; 

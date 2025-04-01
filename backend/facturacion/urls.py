@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_tasks
+from .views_info import DatabaseInfoView
 
 urlpatterns = [
     # ... rutas existentes ...
@@ -13,4 +14,7 @@ urlpatterns = [
     
     # Ruta de prueba CORS
     path('test-cors/', views_tasks.test_cors, name='test_cors'),
+
+    # Endpoints de información y diagnóstico
+    path('info/database/', DatabaseInfoView.as_view(), name='database-info'),
 ] 

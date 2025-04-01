@@ -35,7 +35,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import moment from 'moment';
 import 'moment/locale/es';
-import { formatApiError, getSolutionSuggestion } from '../utils/errorHandler';
+import { formatApiError, getSolutionSuggestion, isConnectivityError } from '../utils/errorHandler';
+import ConexionAPI from '../components/diagnostico/ConexionAPI';
 
 moment.locale('es');
 
@@ -152,6 +153,7 @@ const ListadoFacturas = () => {
     // Formatear el error para mostrar información más útil
     const errorMessage = formatApiError(error, 'No se pudieron cargar las facturas');
     const solutionSuggestion = getSolutionSuggestion(error);
+    const isConnectionError = isConnectivityError(error);
     
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -171,6 +173,9 @@ const ListadoFacturas = () => {
             {solutionSuggestion}
           </Alert>
         )}
+        
+        {/* Mostrar herramienta de diagnóstico si parece un problema de conexión */}
+        {isConnectionError && <ConexionAPI />}
         
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
