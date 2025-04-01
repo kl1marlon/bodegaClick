@@ -2,7 +2,14 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // URLs base para las APIs
-const API_URL = '/api';
+const getApiUrl = () => {
+  if (window.ENV && window.ENV.API_URL) {
+    return window.ENV.API_URL;
+  }
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+};
+
+const API_URL = getApiUrl();
 
 // Thunks asíncronos
 export const fetchFacturas = createAsyncThunk(
