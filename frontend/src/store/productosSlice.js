@@ -30,13 +30,26 @@ export const syncFromLoyverse = createAsyncThunk(
         categorias: opciones.categorias || null,
         tipo_tasa: opciones.tipo_tasa || null,
         productos_ids: opciones.productos_ids || null,
-        forzar_exportar: opciones.forzar_exportar || false
+        forzar_exportar: opciones.forzar_exportar || false,
+        tamaño_lote: opciones.tamaño_lote || 10 // Tamaño de lote predeterminado
       };
       
       console.log(`Iniciando sincronización de productos desde Loyverse con opciones:`, opcionesSincronizacion);
       
-      const response = await axios.post(`${API_URL}/productos/sync_from_loyverse/`, opcionesSincronizacion);
-      console.log('Respuesta de sincronización:', response.data);
+      // Solicitar el inicio de la tarea asíncrona
+      const adminToken = 'admin_secret_token_default'; // El mismo que usas en syncInventory
+      
+      const response = await axios.post(`${API_URL}/tareas/iniciar/`, {
+        type: 'sync_prices',
+        params: opcionesSincronizacion
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': adminToken
+        }
+      });
+      
+      console.log('Respuesta de iniciar tarea de sincronización:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error en sincronización:', error.response?.data || error.message);

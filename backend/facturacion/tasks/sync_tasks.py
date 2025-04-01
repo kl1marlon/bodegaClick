@@ -429,80 +429,133 @@ def sincronizar_inventario(self, force: bool = False) -> Dict[str, Any]:
         return {"success": False, "error": error_msg}
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, soft_time_limit=1800, time_limit=1900)  # 30 min soft, ~32 min hard
 def sincronizar_precios(self, opciones: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
-    Tarea asíncrona para sincronizar precios con Loyverse (Simulación)
-
+    Tarea asíncrona para sincronizar precios con Loyverse
+    
     Args:
         self: Instancia de la tarea (proporcionado por Celery)
         opciones (dict, optional): Opciones para la sincronización de precios
-
+        
     Returns:
         dict: Resultado de la sincronización
     """
+    from facturacion.models import Producto
+    from facturacion.services import LoyverseService
+    
     task_id = self.request.id
     opciones = opciones or {}
-
+    
     logger.info(f"Iniciando tarea de sincronización de precios (ID: {task_id}), opciones={opciones}")
-
+    
     # Inicializar progreso
     TaskProgressManager.set_progress(
         task_id=task_id,
         current=0,
-        total=1, # Total inicial temporal
-        status=TaskStatus.STARTED
+        total=1,  # Total temporal
+        status=TaskStatus.STARTED,
+        metadata={"tipo_tarea": "sincronizacion_precios", "opciones": opciones}
     )
-
+    
     try:
-        # Aquí iría la implementación completa de sincronización de precios
-        # Por ahora es una simulación
-
-        total_items = 200 # Simulado - Deberías obtener esto de alguna manera
-        logger.info(f"Total de productos a procesar (precios): {total_items} (Tarea: {task_id})")
-
+        # Inicializar el servicio
+        loyverse_service = LoyverseService()
+        
+        # Filtrar productos por opciones (categorías, tipo_tasa, etc.)
+        productos_query = Producto.objects.filter(loyverse_id__isnull=False)
+        
+        if opciones.get('categorias'):
+            productos_query = productos_query.filter(categoria__in=opciones['categorias'])
+            
+        if opciones.get('tipo_tasa'):
+            productos_query = productos_query.filter(tipo_tasa=opciones['tipo_tasa'])
+            
+        if opciones.get('productos_ids'):
+            productos_query = productos_query.filter(id__in=opciones['productos_ids'])
+            
+        # Contar total de productos a procesar
+        total_productos = productos_query.count()
+        logger.info(f"Total de productos a procesar: {total_productos} (Tarea: {task_id})")
+        
+        if total_productos == 0:
+            logger.warning(f"No se encontraron productos para procesar (Tarea: {task_id})")
+            return {"success": False, "message": "No se encontraron productos para procesar"}
+        
+        # Actualizar progreso con el total real
         TaskProgressManager.set_progress(
             task_id=task_id,
             current=0,
-            total=total_items,
+            total=total_productos,
             status=TaskStatus.PROGRESS
         )
-
-        # Simulación de procesamiento
-        for i in range(total_items):
+        
+        # Calcular tamaño de lote según opciones o usar valor predeterminado
+        tamaño_lote = opciones.get('tamaño_lote', 10)
+        
+        # Dividir productos en lotes para procesar
+        productos_procesados = 0
+        exito_total = True
+        productos_actualizados = 0
+        productos_fallidos = 0
+        
+        # Procesar por lotes para evitar timeout
+        for i in range(0, total_productos, tamaño_lote):
             # Verificar si la tarea ha sido cancelada
-            # Mejor usar estado almacenado en Redis para evitar problemas con is_revoked
             task_status = TaskProgressManager.get_progress(task_id)
             if task_status and task_status.get('status') == TaskStatus.REVOKED.value:
-                logger.warning(f"Tarea de sincronización de precios cancelada por el usuario (ID: {task_id})")
+                logger.warning(f"Tarea de sincronización cancelada por el usuario (Tarea: {task_id})")
                 return {"success": False, "message": "Tarea cancelada por el usuario"}
-
-            # Simular trabajo
-            time.sleep(0.05)
-
-            # Actualizar progreso cada 10 items o al final
-            processed_items_count = i + 1
-            if processed_items_count % 10 == 0 or processed_items_count == total_items:
-                progress_perc = int((processed_items_count / total_items) * 100) if total_items > 0 else 0
-                logger.debug(f"Progreso (precios): {processed_items_count}/{total_items} ({progress_perc}%) (Tarea: {task_id})")
-                TaskProgressManager.set_progress(
-                    task_id=task_id,
-                    current=processed_items_count,
-                    total=total_items,
-                    status=TaskStatus.PROGRESS
-                )
-
+            
+            # Obtener el siguiente lote de productos
+            lote_productos = list(productos_query[i:i+tamaño_lote])
+            logger.info(f"Procesando lote {i//tamaño_lote + 1}/{(total_productos + tamaño_lote - 1)//tamaño_lote}, productos {i+1}-{min(i+tamaño_lote, total_productos)} (Tarea: {task_id})")
+            
+            # Sincronizar este lote con Loyverse
+            resultado_lote = loyverse_service.sync_prices(lote_productos)
+            logger.info(f"Resultado del lote: {resultado_lote} (Tarea: {task_id})")
+            
+            # Actualizar contadores
+            productos_procesados += len(lote_productos)
+            productos_actualizados += resultado_lote.get('updated', 0)
+            productos_fallidos += resultado_lote.get('failed', 0)
+            
+            # Si este lote falló, registrar pero continuar con los siguientes
+            if not resultado_lote.get('success', False):
+                exito_total = False
+                logger.warning(f"Fallo en lote {i//tamaño_lote + 1}: {resultado_lote} (Tarea: {task_id})")
+            
+            # Actualizar progreso
+            TaskProgressManager.set_progress(
+                task_id=task_id,
+                current=productos_procesados,
+                total=total_productos,
+                status=TaskStatus.PROGRESS,
+                metadata={
+                    "ultimo_lote": i//tamaño_lote + 1,
+                    "resultado_lote": resultado_lote,
+                    "productos_actualizados": productos_actualizados,
+                    "productos_fallidos": productos_fallidos
+                }
+            )
+            
+            # Breve pausa para evitar sobrecargar la API
+            time.sleep(1)
+        
         # Marcar como completada
         result = {
-            "success": True,
-            "processed_items": total_items,
-            "total_items": total_items,
+            "success": exito_total,
+            "processed_items": productos_procesados,
+            "total_items": total_productos,
+            "productos_actualizados": productos_actualizados,
+            "productos_fallidos": productos_fallidos,
             "options": opciones
         }
-        logger.info(f"Sincronización de precios completada: {total_items}/{total_items} productos (Tarea: {task_id})")
+        
+        logger.info(f"Sincronización de precios completada: {productos_procesados}/{total_productos} productos (Tarea: {task_id})")
         TaskProgressManager.set_completed(task_id, result)
         return result
-
+        
     except SoftTimeLimitExceeded:
         error_msg = "La tarea excedió el tiempo límite permitido"
         logger.error(f"{error_msg} (Tarea: {task_id})")
