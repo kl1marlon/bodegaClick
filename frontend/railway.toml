@@ -6,7 +6,7 @@ buildCommand = "npm install && npm run build"
 startCommand = "npx serve -s build"
 healthcheckPath = "/"
 healthcheckTimeout = 100
-restartPolicyType = "on-failure"
+restartPolicy = "on-failure"
 
 [phases.setup]
 nixPkgs = ["nodejs", "npm"] 
