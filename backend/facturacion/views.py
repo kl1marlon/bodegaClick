@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Producto, TasaCambio, Factura, Webhook
+from .models import Producto, TasaCambio, Factura, Webhook, DetalleFactura
 from .serializers import (
     ProductoSerializer,
     TasaCambioSerializer,
@@ -10,7 +10,8 @@ from .serializers import (
     CrearFacturaSerializer,
     ActualizarPreciosSerializer,
     WebhookSerializer,
-    CreateWebhookSerializer
+    CreateWebhookSerializer,
+    DetalleFacturaSerializer
 )
 from .services import LoyverseService
 import json
@@ -30,9 +31,17 @@ import logging
 from loyverse_sync.sync import sincronizar_desde_loyverse
 import requests
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.utils.decorators import method_decorator
 from django.db import connection
+import io
+import csv
+import xlsxwriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -728,4 +737,303 @@ class SincronizarInventarioView(APIView):
 class SincronizarInventarioHtmlView(APIView):
     def get(self, request):
         from django.shortcuts import render
-        return render(request, 'sincronizar_inventario.html') 
+        return render(request, 'sincronizar_inventario.html')
+
+@api_view(['GET'])
+def lista_facturas(request):
+    """
+    Obtener listado de facturas de compra
+    """
+    facturas = Factura.objects.all().order_by('-fecha')
+    serializer = FacturaSerializer(facturas, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+def detalle_factura(request, factura_id):
+    """
+    Obtener, actualizar o eliminar una factura específica
+    """
+    factura = get_object_or_404(Factura, id=factura_id)
+    
+    if request.method == 'GET':
+        serializer = FacturaSerializer(factura, context={'request': request})
+        return Response(serializer.data)
+    
+    elif request.method == 'PATCH':
+        serializer = FacturaSerializer(factura, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        factura.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+def sincronizar_factura(request, factura_id):
+    """
+    Sincronizar una factura con Loyverse
+    """
+    factura = get_object_or_404(Factura, id=factura_id)
+    
+    try:
+        # Aquí implementaríamos la lógica de sincronización con Loyverse
+        # Por ahora, simplemente marcamos la factura como sincronizada
+        factura.sincronizado_loyverse = True
+        factura.save()
+        
+        # Actualizamos los productos relacionados
+        for detalle in factura.detalles.all():
+            producto = detalle.producto
+            
+            # Actualizar valores del producto
+            producto.precio_compra = detalle.precio_unitario
+            producto.precio_compra_usd = detalle.precio_compra_usd
+            producto.unidades_paquete = detalle.unidades_paquete
+            producto.porcentaje_ganancia = detalle.porcentaje_ganancia
+            producto.aplicar_iva = detalle.aplicarIva
+            
+            # Calcular precio de venta
+            if detalle.precio_base_usd:
+                producto.precio_base_usd = detalle.precio_base_usd
+            else:
+                producto.precio_base_usd = detalle.precio_compra_usd * (1 + (detalle.porcentaje_ganancia / 100))
+            
+            # Actualizar stock
+            producto.stock_actual += detalle.cantidad * detalle.unidades_paquete
+            producto.ultima_actualizacion_stock = datetime.now()
+            
+            # Marcar como actualizado desde factura
+            producto.fuente_actualizacion = 'factura'
+            producto.save()
+        
+        serializer = FacturaSerializer(factura)
+        return Response(serializer.data)
+    
+    except Exception as e:
+        logger.error(f"Error al sincronizar factura {factura_id}: {str(e)}")
+        return Response(
+            {"error": f"Error al sincronizar: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['PATCH'])
+def actualizar_producto_factura(request, factura_id, detalle_id):
+    """
+    Actualizar un producto específico de una factura
+    """
+    factura = get_object_or_404(Factura, id=factura_id)
+    detalle = get_object_or_404(DetalleFactura, id=detalle_id, factura=factura)
+    
+    serializer = DetalleFacturaSerializer(detalle, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        
+        # Recalcular totales de la factura si es necesario
+        if 'cantidad' in request.data or 'precio_unitario' in request.data:
+            actualizar_totales_factura(factura)
+        
+        return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def actualizar_totales_factura(factura):
+    """
+    Actualizar los totales de una factura basados en sus detalles
+    """
+    total_bs = sum(detalle.total for detalle in factura.detalles.all() if detalle.factura.moneda == 'BS')
+    
+    # Para el total en USD, convertimos si la moneda original es Bs
+    if factura.moneda == 'BS' and factura.tasa_cambio:
+        total_usd = total_bs / factura.tasa_cambio.valor
+    else:
+        total_usd = sum(detalle.total for detalle in factura.detalles.all() if detalle.factura.moneda == 'USD')
+    
+    # Para el total en Bs, convertimos si la moneda original es USD
+    if factura.moneda == 'USD' and factura.tasa_cambio:
+        total_bs = total_usd * factura.tasa_cambio.valor
+    
+    factura.total_bs = total_bs
+    factura.total_usd = total_usd
+    factura.save()
+
+@api_view(['GET'])
+def exportar_factura(request, factura_id):
+    """
+    Exportar una factura a diferentes formatos (PDF, Excel, CSV)
+    """
+    factura = get_object_or_404(Factura, id=factura_id)
+    formato = request.query_params.get('formato', 'pdf').lower()
+    
+    if formato == 'pdf':
+        return exportar_factura_pdf(factura)
+    elif formato == 'excel':
+        return exportar_factura_excel(factura)
+    elif formato == 'csv':
+        return exportar_factura_csv(factura)
+    else:
+        return Response(
+            {"error": f"Formato no soportado: {formato}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+def exportar_factura_pdf(factura):
+    """
+    Generar un PDF con los detalles de la factura
+    """
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    
+    # Título del documento
+    elements.append(Paragraph(f"Factura de Compra #{factura.numero}", styles['Title']))
+    elements.append(Paragraph(f"Fecha: {factura.fecha.strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+    elements.append(Paragraph(f"Moneda: {'Dólares' if factura.moneda == 'USD' else 'Bolívares'}", styles['Normal']))
+    
+    if factura.tasa_cambio:
+        elements.append(Paragraph(
+            f"Tasa de cambio: {factura.tasa_cambio.valor} ({factura.tasa_cambio.tipo})", 
+            styles['Normal']
+        ))
+    
+    elements.append(Paragraph(f"Porcentaje ganancia general: {factura.porcentaje_ganancia}%", styles['Normal']))
+    elements.append(Paragraph(f"Total USD: ${factura.total_usd:.2f}", styles['Normal']))
+    elements.append(Paragraph(f"Total Bs: Bs {factura.total_bs:.2f}", styles['Normal']))
+    
+    # Espaciador
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+    
+    # Tabla de productos
+    if factura.detalles.exists():
+        data = [
+            ['Producto', 'Cantidad', 'Unidades/Paq.', 'Precio Unit.', 'Total', 'Precio USD', '% Ganancia', 'IVA']
+        ]
+        
+        for detalle in factura.detalles.all():
+            data.append([
+                detalle.producto.nombre if detalle.producto else 'N/A',
+                str(detalle.cantidad),
+                str(detalle.unidades_paquete),
+                f"{'$' if factura.moneda == 'USD' else 'Bs '}{detalle.precio_unitario:.2f}",
+                f"{'$' if factura.moneda == 'USD' else 'Bs '}{detalle.total:.2f}",
+                f"${detalle.precio_compra_usd:.2f}",
+                f"{detalle.porcentaje_ganancia}%",
+                "Sí" if detalle.aplicarIva else "No"
+            ])
+        
+        tabla = Table(data)
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        
+        elements.append(tabla)
+    else:
+        elements.append(Paragraph("No hay productos en esta factura", styles['Normal']))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    response = FileResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="factura-{factura.id}.pdf"'
+    return response
+
+def exportar_factura_excel(factura):
+    """
+    Generar un archivo Excel con los detalles de la factura
+    """
+    buffer = io.BytesIO()
+    workbook = xlsxwriter.Workbook(buffer)
+    worksheet = workbook.add_worksheet()
+    
+    # Formatos
+    title_format = workbook.add_format({'bold': True, 'font_size': 14})
+    header_format = workbook.add_format({'bold': True, 'bg_color': '#CCCCCC', 'border': 1})
+    cell_format = workbook.add_format({'border': 1})
+    
+    # Encabezado de la factura
+    worksheet.write(0, 0, f"Factura de Compra #{factura.numero}", title_format)
+    worksheet.write(1, 0, f"Fecha: {factura.fecha.strftime('%d/%m/%Y %H:%M')}")
+    worksheet.write(2, 0, f"Moneda: {'Dólares' if factura.moneda == 'USD' else 'Bolívares'}")
+    
+    if factura.tasa_cambio:
+        worksheet.write(3, 0, f"Tasa de cambio: {factura.tasa_cambio.valor} ({factura.tasa_cambio.tipo})")
+    
+    worksheet.write(4, 0, f"Porcentaje ganancia general: {factura.porcentaje_ganancia}%")
+    worksheet.write(5, 0, f"Total USD: ${factura.total_usd:.2f}")
+    worksheet.write(6, 0, f"Total Bs: Bs {factura.total_bs:.2f}")
+    
+    # Tabla de productos
+    headers = ['Producto', 'Cantidad', 'Unidades/Paq.', 'Precio Unit.', 'Total', 'Precio USD', '% Ganancia', 'IVA']
+    
+    for col, header in enumerate(headers):
+        worksheet.write(8, col, header, header_format)
+    
+    row = 9
+    for detalle in factura.detalles.all():
+        worksheet.write(row, 0, detalle.producto.nombre if detalle.producto else 'N/A', cell_format)
+        worksheet.write(row, 1, detalle.cantidad, cell_format)
+        worksheet.write(row, 2, detalle.unidades_paquete, cell_format)
+        worksheet.write(row, 3, detalle.precio_unitario, cell_format)
+        worksheet.write(row, 4, detalle.total, cell_format)
+        worksheet.write(row, 5, detalle.precio_compra_usd, cell_format)
+        worksheet.write(row, 6, detalle.porcentaje_ganancia, cell_format)
+        worksheet.write(row, 7, "Sí" if detalle.aplicarIva else "No", cell_format)
+        row += 1
+    
+    workbook.close()
+    buffer.seek(0)
+    
+    response = FileResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="factura-{factura.id}.xlsx"'
+    return response
+
+def exportar_factura_csv(factura):
+    """
+    Generar un archivo CSV con los detalles de la factura
+    """
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    
+    # Encabezado de la factura
+    writer.writerow([f"Factura de Compra #{factura.numero}"])
+    writer.writerow([f"Fecha: {factura.fecha.strftime('%d/%m/%Y %H:%M')}"])
+    writer.writerow([f"Moneda: {'Dólares' if factura.moneda == 'USD' else 'Bolívares'}"])
+    
+    if factura.tasa_cambio:
+        writer.writerow([f"Tasa de cambio: {factura.tasa_cambio.valor} ({factura.tasa_cambio.tipo})"])
+    
+    writer.writerow([f"Porcentaje ganancia general: {factura.porcentaje_ganancia}%"])
+    writer.writerow([f"Total USD: ${factura.total_usd:.2f}"])
+    writer.writerow([f"Total Bs: Bs {factura.total_bs:.2f}"])
+    writer.writerow([])  # Línea vacía
+    
+    # Tabla de productos
+    writer.writerow(['Producto', 'Cantidad', 'Unidades/Paq.', 'Precio Unit.', 'Total', 'Precio USD', '% Ganancia', 'IVA'])
+    
+    for detalle in factura.detalles.all():
+        writer.writerow([
+            detalle.producto.nombre if detalle.producto else 'N/A',
+            detalle.cantidad,
+            detalle.unidades_paquete,
+            detalle.precio_unitario,
+            detalle.total,
+            detalle.precio_compra_usd,
+            detalle.porcentaje_ganancia,
+            "Sí" if detalle.aplicarIva else "No"
+        ])
+    
+    csv_content = buffer.getvalue()
+    
+    response = HttpResponse(csv_content, content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="factura-{factura.id}.csv"'
+    return response 

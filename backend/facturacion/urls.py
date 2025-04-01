@@ -3,7 +3,12 @@ from . import views
 from . import views_tasks
 
 urlpatterns = [
-    # ... rutas existentes ...
+    # Rutas para facturas
+    path('facturas/', views.lista_facturas, name='lista_facturas'),
+    path('facturas/<int:factura_id>/', views.detalle_factura, name='detalle_factura'),
+    path('facturas/<int:factura_id>/sincronizar/', views.sincronizar_factura, name='sincronizar_factura'),
+    path('facturas/<int:factura_id>/productos/<int:detalle_id>/', views.actualizar_producto_factura, name='actualizar_producto_factura'),
+    path('facturas/<int:factura_id>/exportar/', views.exportar_factura, name='exportar_factura'),
     
     # Rutas para tareas asíncronas
     path('tareas/iniciar/', views_tasks.iniciar_tarea, name='iniciar_tarea'),

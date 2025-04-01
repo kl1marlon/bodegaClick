@@ -19,8 +19,8 @@ export const fetchFacturas = createAsyncThunk(
   }
 );
 
-export const fetchFacturaById = createAsyncThunk(
-  'facturas/fetchFacturaById',
+export const fetchFacturaDetalle = createAsyncThunk(
+  'facturas/fetchFacturaDetalle',
   async (id) => {
     const response = await axios.get(`${API_URL}/facturas/${id}/`);
     return response.data;
@@ -35,13 +35,54 @@ export const createFactura = createAsyncThunk(
   }
 );
 
+export const sincronizarFactura = createAsyncThunk(
+  'facturas/sincronizarFactura',
+  async (id) => {
+    const response = await axios.post(`${API_URL}/facturas/${id}/sincronizar/`);
+    return response.data;
+  }
+);
+
+export const actualizarProductoFactura = createAsyncThunk(
+  'facturas/actualizarProductoFactura',
+  async ({ facturaId, productoId, campo, valor }) => {
+    const response = await axios.patch(
+      `${API_URL}/facturas/${facturaId}/productos/${productoId}/`, 
+      { [campo]: valor }
+    );
+    return response.data;
+  }
+);
+
+export const exportarFactura = createAsyncThunk(
+  'facturas/exportarFactura',
+  async ({ id, formato }) => {
+    const response = await axios.get(
+      `${API_URL}/facturas/${id}/exportar/?formato=${formato}`,
+      { responseType: 'blob' }
+    );
+    
+    // Crear una URL para el blob y descargar el archivo
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `factura-${id}.${formato}`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    
+    return { id, formato };
+  }
+);
+
 const facturasSlice = createSlice({
   name: 'facturas',
   initialState: {
     items: [],
     currentFactura: null,
+    detalleActual: null,
     status: 'idle',
-    detailStatus: 'idle',
+    exportStatus: 'idle',
     error: null,
   },
   reducers: {
@@ -54,6 +95,7 @@ const facturasSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Obtener listado de facturas
       .addCase(fetchFacturas.pending, (state) => {
         state.status = 'loading';
       })
@@ -65,19 +107,80 @@ const facturasSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
+      
+      // Crear factura
+      .addCase(createFactura.pending, (state) => {
+        state.status = 'loading';
+      })
       .addCase(createFactura.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.items.unshift(action.payload);
         state.currentFactura = null;
       })
-      .addCase(fetchFacturaById.pending, (state) => {
-        state.detailStatus = 'loading';
+      .addCase(createFactura.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
       })
-      .addCase(fetchFacturaById.fulfilled, (state, action) => {
-        state.detailStatus = 'succeeded';
-        state.currentFactura = action.payload;
+      
+      // Obtener detalle de factura
+      .addCase(fetchFacturaDetalle.pending, (state) => {
+        state.status = 'loading';
       })
-      .addCase(fetchFacturaById.rejected, (state, action) => {
-        state.detailStatus = 'failed';
+      .addCase(fetchFacturaDetalle.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.detalleActual = action.payload;
+      })
+      .addCase(fetchFacturaDetalle.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      
+      // Sincronizar factura
+      .addCase(sincronizarFactura.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(sincronizarFactura.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        
+        // Actualizar en el detalle
+        if (state.detalleActual && state.detalleActual.id === action.payload.id) {
+          state.detalleActual = action.payload;
+        }
+        
+        // Actualizar en el listado
+        const index = state.items.findIndex(item => item.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(sincronizarFactura.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      
+      // Actualizar producto de factura
+      .addCase(actualizarProductoFactura.fulfilled, (state, action) => {
+        if (state.detalleActual && state.detalleActual.detalles) {
+          // Encontrar y actualizar el producto en el detalle actual
+          const index = state.detalleActual.detalles.findIndex(
+            detalle => detalle.id === action.payload.id
+          );
+          
+          if (index !== -1) {
+            state.detalleActual.detalles[index] = action.payload;
+          }
+        }
+      })
+      
+      // Exportar factura
+      .addCase(exportarFactura.pending, (state) => {
+        state.exportStatus = 'loading';
+      })
+      .addCase(exportarFactura.fulfilled, (state) => {
+        state.exportStatus = 'succeeded';
+      })
+      .addCase(exportarFactura.rejected, (state, action) => {
+        state.exportStatus = 'failed';
         state.error = action.error.message;
       });
   },
