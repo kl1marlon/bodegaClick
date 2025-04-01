@@ -1,190 +1,129 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Usar la configuración dinámica si está disponible
-const getApiUrl = () => {
-  if (window.ENV && window.ENV.API_URL) {
-    return window.ENV.API_URL;
-  }
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-};
+// URLs base para las APIs
+const API_URL = '/api';
 
-const API_URL = getApiUrl();
-
+// Thunks asíncronos
 export const fetchFacturas = createAsyncThunk(
   'facturas/fetchFacturas',
-  async () => {
-    const response = await axios.get(`${API_URL}/facturas/`);
-    return response.data;
+  async (filtros = {}, { rejectWithValue }) => {
+    try {
+      // Construir params para filtros
+      const params = new URLSearchParams();
+      
+      if (filtros.fechaInicio) params.append('fecha_inicio', filtros.fechaInicio);
+      if (filtros.fechaFin) params.append('fecha_fin', filtros.fechaFin);
+      if (filtros.montoMinUSD) params.append('monto_min_usd', filtros.montoMinUSD);
+      if (filtros.montoMaxUSD) params.append('monto_max_usd', filtros.montoMaxUSD);
+      if (filtros.sincronizado && filtros.sincronizado !== 'todos') {
+        params.append('sincronizado', filtros.sincronizado === 'si');
+      }
+      if (filtros.tipoTasa && filtros.tipoTasa !== 'todos') {
+        params.append('tipo_tasa', filtros.tipoTasa);
+      }
+      
+      const response = await axios.get(`${API_URL}/facturas/?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'No se pudieron cargar las facturas');
+    }
   }
 );
 
 export const fetchFacturaDetalle = createAsyncThunk(
   'facturas/fetchFacturaDetalle',
-  async (id) => {
-    const response = await axios.get(`${API_URL}/facturas/${id}/`);
-    return response.data;
-  }
-);
-
-export const createFactura = createAsyncThunk(
-  'facturas/createFactura',
-  async (facturaData) => {
-    const response = await axios.post(`${API_URL}/facturas/`, facturaData);
-    return response.data;
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/facturas/${id}/`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'No se pudo cargar el detalle de la factura');
+    }
   }
 );
 
 export const sincronizarFactura = createAsyncThunk(
   'facturas/sincronizarFactura',
-  async (id) => {
-    const response = await axios.post(`${API_URL}/facturas/${id}/sincronizar/`);
-    return response.data;
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/facturas/${id}/sincronizar/`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Error al sincronizar la factura');
+    }
   }
 );
 
-export const actualizarProductoFactura = createAsyncThunk(
-  'facturas/actualizarProductoFactura',
-  async ({ facturaId, productoId, campo, valor }) => {
-    const response = await axios.patch(
-      `${API_URL}/facturas/${facturaId}/productos/${productoId}/`, 
-      { [campo]: valor }
-    );
-    return response.data;
-  }
-);
-
-export const exportarFactura = createAsyncThunk(
-  'facturas/exportarFactura',
-  async ({ id, formato }) => {
-    const response = await axios.get(
-      `${API_URL}/facturas/${id}/exportar/?formato=${formato}`,
-      { responseType: 'blob' }
-    );
-    
-    // Crear una URL para el blob y descargar el archivo
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `factura-${id}.${formato}`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    
-    return { id, formato };
-  }
-);
-
+// Slice de Redux
 const facturasSlice = createSlice({
   name: 'facturas',
   initialState: {
     items: [],
-    currentFactura: null,
     detalleActual: null,
-    status: 'idle',
-    exportStatus: 'idle',
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
+    sincronizacionStatus: 'idle',
+    sincronizacionError: null,
   },
   reducers: {
-    setCurrentFactura: (state, action) => {
-      state.currentFactura = action.payload;
-    },
-    clearCurrentFactura: (state) => {
-      state.currentFactura = null;
-    },
+    // Reducers adicionales si son necesarios
   },
   extraReducers: (builder) => {
     builder
-      // Obtener listado de facturas
+      // Manejar fetchFacturas
       .addCase(fetchFacturas.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchFacturas.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.items = action.payload;
+        state.error = null;
       })
       .addCase(fetchFacturas.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message;
+        state.error = action.payload || 'Error desconocido';
       })
       
-      // Crear factura
-      .addCase(createFactura.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(createFactura.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.items.unshift(action.payload);
-        state.currentFactura = null;
-      })
-      .addCase(createFactura.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
-      
-      // Obtener detalle de factura
+      // Manejar fetchFacturaDetalle
       .addCase(fetchFacturaDetalle.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(fetchFacturaDetalle.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.detalleActual = action.payload;
+        state.error = null;
       })
       .addCase(fetchFacturaDetalle.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message;
+        state.error = action.payload || 'Error desconocido';
       })
       
-      // Sincronizar factura
+      // Manejar sincronizarFactura
       .addCase(sincronizarFactura.pending, (state) => {
-        state.status = 'loading';
+        state.sincronizacionStatus = 'loading';
       })
       .addCase(sincronizarFactura.fulfilled, (state, action) => {
-        state.status = 'succeeded';
+        state.sincronizacionStatus = 'succeeded';
         
-        // Actualizar en el detalle
+        // Actualizar la factura en la lista
+        const index = state.items.findIndex(f => f.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+        
+        // Actualizar detalle actual si corresponde
         if (state.detalleActual && state.detalleActual.id === action.payload.id) {
           state.detalleActual = action.payload;
         }
         
-        // Actualizar en el listado
-        const index = state.items.findIndex(item => item.id === action.payload.id);
-        if (index !== -1) {
-          state.items[index] = action.payload;
-        }
+        state.sincronizacionError = null;
       })
       .addCase(sincronizarFactura.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
-      
-      // Actualizar producto de factura
-      .addCase(actualizarProductoFactura.fulfilled, (state, action) => {
-        if (state.detalleActual && state.detalleActual.detalles) {
-          // Encontrar y actualizar el producto en el detalle actual
-          const index = state.detalleActual.detalles.findIndex(
-            detalle => detalle.id === action.payload.id
-          );
-          
-          if (index !== -1) {
-            state.detalleActual.detalles[index] = action.payload;
-          }
-        }
-      })
-      
-      // Exportar factura
-      .addCase(exportarFactura.pending, (state) => {
-        state.exportStatus = 'loading';
-      })
-      .addCase(exportarFactura.fulfilled, (state) => {
-        state.exportStatus = 'succeeded';
-      })
-      .addCase(exportarFactura.rejected, (state, action) => {
-        state.exportStatus = 'failed';
-        state.error = action.error.message;
+        state.sincronizacionStatus = 'failed';
+        state.sincronizacionError = action.payload || 'Error desconocido';
       });
   },
 });
 
-export const { setCurrentFactura, clearCurrentFactura } = facturasSlice.actions;
 export default facturasSlice.reducer; 

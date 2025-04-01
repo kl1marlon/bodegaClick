@@ -1,69 +1,63 @@
 import React from 'react';
-import { Box, Container } from '@mui/material';
-import { Routes, Route, Link } from 'react-router-dom';
-import ListadoProductos from './pages/ListadoProductos';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { esES } from '@mui/material/locale';
+import Layout from './components/Layout';
 import ListadoFacturas from './pages/ListadoFacturas';
 import DetalleFactura from './pages/DetalleFactura';
-import NuevaFactura from './pages/NuevaFactura';
-// Comentamos la importación del componente de notificaciones
-// import NotificacionInventario from './components/NotificacionInventario';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ReceiptIcon from '@mui/icons-material/Receipt';
+// Importar otros componentes según sea necesario
+
+// Crear tema personalizado
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  typography: {
+    fontFamily: [
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif'
+    ].join(','),
+  },
+}, esES); // Configuración regional para español
 
 function App() {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static" sx={{ mb: 2 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            BodegaClick
-          </Typography>
-          <Button 
-            component={Link} 
-            to="/" 
-            color="inherit" 
-            startIcon={<InventoryIcon />}
-            sx={{ mr: 2 }}
-          >
-            Inventario
-          </Button>
-          <Button 
-            component={Link} 
-            to="/facturas" 
-            color="inherit" 
-            startIcon={<ReceiptIcon />}
-            sx={{ mr: 2 }}
-          >
-            Facturas de Compra
-          </Button>
-          <Button 
-            component={Link} 
-            to="/facturas/nueva" 
-            color="inherit"
-            startIcon={<ShoppingCartIcon />}
-          >
-            Nueva Factura
-          </Button>
-        </Toolbar>
-      </AppBar>
-      
-      <Container component="main" sx={{ mt: 2, mb: 4, flex: 1 }}>
-        <Routes>
-          <Route path="/" element={<ListadoProductos />} />
-          <Route path="/facturas" element={<ListadoFacturas />} />
-          <Route path="/facturas/:id" element={<DetalleFactura />} />
-          <Route path="/facturas/nueva" element={<NuevaFactura />} />
-        </Routes>
-      </Container>
-      
-      {/* Comentamos el componente de notificaciones */}
-      {/* <NotificacionInventario /> */}
-    </Box>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Layout>
+          <Routes>
+            {/* Ruta principal redirige a facturas */}
+            <Route path="/" element={<Navigate to="/facturas" replace />} />
+            
+            {/* Rutas de Facturas */}
+            <Route path="/facturas" element={<ListadoFacturas />} />
+            <Route path="/facturas/:id" element={<DetalleFactura />} />
+            
+            {/* Otras rutas aquí */}
+            
+            {/* Ruta 404 - No encontrado */}
+            <Route path="*" element={
+              <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <h2>Página no encontrada</h2>
+                <p>La página que estás buscando no existe o ha sido movida.</p>
+              </div>
+            } />
+          </Routes>
+        </Layout>
+      </Router>
+    </ThemeProvider>
   );
 }
 
