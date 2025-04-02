@@ -171,17 +171,19 @@ const CrearProducto = () => {
     
     if (precioCompraUSD <= 0 || unidadesPaquete <= 0) return 0;
     
-    // Cálculo básico: precio de compra por unidad * (1 + %ganancia/100)
+    // Cálculo: precio por unidad considerando el paquete
     const precioCompraUnidad = precioCompraUSD / unidadesPaquete;
-    let precioBaseUSD = precioCompraUnidad * (1 + porcentajeGanancia / 100);
     
-    // Si se aplica IVA (16%), añadirlo al precio
+    // Aplicar la ganancia
+    let precioConGanancia = precioCompraUnidad * (1 + porcentajeGanancia / 100);
+    
+    // Si se aplica IVA (16%), añadirlo al precio después de la ganancia
     if (producto.aplicar_iva) {
-      precioBaseUSD = precioBaseUSD * 1.16;
+      precioConGanancia = precioConGanancia * 1.16;
     }
     
-    // Redondear a 2 decimales
-    return Math.round(precioBaseUSD * 100) / 100;
+    // Redondear a 2 decimales para evitar problemas con números flotantes
+    return Math.round(precioConGanancia * 100) / 100;
   };
 
   // Actualizar precio_base_usd cuando cambian los valores relacionados
@@ -213,10 +215,16 @@ const CrearProducto = () => {
   const agregarNuevaCategoria = () => {
     if (nuevaCategoria.trim() === '') return;
     
-    if (!categorias.includes(nuevaCategoria)) {
+    // Verificar si la categoría ya existe (ignorando mayúsculas/minúsculas)
+    const categoriaExiste = categorias.some(
+      cat => cat.toLowerCase() === nuevaCategoria.toLowerCase()
+    );
+    
+    if (!categoriaExiste) {
       setCategorias([...categorias, nuevaCategoria]);
     }
     
+    // Establecer la nueva categoría en el producto
     setProducto(prev => ({ ...prev, categoria: nuevaCategoria }));
     setMostrarCampoNuevaCategoria(false);
     setNuevaCategoria('');
