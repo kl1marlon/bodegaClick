@@ -67,6 +67,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     'x-admin-token',  # Añadir este encabezado personalizado para la sincronización de inventario
+    'cache-control',  # Añadido para permitir el encabezado cache-control en solicitudes
+    'pragma',         # Añadido para permitir el encabezado pragma en solicitudes
 ]
 
 # Exponer headers en respuestas CORS

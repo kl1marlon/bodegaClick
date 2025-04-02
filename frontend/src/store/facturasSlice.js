@@ -62,12 +62,14 @@ export const fetchFacturas = createAsyncThunk(
       console.log('Haciendo fetch a URL:', requestUrl);
       
       // Configurar timeout y otros parámetros de la petición
+      // Temporalmente eliminar los encabezados que causan problemas de CORS
       const response = await axios.get(requestUrl, {
-        timeout: 15000, // Aumentar a 15 segundos de timeout
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+        timeout: 15000
+        // Encabezados eliminados temporalmente hasta que se actualice la configuración CORS en el backend
+        // headers: {
+        //   'Cache-Control': 'no-cache',
+        //   'Pragma': 'no-cache'
+        // }
       });
       
       // Verificar si la respuesta contiene datos
@@ -115,10 +117,11 @@ export const fetchFacturaDetalle = createAsyncThunk(
       console.log(`Obteniendo detalle de factura ID: ${id} desde ${API_URL}`);
       
       const response = await axios.get(`${API_URL}/facturas/${id}/`, {
-        timeout: 15000,
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+        timeout: 15000
+        // Encabezados eliminados temporalmente hasta que se actualice la configuración CORS en el backend
+        // headers: {
+        //   'Cache-Control': 'no-cache'
+        // }
       });
       
       // Verificar si la respuesta contiene datos
