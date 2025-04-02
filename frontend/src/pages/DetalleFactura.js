@@ -21,14 +21,19 @@ import {
   Box,
   CircularProgress,
   IconButton,
-  Tooltip
+  Tooltip,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SyncIcon from '@mui/icons-material/Sync';
 import GetAppIcon from '@mui/icons-material/GetApp';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import moment from 'moment';
 import 'moment/locale/es';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import { formatApiError, getSolutionSuggestion, isConnectivityError } from '../utils/errorHandler';
 
 moment.locale('es');
 
@@ -42,10 +47,32 @@ const DetalleFactura = () => {
   const factura = useSelector((state) => state.facturas.detalleActual);
   const status = useSelector((state) => state.facturas.status);
   const error = useSelector((state) => state.facturas.error);
+  const [sincronizando, setSincronizando] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchFacturaDetalle(id));
+    console.log(`Cargando detalle de factura ID: ${id}`);
+    dispatch(fetchFacturaDetalle(id))
+      .unwrap()
+      .then(data => {
+        console.log('Detalle de factura cargado exitosamente:', data);
+      })
+      .catch(error => {
+        console.error('Error al cargar detalle de factura:', error);
+      });
   }, [id, dispatch]);
+
+  // Función para recargar los datos de la factura
+  const recargarFactura = () => {
+    console.log(`Recargando detalle de factura ID: ${id}`);
+    dispatch(fetchFacturaDetalle(id))
+      .unwrap()
+      .then(data => {
+        console.log('Detalle de factura recargado exitosamente:', data);
+      })
+      .catch(error => {
+        console.error('Error al recargar detalle de factura:', error);
+      });
+  };
 
   if (status === 'loading') {
     return (
@@ -58,11 +85,59 @@ const DetalleFactura = () => {
   }
 
   if (status === 'failed') {
+    console.error('Error en estado de factura detalle:', error);
+    
+    // Formatear el error para mostrar información más útil
+    const errorMessage = formatApiError(error, `No se pudo cargar el detalle de la factura ID: ${id}`);
+    const solutionSuggestion = getSolutionSuggestion(error);
+    const isConnectionError = isConnectivityError(error);
+    
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography color="error" variant="h6">
-          Error al cargar el detalle de factura: {error}
-        </Typography>
+        <Box display="flex" alignItems="center" mb={3}>
+          <IconButton onClick={() => navigate('/facturas')} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5">
+            Error al cargar el detalle de factura
+          </Typography>
+        </Box>
+        
+        <Alert 
+          severity="error" 
+          variant="filled"
+          sx={{ mb: 3 }}
+          icon={<ErrorOutlineIcon fontSize="inherit" />}
+        >
+          <AlertTitle>Error</AlertTitle>
+          {errorMessage}
+        </Alert>
+        
+        {solutionSuggestion && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <AlertTitle>Sugerencia</AlertTitle>
+            {solutionSuggestion}
+          </Alert>
+        )}
+        
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            startIcon={<RefreshIcon />}
+            variant="contained"
+            color="primary"
+            onClick={recargarFactura}
+          >
+            Reintentar
+          </Button>
+          
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/facturas')}
+          >
+            Volver al listado
+          </Button>
+        </Box>
       </Container>
     );
   }
@@ -97,14 +172,14 @@ const DetalleFactura = () => {
       };
     }
 
-    const subtotal = factura.detalles.reduce((sum, detalle) => sum + detalle.total, 0);
+    const subtotal = factura.detalles.reduce((sum, detalle) => sum + parseFloat(detalle.total || 0), 0);
     const productosConIva = factura.detalles.filter(d => d.aplicarIva);
-    const iva = productosConIva.reduce((sum, detalle) => sum + (detalle.total * 0.16), 0);
+    const iva = productosConIva.reduce((sum, detalle) => sum + (parseFloat(detalle.total || 0) * 0.16), 0);
     
     // Calcular ganancia estimada
     const gananciaEstimada = factura.detalles.reduce((sum, detalle) => {
-      const porcentaje = detalle.porcentaje_ganancia || factura.porcentaje_ganancia || 30;
-      return sum + (detalle.total * (porcentaje / 100));
+      const porcentaje = parseFloat(detalle.porcentaje_ganancia || factura.porcentaje_ganancia || 30);
+      return sum + (parseFloat(detalle.total || 0) * (porcentaje / 100));
     }, 0);
 
     const valorVenta = subtotal + gananciaEstimada;
@@ -112,7 +187,7 @@ const DetalleFactura = () => {
     return {
       subtotal,
       iva,
-      total: factura.total_usd,
+      total: parseFloat(factura.total_usd || 0),
       gananciaEstimada,
       valorVenta
     };
@@ -131,7 +206,7 @@ const DetalleFactura = () => {
       if (!categorias[categoria]) {
         categorias[categoria] = 0;
       }
-      categorias[categoria] += detalle.total;
+      categorias[categoria] += parseFloat(detalle.total || 0);
     });
 
     // Convertir a formato para el gráfico
@@ -145,7 +220,20 @@ const DetalleFactura = () => {
   const datosGrafico = prepararDatosGrafico();
 
   const handleSincronizar = () => {
-    dispatch(sincronizarFactura(id));
+    setSincronizando(true);
+    dispatch(sincronizarFactura(id))
+      .unwrap()
+      .then(result => {
+        console.log('Factura sincronizada exitosamente:', result);
+        // Recargar los datos de la factura para mostrar el estado actualizado
+        dispatch(fetchFacturaDetalle(id));
+      })
+      .catch(error => {
+        console.error('Error al sincronizar factura:', error);
+      })
+      .finally(() => {
+        setSincronizando(false);
+      });
   };
 
   const handleExportar = () => {
@@ -167,8 +255,16 @@ const DetalleFactura = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4">
-              Factura #{factura.numero}
+              Factura #{factura.numero || 'Sin número'}
             </Typography>
+            <IconButton 
+              color="primary" 
+              sx={{ ml: 2 }} 
+              onClick={recargarFactura}
+              title="Recargar datos"
+            >
+              <RefreshIcon />
+            </IconButton>
           </Box>
           <Divider sx={{ mb: 2 }} />
         </Grid>
@@ -184,7 +280,7 @@ const DetalleFactura = () => {
                   Fecha de Compra
                 </Typography>
                 <Typography variant="body1">
-                  {moment(factura.fecha).format('DD/MM/YYYY HH:mm')}
+                  {factura.fecha ? moment(factura.fecha).format('DD/MM/YYYY HH:mm') : 'N/A'}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -200,7 +296,9 @@ const DetalleFactura = () => {
                   Tasa de Cambio
                 </Typography>
                 <Typography variant="body1">
-                  {factura.tasa_cambio ? `${factura.tasa_cambio.valor} (${factura.tasa_cambio.tipo})` : 'N/A'}
+                  {factura.tasa_cambio ? 
+                    `${parseFloat(factura.tasa_cambio.valor).toFixed(2)} (${factura.tasa_cambio.tipo})` : 
+                    'N/A'}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -208,7 +306,7 @@ const DetalleFactura = () => {
                   Total USD
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
-                  ${factura.total_usd.toFixed(2)}
+                  ${parseFloat(factura.total_usd || 0).toFixed(2)}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -216,7 +314,7 @@ const DetalleFactura = () => {
                   Total Bs
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
-                  Bs.{factura.total_bs.toFixed(2)}
+                  Bs.{parseFloat(factura.total_bs || 0).toFixed(2)}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -224,7 +322,7 @@ const DetalleFactura = () => {
                   % Ganancia General
                 </Typography>
                 <Typography variant="body1">
-                  {factura.porcentaje_ganancia}%
+                  {parseFloat(factura.porcentaje_ganancia || 30).toFixed(2)}%
                 </Typography>
               </Grid>
             </Grid>
@@ -250,8 +348,9 @@ const DetalleFactura = () => {
                     variant="contained"
                     startIcon={<SyncIcon />}
                     onClick={handleSincronizar}
+                    disabled={sincronizando}
                   >
-                    Sincronizar
+                    {sincronizando ? 'Sincronizando...' : 'Sincronizar'}
                   </Button>
                 )}
               </Box>
@@ -281,30 +380,32 @@ const DetalleFactura = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {factura.detalles && factura.detalles.map((detalle, index) => {
-                const porcentajeGanancia = detalle.porcentaje_ganancia || factura.porcentaje_ganancia || 30;
-                const precioVenta = detalle.precio_unitario * (1 + (porcentajeGanancia / 100));
-                
-                return (
-                  <TableRow key={index} hover>
-                    <TableCell>{detalle.producto?.nombre || 'Producto no disponible'}</TableCell>
-                    <TableCell align="right">{detalle.cantidad}</TableCell>
-                    <TableCell align="right">{detalle.unidades_paquete}</TableCell>
-                    <TableCell align="right">${detalle.precio_unitario.toFixed(2)}</TableCell>
-                    <TableCell align="right">${detalle.total.toFixed(2)}</TableCell>
-                    <TableCell align="right">${detalle.precio_compra_usd?.toFixed(2) || 'N/A'}</TableCell>
-                    <TableCell align="right">{porcentajeGanancia}%</TableCell>
-                    <TableCell align="right">${precioVenta.toFixed(2)}</TableCell>
-                    <TableCell align="center">
-                      {detalle.aplicarIva ? 
-                        <Chip label="Sí" color="primary" size="small" /> : 
-                        <Chip label="No" variant="outlined" size="small" />
-                      }
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {(!factura.detalles || factura.detalles.length === 0) && (
+              {factura.detalles && factura.detalles.length > 0 ? (
+                factura.detalles.map((detalle, index) => {
+                  const porcentajeGanancia = parseFloat(detalle.porcentaje_ganancia || factura.porcentaje_ganancia || 30);
+                  const precioUnitario = parseFloat(detalle.precio_unitario || 0);
+                  const precioVenta = precioUnitario * (1 + (porcentajeGanancia / 100));
+                  
+                  return (
+                    <TableRow key={index} hover>
+                      <TableCell>{detalle.producto?.nombre || 'Producto no disponible'}</TableCell>
+                      <TableCell align="right">{parseFloat(detalle.cantidad || 0).toFixed(2)}</TableCell>
+                      <TableCell align="right">{parseFloat(detalle.unidades_paquete || 1).toFixed(2)}</TableCell>
+                      <TableCell align="right">${precioUnitario.toFixed(2)}</TableCell>
+                      <TableCell align="right">${parseFloat(detalle.total || 0).toFixed(2)}</TableCell>
+                      <TableCell align="right">${parseFloat(detalle.precio_compra_usd || 0).toFixed(2)}</TableCell>
+                      <TableCell align="right">{porcentajeGanancia.toFixed(2)}%</TableCell>
+                      <TableCell align="right">${precioVenta.toFixed(2)}</TableCell>
+                      <TableCell align="center">
+                        {detalle.aplicarIva ? 
+                          <Chip label="Sí" color="primary" size="small" /> : 
+                          <Chip label="No" variant="outlined" size="small" />
+                        }
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
                 <TableRow>
                   <TableCell colSpan={9} align="center">
                     No hay productos en esta factura
@@ -390,4 +491,4 @@ const DetalleFactura = () => {
   );
 };
 
-export default DetalleFactura; 
+export default DetalleFactura;

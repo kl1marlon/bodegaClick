@@ -43,7 +43,7 @@ moment.locale('es');
 const ListadoFacturas = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const facturas = useSelector((state) => state.facturas.items);
+  const facturas = useSelector((state) => state.facturas.items) || [];
   const status = useSelector((state) => state.facturas.status);
   const error = useSelector((state) => state.facturas.error);
   
@@ -62,22 +62,36 @@ const ListadoFacturas = () => {
   // Estadísticas básicas
   const stats = {
     totalFacturas: facturas.length,
-    gastoTotalUSD: facturas.reduce((sum, factura) => sum + factura.total_usd, 0),
-    gastoTotalBS: facturas.reduce((sum, factura) => sum + factura.total_bs, 0)
+    gastoTotalUSD: facturas.reduce((sum, factura) => sum + (parseFloat(factura.total_usd) || 0), 0),
+    gastoTotalBS: facturas.reduce((sum, factura) => sum + (parseFloat(factura.total_bs) || 0), 0)
   };
 
   useEffect(() => {
     if (status === 'idle') {
       console.log('Iniciando carga de facturas...');
       dispatch(fetchFacturas())
+        .unwrap()
         .then(result => {
-          console.log('Resultado de carga de facturas:', result);
+          console.log('Facturas cargadas exitosamente:', result);
         })
         .catch(error => {
           console.error('Error capturado al cargar facturas:', error);
         });
     }
   }, [status, dispatch]);
+
+  // Función para recargar facturas
+  const recargarFacturas = () => {
+    console.log('Recargando facturas...');
+    dispatch(fetchFacturas())
+      .unwrap()
+      .then(result => {
+        console.log('Facturas recargadas exitosamente:', result);
+      })
+      .catch(error => {
+        console.error('Error al recargar facturas:', error);
+      });
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -100,9 +114,14 @@ const ListadoFacturas = () => {
   };
 
   const aplicarFiltros = () => {
-    // Lógica para aplicar filtros
-    // Por ahora solo volvemos a cargar todos
-    dispatch(fetchFacturas(filtros));
+    dispatch(fetchFacturas(filtros))
+      .unwrap()
+      .then(result => {
+        console.log('Filtros aplicados, facturas cargadas:', result);
+      })
+      .catch(error => {
+        console.error('Error al aplicar filtros:', error);
+      });
   };
 
   const resetearFiltros = () => {
@@ -136,6 +155,9 @@ const ListadoFacturas = () => {
       />
     );
   };
+
+  // Verificar si hay facturas disponibles
+  const hayFacturas = Array.isArray(facturas) && facturas.length > 0;
 
   if (status === 'loading') {
     return (
@@ -366,6 +388,17 @@ const ListadoFacturas = () => {
         </Collapse>
       </Paper>
       
+      {/* Botón para recargar facturas */}
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={recargarFacturas}
+        >
+          Recargar facturas
+        </Button>
+      </Box>
+      
       {/* Tabla principal de facturas */}
       <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
         <TableContainer>
@@ -383,51 +416,56 @@ const ListadoFacturas = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(rowsPerPage > 0
-                ? facturas.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                : facturas
-              ).map((factura) => (
-                <TableRow key={factura.id} hover>
-                  <TableCell>{factura.numero || 'N/A'}</TableCell>
-                  <TableCell>{moment(factura.fecha).format('DD/MM/YYYY HH:mm')}</TableCell>
-                  <TableCell>${factura.total_usd.toFixed(2)}</TableCell>
-                  <TableCell>Bs.{factura.total_bs.toFixed(2)}</TableCell>
-                  <TableCell>{factura.tasa_cambio ? `${factura.tasa_cambio.valor} (${factura.tasa_cambio.tipo})` : 'N/A'}</TableCell>
-                  <TableCell>{factura.porcentaje_ganancia}%</TableCell>
-                  <TableCell>{getSincronizadoChip(factura.sincronizado_loyverse)}</TableCell>
-                  <TableCell>
-                    <Box sx={{ '& > button': { mr: 1 } }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<DescriptionIcon />}
-                        onClick={() => viewFacturaDetail(factura.id)}
-                      >
-                        Ver
-                      </Button>
-                      {!factura.sincronizado_loyverse && (
-                        <IconButton
-                          color="primary"
+              {hayFacturas ? (
+                (rowsPerPage > 0
+                  ? facturas.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  : facturas
+                ).map((factura) => (
+                  <TableRow key={factura.id} hover>
+                    <TableCell>{factura.numero || 'N/A'}</TableCell>
+                    <TableCell>{moment(factura.fecha).format('DD/MM/YYYY HH:mm')}</TableCell>
+                    <TableCell>${parseFloat(factura.total_usd).toFixed(2)}</TableCell>
+                    <TableCell>Bs.{parseFloat(factura.total_bs).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {factura.tasa_cambio ? 
+                        `${parseFloat(factura.tasa_cambio.valor).toFixed(2)} (${factura.tasa_cambio.tipo})` : 
+                        'N/A'}
+                    </TableCell>
+                    <TableCell>{parseFloat(factura.porcentaje_ganancia).toFixed(2)}%</TableCell>
+                    <TableCell>{getSincronizadoChip(factura.sincronizado_loyverse)}</TableCell>
+                    <TableCell>
+                      <Box sx={{ '& > button': { mr: 1 } }}>
+                        <Button
+                          variant="outlined"
                           size="small"
-                          onClick={() => handleSincronizar(factura.id)}
-                          title="Sincronizar con Loyverse"
+                          startIcon={<DescriptionIcon />}
+                          onClick={() => viewFacturaDetail(factura.id)}
                         >
-                          <SyncIcon />
+                          Ver
+                        </Button>
+                        {!factura.sincronizado_loyverse && (
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => handleSincronizar(factura.id)}
+                            title="Sincronizar con Loyverse"
+                          >
+                            <SyncIcon />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          color="secondary"
+                          size="small"
+                          onClick={() => handleExportar(factura.id)}
+                          title="Exportar factura"
+                        >
+                          <GetAppIcon />
                         </IconButton>
-                      )}
-                      <IconButton
-                        color="secondary"
-                        size="small"
-                        onClick={() => handleExportar(factura.id)}
-                        title="Exportar factura"
-                      >
-                        <GetAppIcon />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {facturas.length === 0 && (
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
                   <TableCell colSpan={8} align="center">
                     No hay facturas disponibles
@@ -437,20 +475,22 @@ const ListadoFacturas = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, { label: 'Todas', value: -1 }]}
-          component="div"
-          count={facturas.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Filas por página:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-        />
+        {hayFacturas && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, { label: 'Todas', value: -1 }]}
+            component="div"
+            count={facturas.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            labelRowsPerPage="Filas por página:"
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+          />
+        )}
       </Paper>
     </Container>
   );
 };
 
-export default ListadoFacturas; 
+export default ListadoFacturas;

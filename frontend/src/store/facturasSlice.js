@@ -63,48 +63,42 @@ export const fetchFacturas = createAsyncThunk(
       
       // Configurar timeout y otros parámetros de la petición
       const response = await axios.get(requestUrl, {
-        timeout: 10000, // 10 segundos de timeout
+        timeout: 15000, // Aumentar a 15 segundos de timeout
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
       });
       
-      console.log('Respuesta recibida:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error en fetchFacturas:', error);
-      console.error('Mensaje de error:', error.message);
-      
-      // Diagnóstico detallado
-      if (error.response) {
-        console.error('Respuesta del servidor:', {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers
-        });
-      } else if (error.request) {
-        console.error('Detalles de la petición:', {
-          url: error.request.url,
-          method: error.request.method,
-          timeout: error.request.timeout
-        });
+      // Verificar si la respuesta contiene datos
+      if (!response.data || (Array.isArray(response.data) && response.data.length === 0)) {
+        console.log('La respuesta no contiene facturas o está vacía');
+        return [];
       }
       
-      // Crear un mensaje de error más detallado
+      console.log('Respuesta recibida:', response.data);
+      
+      // Asegurar que los valores numéricos sean números
+      const facturas = Array.isArray(response.data) ? response.data : [];
+      return facturas.map(factura => ({
+        ...factura,
+        total_usd: parseFloat(factura.total_usd) || 0,
+        total_bs: parseFloat(factura.total_bs) || 0,
+        porcentaje_ganancia: parseFloat(factura.porcentaje_ganancia) || 30
+      }));
+    } catch (error) {
+      console.error('Error en fetchFacturas:', error);
+      
       let errorMessage = 'No se pudieron cargar las facturas';
       
       if (error.response) {
-        // El servidor respondió con un código de error
         errorMessage += ` - Status: ${error.response.status}`;
         if (error.response.data && error.response.data.error) {
           errorMessage += ` - ${error.response.data.error}`;
         }
       } else if (error.request) {
-        // La petición fue hecha pero no se recibió respuesta
         errorMessage += ' - No se recibió respuesta del servidor';
       } else {
-        // Algo salió mal en la configuración de la petición
         errorMessage += ` - ${error.message}`;
       }
       
@@ -118,10 +112,63 @@ export const fetchFacturaDetalle = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const API_URL = await getApiUrl();
-      const response = await axios.get(`${API_URL}/facturas/${id}/`);
-      return response.data;
+      console.log(`Obteniendo detalle de factura ID: ${id} desde ${API_URL}`);
+      
+      const response = await axios.get(`${API_URL}/facturas/${id}/`, {
+        timeout: 15000,
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      // Verificar si la respuesta contiene datos
+      if (!response.data) {
+        return rejectWithValue('No se encontraron datos para esta factura');
+      }
+      
+      console.log('Detalle de factura recibido:', response.data);
+      
+      // Procesar los datos para asegurar que los valores numéricos sean números
+      const factura = response.data;
+      
+      // Convertir valores numéricos
+      const facturaProcessed = {
+        ...factura,
+        total_usd: parseFloat(factura.total_usd) || 0,
+        total_bs: parseFloat(factura.total_bs) || 0,
+        porcentaje_ganancia: parseFloat(factura.porcentaje_ganancia) || 30
+      };
+      
+      // Procesar detalles si existen
+      if (factura.detalles && Array.isArray(factura.detalles)) {
+        facturaProcessed.detalles = factura.detalles.map(detalle => ({
+          ...detalle,
+          cantidad: parseFloat(detalle.cantidad) || 0,
+          precio_unitario: parseFloat(detalle.precio_unitario) || 0,
+          total: parseFloat(detalle.total) || 0,
+          precio_compra_usd: parseFloat(detalle.precio_compra_usd) || 0,
+          unidades_paquete: parseFloat(detalle.unidades_paquete) || 1,
+          porcentaje_ganancia: parseFloat(detalle.porcentaje_ganancia) || facturaProcessed.porcentaje_ganancia
+        }));
+      } else {
+        facturaProcessed.detalles = [];
+      }
+      
+      return facturaProcessed;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'No se pudo cargar el detalle de la factura');
+      console.error('Error al obtener detalle de factura:', error);
+      
+      let errorMessage = `Error al obtener detalle de factura ID: ${id}`;
+      
+      if (error.response) {
+        errorMessage += ` - Status: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage += ' - No se recibió respuesta del servidor';
+      } else {
+        errorMessage += ` - ${error.message}`;
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -239,4 +286,4 @@ const facturasSlice = createSlice({
   },
 });
 
-export default facturasSlice.reducer; 
+export default facturasSlice.reducer;
