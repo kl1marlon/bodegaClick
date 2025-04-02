@@ -143,11 +143,13 @@ export const aplicarRedondeoEspecial = (precioBs) => {
     } else if (entero < 10) {
       // Números entre 5 y 9
       if (entero == 5) {
+        // Si es exactamente 5, se mantiene
         return 5;
-      } else if (entero == 6) {
-        return 5;
-      } else {
-        // 7, 8, 9 se redondean a 10
+      } else if (decimal > 0 && entero == 5) {
+        // Si es mayor que 5 (5.algo), se redondea a 10
+        return 10;
+      } else if (entero > 5) {
+        // 6, 7, 8, 9 se redondean a 10
         return 10;
       }
     } else if (entero < 15) {
