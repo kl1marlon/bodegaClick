@@ -40,16 +40,19 @@ function App() {
       <CssBaseline />
       <Layout>
         <Routes>
-          {/* Ruta principal redirige a facturas */}
-          <Route path="/" element={<Navigate to="/facturas" replace />} />
+          {/* Ruta principal redirige a la implementación optimizada de facturas */}
+          <Route path="/" element={<Navigate to="/lista-facturas" replace />} />
           
-          {/* Rutas de Facturas */}
-          <Route path="/facturas" element={<ListadoFacturas />} />
+          {/* Rutas de Facturas - Versión Optimizada (predeterminada) */}
+          <Route path="/facturas" element={<Navigate to="/lista-facturas" replace />} />
+          <Route path="/lista-facturas" element={<ListaDeFacturas />} />
+          
+          {/* Rutas de Facturas - Versión Antigua (mantener temporalmente) */}
+          <Route path="/facturas-legacy" element={<ListadoFacturas />} />
+          
+          {/* Rutas compartidas entre ambas implementaciones */}
           <Route path="/facturas/nueva" element={<NuevaFactura />} />
           <Route path="/facturas/:id" element={<DetalleFactura />} />
-          
-          {/* Ruta para la nueva implementación de facturas */}
-          <Route path="/lista-facturas" element={<ListaDeFacturas />} />
           
           {/* Ruta de Productos */}
           <Route path="/productos" element={<ListadoProductos />} />
@@ -67,4 +70,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

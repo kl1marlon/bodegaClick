@@ -23,7 +23,8 @@ import {
   InputAdornment,
   Alert,
   AlertTitle,
-  Pagination
+  Pagination,
+  MenuItem
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SyncIcon from '@mui/icons-material/Sync';
@@ -38,7 +39,7 @@ moment.locale('es');
 const ListaDeFacturas = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const facturas = useSelector((state) => state.facturas.items);
+  const facturas = useSelector((state) => state.facturas.items || []);
   const status = useSelector((state) => state.facturas.status);
   const error = useSelector((state) => state.facturas.error);
   const paginacion = useSelector((state) => state.facturas.paginacion);
@@ -52,10 +53,13 @@ const ListaDeFacturas = () => {
     const obtenerDatos = async () => {
       try {
         console.log('Iniciando carga de facturas optimizada...');
+        console.log('Parámetros de paginación:', { page: paginacion.page, pageSize: paginacion.pageSize });
+        
         const resultado = await dispatch(fetchFacturasOptimizado({
           page: paginacion.page,
           pageSize: paginacion.pageSize
         })).unwrap();
+        
         console.log('Facturas cargadas exitosamente (optimizado):', resultado);
         console.log('Datos en facturas:', resultado.results);
       } catch (error) {
@@ -200,8 +204,7 @@ const ListaDeFacturas = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              variant="outlined"
-              placeholder="Buscar por número de factura o ID..."
+              placeholder="Buscar por número o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -212,46 +215,53 @@ const ListaDeFacturas = () => {
                 ),
               }}
               size="small"
+              variant="outlined"
             />
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Box display="flex" justifyContent="flex-end">
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={recargarFacturas}
-              >
-                Recargar facturas
-              </Button>
-            </Box>
+          <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              startIcon={<RefreshIcon />}
+              variant="outlined"
+              onClick={recargarFacturas}
+              sx={{ mr: 1 }}
+            >
+              Actualizar
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate('/facturas/nueva')}
+            >
+              Nueva Factura
+            </Button>
           </Grid>
         </Grid>
       </Paper>
       
       {/* Tabla de facturas */}
-      <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
-        <TableContainer>
-          <Table aria-label="tabla de facturas">
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 350px)' }}>
+          <Table stickyHeader aria-label="tabla de facturas">
             <TableHead>
               <TableRow>
-                <TableCell><strong>ID</strong></TableCell>
-                <TableCell><strong>Número</strong></TableCell>
-                <TableCell><strong>Fecha</strong></TableCell>
-                <TableCell><strong>Total USD</strong></TableCell>
-                <TableCell><strong>Total Bs</strong></TableCell>
-                <TableCell><strong>Sincronizado</strong></TableCell>
-                <TableCell><strong>Acciones</strong></TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Número</TableCell>
+                <TableCell>Fecha</TableCell>
+                <TableCell align="right">Total USD</TableCell>
+                <TableCell align="right">Total Bs</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell align="center">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {facturasFiltradas && facturasFiltradas.length > 0 ? (
+              {facturasFiltradas.length > 0 ? (
                 facturasFiltradas.map((factura) => (
                   <TableRow key={factura.id} hover>
                     <TableCell>{factura.id}</TableCell>
-                    <TableCell>{factura.numero || 'N/A'}</TableCell>
-                    <TableCell>{factura.fecha ? moment(factura.fecha).format('DD/MM/YYYY HH:mm') : 'N/A'}</TableCell>
-                    <TableCell>${parseFloat(factura.total_usd || 0).toFixed(2)}</TableCell>
-                    <TableCell>Bs.{parseFloat(factura.total_bs || 0).toFixed(2)}</TableCell>
+                    <TableCell>{factura.numero}</TableCell>
+                    <TableCell>{moment(factura.fecha).format('DD/MM/YYYY')}</TableCell>
+                    <TableCell align="right">${parseFloat(factura.total_usd).toFixed(2)}</TableCell>
+                    <TableCell align="right">Bs.{parseFloat(factura.total_bs).toFixed(2)}</TableCell>
                     <TableCell>
                       <Chip 
                         label={factura.sincronizado_loyverse ? 'Sincronizado' : 'Pendiente'} 
@@ -259,32 +269,37 @@ const ListaDeFacturas = () => {
                         size="small" 
                       />
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<DescriptionIcon />}
+                    <TableCell align="center">
+                      <IconButton 
+                        size="small" 
+                        color="primary" 
                         onClick={() => verDetalleFactura(factura.id)}
-                        sx={{ mr: 1 }}
+                        title="Ver detalle"
                       >
-                        Ver
-                      </Button>
-                      {!factura.sincronizado_loyverse && (
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          title="Sincronizar con Loyverse"
-                        >
-                          <SyncIcon />
-                        </IconButton>
-                      )}
+                        <DescriptionIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        size="small" 
+                        color="secondary" 
+                        title="Sincronizar con Loyverse"
+                        disabled={factura.sincronizado_loyverse}
+                      >
+                        <SyncIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        size="small" 
+                        color="default" 
+                        title="Exportar"
+                      >
+                        <GetAppIcon fontSize="small" />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} align="center">
-                    {status === 'loading' ? 'Cargando facturas...' : 'No hay facturas disponibles'}
+                    {searchTerm ? 'No se encontraron facturas que coincidan con la búsqueda' : 'No hay facturas disponibles'}
                   </TableCell>
                 </TableRow>
               )}
@@ -293,64 +308,50 @@ const ListaDeFacturas = () => {
         </TableContainer>
         
         {/* Paginación */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ mr: 2 }}>
-              Filas por página:
-            </Typography>
-            <TextField
-              select
-              value={paginacion.pageSize}
-              onChange={handlePageSizeChange}
-              variant="outlined"
-              size="small"
-              sx={{ width: 80 }}
-              SelectProps={{
-                native: true,
-              }}
-            >
-              {[10, 20, 50, 100].map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </TextField>
-          </Box>
-          
-          <Pagination
-            count={paginacion.totalPages}
-            page={paginacion.page}
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          <Pagination 
+            count={paginacion.totalPages} 
+            page={paginacion.page} 
             onChange={handlePageChange}
             color="primary"
             showFirstButton
             showLastButton
           />
         </Box>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mr: 2, alignSelf: 'center' }}>
+            Filas por página:
+          </Typography>
+          <TextField
+            select
+            value={paginacion.pageSize}
+            onChange={handlePageSizeChange}
+            size="small"
+            sx={{ width: 80 }}
+          >
+            {[10, 20, 50, 100].map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
       </Paper>
       
       {/* Información de depuración */}
-      <Paper elevation={1} sx={{ p: 2, mb: 4, bgcolor: '#f5f5f5' }}>
-        <Typography variant="subtitle2" gutterBottom>Información de depuración</Typography>
-        <Typography variant="body2">Estado Redux: {status}</Typography>
-        <Typography variant="body2">Facturas en página actual: {facturas ? facturas.length : 0}</Typography>
-        <Typography variant="body2">Facturas filtradas: {facturasFiltradas ? facturasFiltradas.length : 0}</Typography>
-        <Typography variant="body2">Página actual: {paginacion.page} de {paginacion.totalPages}</Typography>
-        <Typography variant="body2">Total de facturas: {paginacion.totalItems}</Typography>
-        
-        {/* Mostrar la primera factura para depuración */}
-        {facturas && facturas.length > 0 && (
-          <Box mt={2}>
-            <Typography variant="subtitle2">Primera factura (para depuración):</Typography>
-            <pre style={{ overflow: 'auto', maxHeight: '200px', fontSize: '12px' }}>
-              {JSON.stringify(facturas[0], null, 2)}
-            </pre>
-          </Box>
-        )}
-        
-        {error && (
-          <Typography variant="body2" color="error">Error: {error}</Typography>
-        )}
-      </Paper>
+      {process.env.NODE_ENV === 'development' && (
+        <Paper sx={{ mt: 3, p: 2 }}>
+          <Typography variant="h6" gutterBottom>Información de depuración</Typography>
+          <Typography variant="body2">Estado: {status}</Typography>
+          <Typography variant="body2">Facturas cargadas: {facturas.length}</Typography>
+          <Typography variant="body2">Facturas filtradas: {facturasFiltradas.length}</Typography>
+          <Typography variant="body2">Página actual: {paginacion.page}</Typography>
+          <Typography variant="body2">Tamaño de página: {paginacion.pageSize}</Typography>
+          <Typography variant="body2">Total de páginas: {paginacion.totalPages}</Typography>
+          <Typography variant="body2">Total de facturas: {paginacion.totalItems}</Typography>
+        </Paper>
+      )}
     </Container>
   );
 };
