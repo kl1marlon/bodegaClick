@@ -316,6 +316,138 @@ class FacturaViewSet(viewsets.ModelViewSet):
             'error': "Error al procesar la factura: " + ", ".join(errores)
         }, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get'])
+    def listado_simple(self, request):
+        """
+        Endpoint optimizado que devuelve solo datos básicos de facturas
+        sin incluir detalles que podrían causar timeouts.
+        """
+        try:
+            # Obtener parámetros de paginación
+            page_size = int(request.query_params.get('page_size', 20))
+            page = int(request.query_params.get('page', 1))
+            
+            # Limitar el tamaño de página para evitar sobrecarga
+            if page_size > 100:
+                page_size = 100
+                
+            # Calcular índices para paginación manual
+            start_idx = (page - 1) * page_size
+            end_idx = start_idx + page_size
+            
+            # Obtener facturas con una consulta optimizada
+            facturas = Factura.objects.all().order_by('-fecha')[start_idx:end_idx]
+            
+            # Contar el total de facturas (usando una consulta separada para evitar cargar todos los objetos)
+            total_facturas = Factura.objects.count()
+            
+            # Crear una lista simplificada de facturas
+            data = []
+            for factura in facturas:
+                # Convertir a valores primitivos para evitar problemas de serialización
+                tasa_valor = None
+                tasa_tipo = None
+                if factura.tasa_cambio:
+                    tasa_valor = float(factura.tasa_cambio.valor)
+                    tasa_tipo = factura.tasa_cambio.tipo
+                
+                data.append({
+                    'id': factura.id,
+                    'numero': factura.numero,
+                    'fecha': factura.fecha.isoformat(),
+                    'moneda': factura.moneda,
+                    'total_usd': float(factura.total_usd),
+                    'total_bs': float(factura.total_bs),
+                    'sincronizado_loyverse': factura.sincronizado_loyverse,
+                    'porcentaje_ganancia': float(factura.porcentaje_ganancia),
+                    'tasa_cambio': {
+                        'valor': tasa_valor,
+                        'tipo': tasa_tipo
+                    } if factura.tasa_cambio else None
+                })
+            
+            # Devolver datos con información de paginación
+            return Response({
+                'results': data,
+                'count': total_facturas,
+                'next': f"/api/facturas/listado_simple/?page={page+1}&page_size={page_size}" if end_idx < total_facturas else None,
+                'previous': f"/api/facturas/listado_simple/?page={page-1}&page_size={page_size}" if page > 1 else None,
+                'page': page,
+                'page_size': page_size,
+                'total_pages': (total_facturas + page_size - 1) // page_size
+            })
+        except Exception as e:
+            import traceback
+            print(f"Error en listado_simple: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': f"Error al obtener listado de facturas: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['get'])
+    def detalle_simple(self, request, pk=None):
+        """
+        Endpoint optimizado para obtener el detalle de una factura específica
+        sin incluir información innecesaria.
+        """
+        try:
+            factura = self.get_object()
+            
+            # Obtener detalles de la factura de manera optimizada
+            detalles = []
+            for detalle in factura.detalles.all().select_related('producto'):
+                producto_nombre = "Producto no disponible"
+                if detalle.producto:
+                    producto_nombre = detalle.producto.nombre
+                
+                detalles.append({
+                    'id': detalle.id,
+                    'producto_id': detalle.producto_id,
+                    'producto_nombre': producto_nombre,
+                    'cantidad': float(detalle.cantidad),
+                    'precio_unitario': float(detalle.precio_unitario),
+                    'total': float(detalle.total),
+                    'porcentaje_ganancia': float(detalle.porcentaje_ganancia) if detalle.porcentaje_ganancia else float(factura.porcentaje_ganancia),
+                    'precio_compra_usd': float(detalle.precio_compra_usd) if detalle.precio_compra_usd else None,
+                    'unidades_paquete': float(detalle.unidades_paquete),
+                    'aplicarIva': detalle.aplicarIva,
+                    'precio_base_usd': float(detalle.precio_base_usd) if detalle.precio_base_usd else None,
+                    'tipo_tasa': detalle.tipo_tasa
+                })
+            
+            # Convertir a valores primitivos para evitar problemas de serialización
+            tasa_valor = None
+            tasa_tipo = None
+            if factura.tasa_cambio:
+                tasa_valor = float(factura.tasa_cambio.valor)
+                tasa_tipo = factura.tasa_cambio.tipo
+            
+            # Crear respuesta con datos simplificados
+            data = {
+                'id': factura.id,
+                'numero': factura.numero,
+                'fecha': factura.fecha.isoformat(),
+                'moneda': factura.moneda,
+                'total_usd': float(factura.total_usd),
+                'total_bs': float(factura.total_bs),
+                'sincronizado_loyverse': factura.sincronizado_loyverse,
+                'porcentaje_ganancia': float(factura.porcentaje_ganancia),
+                'tasa_cambio': {
+                    'valor': tasa_valor,
+                    'tipo': tasa_tipo
+                } if factura.tasa_cambio else None,
+                'detalles': detalles
+            }
+            
+            return Response(data)
+        except Exception as e:
+            import traceback
+            print(f"Error en detalle_simple: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': f"Error al obtener detalle de factura: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 class WebhookViewSet(viewsets.ModelViewSet):
     queryset = Webhook.objects.all()
     serializer_class = WebhookSerializer

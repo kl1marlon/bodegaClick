@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchFacturas } from '../store/facturasSlice';
+import { fetchFacturasOptimizado, fetchFacturaDetalleOptimizado, setPage, setPageSize } from '../store/facturasSlice';
 import {
   Container,
   Typography,
@@ -22,7 +22,8 @@ import {
   TextField,
   InputAdornment,
   Alert,
-  AlertTitle
+  AlertTitle,
+  Pagination
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SyncIcon from '@mui/icons-material/Sync';
@@ -40,10 +41,7 @@ const ListaDeFacturas = () => {
   const facturas = useSelector((state) => state.facturas.items);
   const status = useSelector((state) => state.facturas.status);
   const error = useSelector((state) => state.facturas.error);
-  
-  // Estados para paginación
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const paginacion = useSelector((state) => state.facturas.paginacion);
   
   // Estado para búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,16 +51,19 @@ const ListaDeFacturas = () => {
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        console.log('Iniciando carga de facturas...');
-        await dispatch(fetchFacturas()).unwrap();
-        console.log('Facturas cargadas exitosamente');
+        console.log('Iniciando carga de facturas optimizada...');
+        await dispatch(fetchFacturasOptimizado({
+          page: paginacion.page,
+          pageSize: paginacion.pageSize
+        })).unwrap();
+        console.log('Facturas cargadas exitosamente (optimizado)');
       } catch (error) {
-        console.error("Error al cargar facturas:", error);
+        console.error("Error al cargar facturas (optimizado):", error);
       }
     };
     
     obtenerDatos();
-  }, [dispatch]);
+  }, [dispatch, paginacion.page, paginacion.pageSize]);
   
   // Filtrar facturas cuando cambia el término de búsqueda o la lista de facturas
   useEffect(() => {
@@ -78,31 +79,34 @@ const ListaDeFacturas = () => {
       }
       
       setFacturasFiltradas(filtered);
-      setPage(0); // Resetear a la primera página cuando cambia el filtro
     } else {
       setFacturasFiltradas([]);
     }
   }, [searchTerm, facturas]);
   
-  // Manejadores para la paginación
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  // Función para cambiar de página
+  const handlePageChange = (event, newPage) => {
+    dispatch(setPage(newPage));
   };
   
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  // Función para cambiar el tamaño de página
+  const handlePageSizeChange = (event) => {
+    dispatch(setPageSize(parseInt(event.target.value, 10)));
+    dispatch(setPage(1)); // Resetear a la primera página
   };
   
   // Función para recargar facturas
   const recargarFacturas = () => {
-    dispatch(fetchFacturas())
+    dispatch(fetchFacturasOptimizado({
+      page: paginacion.page,
+      pageSize: paginacion.pageSize
+    }))
       .unwrap()
       .then(() => {
-        console.log('Facturas recargadas exitosamente');
+        console.log('Facturas recargadas exitosamente (optimizado)');
       })
       .catch(error => {
-        console.error('Error al recargar facturas:', error);
+        console.error('Error al recargar facturas (optimizado):', error);
       });
   };
   
@@ -149,24 +153,19 @@ const ListaDeFacturas = () => {
   
   // Calcular estadísticas básicas
   const stats = {
-    totalFacturas: facturas ? facturas.length : 0,
+    totalFacturas: paginacion.totalItems || 0,
     gastoTotalUSD: facturas ? facturas.reduce((sum, factura) => sum + parseFloat(factura.total_usd || 0), 0) : 0,
     gastoTotalBS: facturas ? facturas.reduce((sum, factura) => sum + parseFloat(factura.total_bs || 0), 0) : 0
   };
-  
-  // Obtener facturas paginadas
-  const facturasPaginadas = rowsPerPage > 0
-    ? facturasFiltradas.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    : facturasFiltradas;
   
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Encabezado */}
       <Typography variant="h4" gutterBottom>
-        Lista Simplificada de Facturas
+        Lista Optimizada de Facturas
       </Typography>
       <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-        Implementación alternativa para visualización de facturas
+        Implementación optimizada para visualización de facturas
       </Typography>
       
       {/* Estadísticas básicas */}
@@ -178,11 +177,11 @@ const ListaDeFacturas = () => {
             <Typography variant="h6">{stats.totalFacturas}</Typography>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Typography variant="body2" color="textSecondary">Total USD</Typography>
+            <Typography variant="body2" color="textSecondary">Total USD (página actual)</Typography>
             <Typography variant="h6">${stats.gastoTotalUSD.toFixed(2)}</Typography>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Typography variant="body2" color="textSecondary">Total Bs</Typography>
+            <Typography variant="body2" color="textSecondary">Total Bs (página actual)</Typography>
             <Typography variant="h6">Bs.{stats.gastoTotalBS.toFixed(2)}</Typography>
           </Grid>
         </Grid>
@@ -238,8 +237,8 @@ const ListaDeFacturas = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {facturasPaginadas.length > 0 ? (
-                facturasPaginadas.map((factura) => (
+              {facturasFiltradas.length > 0 ? (
+                facturasFiltradas.map((factura) => (
                   <TableRow key={factura.id} hover>
                     <TableCell>{factura.id}</TableCell>
                     <TableCell>{factura.numero || 'N/A'}</TableCell>
@@ -285,27 +284,51 @@ const ListaDeFacturas = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {facturasFiltradas.length > 0 && (
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, { label: 'Todas', value: -1 }]}
-            component="div"
-            count={facturasFiltradas.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Filas por página:"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+        
+        {/* Paginación */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ mr: 2 }}>
+              Filas por página:
+            </Typography>
+            <TextField
+              select
+              value={paginacion.pageSize}
+              onChange={handlePageSizeChange}
+              variant="outlined"
+              size="small"
+              sx={{ width: 80 }}
+              SelectProps={{
+                native: true,
+              }}
+            >
+              {[10, 20, 50, 100].map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </TextField>
+          </Box>
+          
+          <Pagination
+            count={paginacion.totalPages}
+            page={paginacion.page}
+            onChange={handlePageChange}
+            color="primary"
+            showFirstButton
+            showLastButton
           />
-        )}
+        </Box>
       </Paper>
       
       {/* Información de depuración */}
       <Paper elevation={1} sx={{ p: 2, mb: 4, bgcolor: '#f5f5f5' }}>
         <Typography variant="subtitle2" gutterBottom>Información de depuración</Typography>
         <Typography variant="body2">Estado Redux: {status}</Typography>
-        <Typography variant="body2">Facturas en Redux: {facturas ? facturas.length : 0}</Typography>
+        <Typography variant="body2">Facturas en página actual: {facturas ? facturas.length : 0}</Typography>
         <Typography variant="body2">Facturas filtradas: {facturasFiltradas.length}</Typography>
+        <Typography variant="body2">Página actual: {paginacion.page} de {paginacion.totalPages}</Typography>
+        <Typography variant="body2">Total de facturas: {paginacion.totalItems}</Typography>
         {error && (
           <Typography variant="body2" color="error">Error: {error}</Typography>
         )}

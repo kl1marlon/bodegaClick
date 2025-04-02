@@ -202,6 +202,92 @@ export const createFactura = createAsyncThunk(
   }
 );
 
+// Nuevos Thunks asíncronos optimizados
+export const fetchFacturasOptimizado = createAsyncThunk(
+  'facturas/fetchFacturasOptimizado',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      // Obtener la URL de la API
+      const API_URL = await getApiUrl();
+      console.log('URL de API usada (optimizado):', API_URL);
+      
+      // Construir parámetros de consulta
+      const queryParams = new URLSearchParams();
+      
+      // Parámetros de paginación
+      if (params.page) queryParams.append('page', params.page);
+      if (params.pageSize) queryParams.append('page_size', params.pageSize);
+      
+      // Añadir timestamp para evitar caché
+      queryParams.append('_', Date.now());
+      
+      // Usar el nuevo endpoint optimizado
+      const requestUrl = `${API_URL}/facturas/listado_simple/?${queryParams.toString()}`;
+      console.log('Haciendo fetch a URL optimizada:', requestUrl);
+      
+      // Hacer la solicitud con un timeout más largo
+      const response = await axios.get(requestUrl, {
+        timeout: 30000 // 30 segundos
+      });
+      
+      console.log('Respuesta optimizada recibida:', response.data);
+      
+      // Devolver los datos con la estructura esperada
+      return response.data;
+    } catch (error) {
+      console.error('Error en fetchFacturasOptimizado:', error);
+      
+      let errorMessage = 'No se pudieron cargar las facturas';
+      
+      if (error.response) {
+        errorMessage += ` - Status: ${error.response.status}`;
+        if (error.response.data && error.response.data.error) {
+          errorMessage += ` - ${error.response.data.error}`;
+        }
+      } else if (error.request) {
+        errorMessage += ' - No se recibió respuesta del servidor';
+      } else {
+        errorMessage += ` - ${error.message}`;
+      }
+      
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const fetchFacturaDetalleOptimizado = createAsyncThunk(
+  'facturas/fetchFacturaDetalleOptimizado',
+  async (id, { rejectWithValue }) => {
+    try {
+      const API_URL = await getApiUrl();
+      console.log(`Obteniendo detalle optimizado de factura ID: ${id} desde ${API_URL}`);
+      
+      // Usar el nuevo endpoint optimizado
+      const response = await axios.get(`${API_URL}/facturas/${id}/detalle_simple/`, {
+        timeout: 30000 // 30 segundos
+      });
+      
+      console.log('Detalle de factura optimizado recibido:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener detalle optimizado de factura:', error);
+      
+      let errorMessage = `Error al obtener detalle de factura ID: ${id}`;
+      
+      if (error.response) {
+        errorMessage += ` - Status: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage += ' - No se recibió respuesta del servidor';
+      } else {
+        errorMessage += ` - ${error.message}`;
+      }
+      
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Slice de Redux
 const facturasSlice = createSlice({
   name: 'facturas',
@@ -214,13 +300,25 @@ const facturasSlice = createSlice({
     sincronizacionError: null,
     creacionStatus: 'idle',
     creacionError: null,
+    paginacion: {
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+      totalItems: 0
+    }
   },
   reducers: {
     // Reducers adicionales si son necesarios
+    setPage: (state, action) => {
+      state.paginacion.page = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.paginacion.pageSize = action.payload;
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Manejar fetchFacturas
+      // Manejar fetchFacturas original
       .addCase(fetchFacturas.pending, (state) => {
         state.status = 'loading';
       })
@@ -234,7 +332,27 @@ const facturasSlice = createSlice({
         state.error = action.payload || 'Error desconocido';
       })
       
-      // Manejar fetchFacturaDetalle
+      // Manejar fetchFacturasOptimizado
+      .addCase(fetchFacturasOptimizado.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchFacturasOptimizado.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items = action.payload.results;
+        state.paginacion = {
+          page: action.payload.page,
+          pageSize: action.payload.page_size,
+          totalPages: action.payload.total_pages,
+          totalItems: action.payload.count
+        };
+        state.error = null;
+      })
+      .addCase(fetchFacturasOptimizado.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Error desconocido';
+      })
+      
+      // Manejar fetchFacturaDetalle original
       .addCase(fetchFacturaDetalle.pending, (state) => {
         state.status = 'loading';
       })
@@ -244,6 +362,20 @@ const facturasSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFacturaDetalle.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Error desconocido';
+      })
+      
+      // Manejar fetchFacturaDetalleOptimizado
+      .addCase(fetchFacturaDetalleOptimizado.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchFacturaDetalleOptimizado.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.detalleActual = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchFacturaDetalleOptimizado.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload || 'Error desconocido';
       })
