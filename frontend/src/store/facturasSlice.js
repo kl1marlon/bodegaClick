@@ -422,3 +422,4 @@ const facturasSlice = createSlice({
 });
 
 export default facturasSlice.reducer;
+export const { setPage, setPageSize } = facturasSlice.actions;
