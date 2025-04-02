@@ -388,7 +388,7 @@ const DetalleFactura = () => {
                   
                   return (
                     <TableRow key={index} hover>
-                      <TableCell>{detalle.producto?.nombre || 'Producto no disponible'}</TableCell>
+                      <TableCell>{detalle.producto_nombre || 'Producto no disponible'}</TableCell>
                       <TableCell align="right">{parseFloat(detalle.cantidad || 0).toFixed(2)}</TableCell>
                       <TableCell align="right">{parseFloat(detalle.unidades_paquete || 1).toFixed(2)}</TableCell>
                       <TableCell align="right">${precioUnitario.toFixed(2)}</TableCell>
