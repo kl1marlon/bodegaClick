@@ -188,6 +188,138 @@ class ProductoViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get'])
+    def categorias(self, request):
+        """
+        Endpoint para obtener todas las categorías únicas existentes en los productos.
+        
+        Returns:
+            Response: Lista de categorías únicas
+        """
+        # Obtener todas las categorías únicas descartando nulos y vacíos
+        categorias = Producto.objects.values_list('categoria', flat=True).distinct()
+        categorias_filtradas = [cat for cat in categorias if cat]
+        
+        return Response(categorias_filtradas)
+    
+    @action(detail=False, methods=['post'])
+    def crear(self, request):
+        """
+        Endpoint para crear un nuevo producto tanto en la base de datos local como en Loyverse.
+        
+        Args:
+            request.data (dict): Datos del producto a crear
+                - nombre (str): Nombre del producto
+                - descripcion (str, opcional): Descripción del producto
+                - categoria (str, opcional): Categoría del producto
+                - precio_base_usd (float): Precio base en USD
+                - precio_compra_usd (float): Precio de compra en USD
+                - porcentaje_ganancia (float): Porcentaje de ganancia
+                - aplicar_iva (bool): Si se aplica IVA al producto
+                - tipo_tasa (str): Tipo de tasa de cambio (BCV o PARALELO)
+                - track_stock (bool): Si se debe hacer seguimiento de inventario
+                - es_precio_variable (bool): Si el precio es variable
+                - unidades_paquete (int): Unidades por paquete
+                
+        Returns:
+            Response: Datos del producto creado
+        """
+        try:
+            logger = logging.getLogger(__name__)
+            logger.info(f"📦 Iniciando creación de producto con datos: {request.data}")
+            
+            # Validaciones básicas
+            if not request.data.get('nombre'):
+                return Response({'error': 'El nombre del producto es obligatorio'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Crear producto primero en Loyverse
+            service = LoyverseService()
+            
+            # Preparar datos para Loyverse
+            loyverse_data = {
+                'item_name': request.data.get('nombre'),
+                'description': request.data.get('descripcion', ''),
+                'category_id': None,  # Por ahora no tenemos mapeo de categorías
+                'track_stock': request.data.get('track_stock', True),
+                'sold_by_weight': False,
+                'is_composite': False,
+                'tax_ids': [],
+                'form': 'SQUARE',
+                'color': 'GREY',
+                'option1_name': None,
+                'option2_name': None,
+                'option3_name': None,
+                'variants': [
+                    {
+                        'sku': str(uuid.uuid4())[:8],  # Generar SKU único
+                        'cost': float(request.data.get('precio_compra_usd', 0)),
+                        'default_pricing_type': 'FIXED' if not request.data.get('es_precio_variable', False) else 'VARIABLE',
+                        'default_price': float(request.data.get('precio_base_usd', 0)),
+                        'option1_value': None,
+                        'option2_value': None,
+                        'option3_value': None
+                    }
+                ]
+            }
+            
+            # Crear en Loyverse
+            loyverse_response = service.create_item(loyverse_data)
+            
+            if not loyverse_response or 'id' not in loyverse_response:
+                return Response({
+                    'error': 'Error al crear el producto en Loyverse',
+                    'detalle': loyverse_response
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            logger.info(f"✅ Producto creado en Loyverse con ID: {loyverse_response['id']}")
+            
+            # Obtener el ID del ítem y variante creados
+            loyverse_id = loyverse_response['id']
+            variant_id = loyverse_response['variants'][0]['variant_id'] if 'variants' in loyverse_response and loyverse_response['variants'] else None
+            
+            # Crear producto en la base de datos local
+            nuevo_producto = Producto(
+                loyverse_id=loyverse_id,
+                variant_id=variant_id,
+                nombre=request.data.get('nombre'),
+                descripcion=request.data.get('descripcion', ''),
+                categoria=request.data.get('categoria', ''),
+                precio_base_usd=float(request.data.get('precio_base_usd', 0)),
+                precio_compra_usd=float(request.data.get('precio_compra_usd', 0)),
+                porcentaje_ganancia=float(request.data.get('porcentaje_ganancia', 30)),
+                unidades_paquete=int(request.data.get('unidades_paquete', 1)),
+                aplicar_iva=bool(request.data.get('aplicar_iva', False)),
+                tipo_tasa=request.data.get('tipo_tasa', 'PARALELO'),
+                es_precio_variable=bool(request.data.get('es_precio_variable', False)),
+                fuente_actualizacion='manual',
+                precio_base=0  # Se calculará basado en la tasa
+            )
+            
+            # Calcular el precio base en bolívares
+            try:
+                tipo_tasa = request.data.get('tipo_tasa', 'PARALELO')
+                tasa = TasaCambio.objects.filter(tipo=tipo_tasa).latest('fecha')
+                precio_base_usd = float(request.data.get('precio_base_usd', 0))
+                nuevo_producto.precio_base = precio_base_usd * tasa.valor
+            except TasaCambio.DoesNotExist:
+                logger.warning(f"⚠️ No se encontró tasa de tipo {tipo_tasa}. Usando precio base 0.")
+                nuevo_producto.precio_base = 0
+            except Exception as e:
+                logger.error(f"❌ Error al calcular precio base en Bs: {str(e)}")
+                nuevo_producto.precio_base = 0
+            
+            nuevo_producto.save()
+            
+            logger.info(f"✅ Producto guardado en base de datos local con ID: {nuevo_producto.id}")
+            
+            # Devolver el producto serializado
+            serializer = self.get_serializer(nuevo_producto)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.exception(f"❌ Error al crear producto: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class TasaCambioViewSet(viewsets.ModelViewSet):
     queryset = TasaCambio.objects.all().order_by('-fecha')
     serializer_class = TasaCambioSerializer

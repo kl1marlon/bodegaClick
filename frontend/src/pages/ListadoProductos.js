@@ -61,11 +61,14 @@ import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
 import DialogoEditarProducto from '../components/factura/DialogoEditarProducto';
+import AddIcon from '@mui/icons-material/Add';
+import { useNavigate } from 'react-router-dom';
 
 const ListadoProductos = () => {
   const dispatch = useDispatch();
   const { items: productos, status } = useSelector((state) => state.productos);
   const { items: tasasCambio } = useSelector((state) => state.tasasCambio);
+  const navigate = useNavigate();
   
   // Estados para paginación
   const [page, setPage] = useState(0);
@@ -1093,6 +1096,22 @@ const ListadoProductos = () => {
         </Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/crear-producto')}
+            sx={{
+              borderRadius: '4px',
+              px: 2,
+              py: 1,
+              textTransform: 'none',
+              fontWeight: 600,
+              mr: 2
+            }}
+          >
+            Agregar Producto
+          </Button>
           <ButtonGroup variant="contained">
             <Button
               color="primary"

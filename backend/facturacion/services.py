@@ -18,6 +18,60 @@ class LoyverseService:
             'Content-Type': 'application/json'
         }
     
+    def create_item(self, item_data):
+        """
+        Crea un nuevo producto en Loyverse
+        
+        Args:
+            item_data (dict): Datos del producto a crear según formato de Loyverse API
+            
+        Returns:
+            dict: Respuesta de la API si es exitosa, None si hay error
+        """
+        import json
+        
+        try:
+            print(f"Creando nuevo producto en Loyverse: {item_data['item_name']}")
+            
+            url = f"{self.BASE_URL}/items"
+            
+            # Asegurar que los campos requeridos estén presentes
+            required_fields = ['item_name', 'variants']
+            for field in required_fields:
+                if field not in item_data:
+                    print(f"Error: Campo requerido '{field}' faltante en los datos del producto")
+                    return None
+            
+            # Si no tiene category_id, establecer como None (sin categoría)
+            if 'category_id' not in item_data:
+                item_data['category_id'] = None
+                
+            # Asegurar que el precio en variants sea un número
+            if 'variants' in item_data and len(item_data['variants']) > 0:
+                for variant in item_data['variants']:
+                    if 'default_price' in variant and variant['default_price'] is not None:
+                        variant['default_price'] = float(variant['default_price'])
+                    if 'cost' in variant and variant['cost'] is not None:
+                        variant['cost'] = float(variant['cost'])
+            
+            # Realizar la petición POST
+            response = requests.post(url, headers=self.headers, json=item_data)
+            
+            print(f"Status code: {response.status_code}")
+            print(f"Respuesta: {response.text[:200]}...")  # Mostrar primeros 200 caracteres para logs
+            
+            if response.status_code == 200 or response.status_code == 201:
+                print("Producto creado exitosamente en Loyverse")
+                return response.json()
+            else:
+                print(f"Error al crear producto en Loyverse: {response.status_code}")
+                print(f"Detalles: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"Excepción al crear producto en Loyverse: {str(e)}")
+            return None
+    
     def fetch_products(self, actualizar_precios=True):
         """
         Obtiene productos de Loyverse y los guarda en la base de datos local.
