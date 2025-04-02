@@ -52,11 +52,12 @@ const ListaDeFacturas = () => {
     const obtenerDatos = async () => {
       try {
         console.log('Iniciando carga de facturas optimizada...');
-        await dispatch(fetchFacturasOptimizado({
+        const resultado = await dispatch(fetchFacturasOptimizado({
           page: paginacion.page,
           pageSize: paginacion.pageSize
         })).unwrap();
-        console.log('Facturas cargadas exitosamente (optimizado)');
+        console.log('Facturas cargadas exitosamente (optimizado):', resultado);
+        console.log('Datos en facturas:', resultado.results);
       } catch (error) {
         console.error("Error al cargar facturas (optimizado):", error);
       }
@@ -67,6 +68,7 @@ const ListaDeFacturas = () => {
   
   // Filtrar facturas cuando cambia el término de búsqueda o la lista de facturas
   useEffect(() => {
+    console.log('Actualizando facturas filtradas. Facturas disponibles:', facturas);
     if (facturas && facturas.length > 0) {
       let filtered = [...facturas];
       
@@ -79,8 +81,10 @@ const ListaDeFacturas = () => {
       }
       
       setFacturasFiltradas(filtered);
+      console.log('Facturas filtradas actualizadas:', filtered);
     } else {
       setFacturasFiltradas([]);
+      console.log('No hay facturas disponibles para filtrar');
     }
   }, [searchTerm, facturas]);
   
@@ -121,6 +125,9 @@ const ListaDeFacturas = () => {
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
           <CircularProgress />
+          <Typography variant="body1" sx={{ ml: 2 }}>
+            Cargando facturas...
+          </Typography>
         </Box>
       </Container>
     );
@@ -237,12 +244,12 @@ const ListaDeFacturas = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {facturasFiltradas.length > 0 ? (
+              {facturasFiltradas && facturasFiltradas.length > 0 ? (
                 facturasFiltradas.map((factura) => (
                   <TableRow key={factura.id} hover>
                     <TableCell>{factura.id}</TableCell>
                     <TableCell>{factura.numero || 'N/A'}</TableCell>
-                    <TableCell>{moment(factura.fecha).format('DD/MM/YYYY HH:mm')}</TableCell>
+                    <TableCell>{factura.fecha ? moment(factura.fecha).format('DD/MM/YYYY HH:mm') : 'N/A'}</TableCell>
                     <TableCell>${parseFloat(factura.total_usd || 0).toFixed(2)}</TableCell>
                     <TableCell>Bs.{parseFloat(factura.total_bs || 0).toFixed(2)}</TableCell>
                     <TableCell>
@@ -326,9 +333,20 @@ const ListaDeFacturas = () => {
         <Typography variant="subtitle2" gutterBottom>Información de depuración</Typography>
         <Typography variant="body2">Estado Redux: {status}</Typography>
         <Typography variant="body2">Facturas en página actual: {facturas ? facturas.length : 0}</Typography>
-        <Typography variant="body2">Facturas filtradas: {facturasFiltradas.length}</Typography>
+        <Typography variant="body2">Facturas filtradas: {facturasFiltradas ? facturasFiltradas.length : 0}</Typography>
         <Typography variant="body2">Página actual: {paginacion.page} de {paginacion.totalPages}</Typography>
         <Typography variant="body2">Total de facturas: {paginacion.totalItems}</Typography>
+        
+        {/* Mostrar la primera factura para depuración */}
+        {facturas && facturas.length > 0 && (
+          <Box mt={2}>
+            <Typography variant="subtitle2">Primera factura (para depuración):</Typography>
+            <pre style={{ overflow: 'auto', maxHeight: '200px', fontSize: '12px' }}>
+              {JSON.stringify(facturas[0], null, 2)}
+            </pre>
+          </Box>
+        )}
+        
         {error && (
           <Typography variant="body2" color="error">Error: {error}</Typography>
         )}

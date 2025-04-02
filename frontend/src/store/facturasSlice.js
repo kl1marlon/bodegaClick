@@ -232,8 +232,36 @@ export const fetchFacturasOptimizado = createAsyncThunk(
       
       console.log('Respuesta optimizada recibida:', response.data);
       
-      // Devolver los datos con la estructura esperada
-      return response.data;
+      // Verificar la estructura de la respuesta y adaptarla si es necesario
+      let processedResponse;
+      
+      if (Array.isArray(response.data)) {
+        // Si la respuesta es un array, adaptarla al formato esperado
+        console.log('La respuesta es un array, adaptando formato...');
+        processedResponse = {
+          results: response.data,
+          count: response.data.length,
+          page: params.page || 1,
+          page_size: params.pageSize || 20,
+          total_pages: Math.ceil(response.data.length / (params.pageSize || 20))
+        };
+      } else if (response.data && response.data.results) {
+        // Si la respuesta ya tiene el formato esperado
+        processedResponse = response.data;
+      } else {
+        // Si la respuesta tiene otro formato inesperado
+        console.error('Estructura de respuesta inesperada:', response.data);
+        processedResponse = {
+          results: response.data ? (typeof response.data === 'object' ? [response.data] : []) : [],
+          count: response.data ? 1 : 0,
+          page: params.page || 1,
+          page_size: params.pageSize || 20,
+          total_pages: response.data ? 1 : 0
+        };
+      }
+      
+      console.log('Respuesta procesada:', processedResponse);
+      return processedResponse;
     } catch (error) {
       console.error('Error en fetchFacturasOptimizado:', error);
       
