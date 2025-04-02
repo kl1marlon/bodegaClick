@@ -2,52 +2,23 @@ import axios from 'axios';
 import moment from 'moment';
 
 // Función para interceptar las llamadas a la API de búsqueda de productos en facturas
-// Esta función emula la respuesta del servidor mientras se implementa el endpoint real en el backend
+// Esta función ya no emula la respuesta, ahora permite que pase al backend real
 export const setupProductoFacturasInterceptor = () => {
-  // Agregar un interceptor para facturas/buscar-por-producto
-  axios.interceptors.request.use(async (config) => {
-    // Verificar si es una solicitud al endpoint de búsqueda de productos en facturas
-    if (config.url && config.url.includes('/facturas/buscar-por-producto/')) {
-      console.log('Interceptando solicitud de búsqueda de productos en facturas:', config.url);
-      
-      // Extraer el ID del producto de la URL
-      const urlParts = config.url.split('/');
-      const productoId = urlParts[urlParts.length - 2]; // El formato es /facturas/buscar-por-producto/{id}/
-      
-      // Prevenir que se envíe la solicitud real
-      throw {
-        response: {
-          status: 200,
-          data: await mockBuscarProductoEnFacturas(productoId)
-        }
-      };
-    }
-    
-    return config;
-  }, (error) => {
-    return Promise.reject(error);
-  });
-
-  // Agregar un interceptor de respuesta para registrar respuestas (opcional)
+  // Agregar un interceptor de respuesta para registrar respuestas (solo para depuración)
   axios.interceptors.response.use((response) => {
     if (response.config.url && response.config.url.includes('/facturas/buscar-por-producto/')) {
       console.log('Respuesta de búsqueda de productos en facturas:', response.data);
     }
     return response;
   }, (error) => {
-    // Si es nuestro error simulado, convertirlo en una respuesta exitosa
-    if (error.response && error.response.status === 200) {
-      return Promise.resolve({
-        data: error.response.data,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: error.config
-      });
-    }
     return Promise.reject(error);
   });
+  
+  console.log('Interceptor configurado: Las solicitudes de búsqueda de productos ahora se envían al backend real');
 };
+
+// Las siguientes funciones se mantienen como referencia, pero ya no se utilizan
+// ===============================================================================
 
 // Función para simular la búsqueda de un producto en las facturas
 const mockBuscarProductoEnFacturas = async (productoId) => {

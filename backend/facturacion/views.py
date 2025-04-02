@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Producto, TasaCambio, Factura, Webhook
+from .models import Producto, TasaCambio, Factura, Webhook, DetalleFactura
 from .serializers import (
     ProductoSerializer,
     TasaCambioSerializer,
@@ -448,6 +448,91 @@ class FacturaViewSet(viewsets.ModelViewSet):
                 'error': f"Error al obtener detalle de factura: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+    @action(detail=False, methods=['get'], url_path='buscar-por-producto/(?P<producto_id>[^/.]+)')
+    def buscar_por_producto(self, request, producto_id=None):
+        """
+        Endpoint para buscar todas las facturas que contienen un producto específico.
+        Devuelve un listado de apariciones del producto en diferentes facturas.
+        """
+        try:
+            # Verificar que el producto existe
+            try:
+                producto = Producto.objects.get(id=producto_id)
+            except Producto.DoesNotExist:
+                return Response(
+                    {"error": f"No se encontró el producto con ID {producto_id}"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Buscar todas las apariciones del producto en detalles de facturas
+            detalles = DetalleFactura.objects.filter(
+                producto_id=producto_id
+            ).select_related('factura', 'factura__tasa_cambio').order_by('-factura__fecha')
+            
+            # Preparar respuesta
+            resultados = []
+            for detalle in detalles:
+                # Calcular información adicional útil
+                tasa_cambio = None
+                if detalle.factura.tasa_cambio:
+                    tasa_cambio = {
+                        'id': detalle.factura.tasa_cambio.id,
+                        'tipo': detalle.factura.tasa_cambio.tipo,
+                        'valor': float(detalle.factura.tasa_cambio.valor),
+                        'fecha': detalle.factura.tasa_cambio.fecha
+                    }
+                
+                # Calcular precio en la otra moneda
+                precio_bs = float(detalle.precio_unitario)
+                precio_usd = float(detalle.precio_unitario)
+                
+                if detalle.factura.moneda == 'BS' and tasa_cambio:
+                    precio_usd = precio_bs / tasa_cambio['valor']
+                elif detalle.factura.moneda == 'USD' and tasa_cambio:
+                    precio_bs = precio_usd * tasa_cambio['valor']
+                
+                resultados.append({
+                    'id': detalle.id,
+                    'factura_id': detalle.factura.id,
+                    'numero': detalle.factura.numero,
+                    'fecha': detalle.factura.fecha,
+                    'cantidad': float(detalle.cantidad),
+                    'precio_unitario': float(detalle.precio_unitario),
+                    'precio_unitario_usd': round(precio_usd, 2),
+                    'precio_unitario_bs': round(precio_bs, 2),
+                    'total': float(detalle.total),
+                    'moneda': detalle.factura.moneda,
+                    'tasa_cambio': tasa_cambio,
+                    'unidades_paquete': float(detalle.unidades_paquete) if detalle.unidades_paquete else 1.0,
+                    'aplicar_iva': detalle.aplicarIva,
+                    'sincronizado': detalle.factura.sincronizado_loyverse,
+                    'factura_fecha_creacion': detalle.factura.created_at if hasattr(detalle.factura, 'created_at') else None
+                })
+            
+            # Agregar información resumida para el frontend
+            resumen = {
+                'nombre_producto': producto.nombre,
+                'categoria': producto.categoria,
+                'total_compras': len(resultados),
+                'ultima_compra': resultados[0]['fecha'] if resultados else None,
+                'precio_promedio_usd': round(sum(r['precio_unitario_usd'] for r in resultados) / len(resultados), 2) if resultados else 0,
+                'cantidad_total': sum(r['cantidad'] for r in resultados)
+            }
+            
+            return Response({
+                'resumen': resumen,
+                'compras': resultados
+            })
+        
+        except Exception as e:
+            import traceback
+            print(f"Error al buscar por producto: {str(e)}")
+            print(traceback.format_exc())
+            return Response(
+                {"error": f"Error al buscar facturas por producto: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class WebhookViewSet(viewsets.ModelViewSet):
     queryset = Webhook.objects.all()
     serializer_class = WebhookSerializer

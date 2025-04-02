@@ -82,15 +82,33 @@ const BusquedaProductoHistorial = () => {
       const API_URL = await getApiUrl();
       const response = await axios.get(`${API_URL}/facturas/buscar-por-producto/${productoId}/`);
       
-      // Convertir y ordenar resultados por fecha (más reciente primero)
-      const historialOrdenado = response.data.sort((a, b) => 
-        new Date(b.fecha) - new Date(a.fecha)
-      );
+      // La respuesta real del backend tiene un formato diferente al simulado
+      const data = response.data;
       
-      setHistorialCompras(historialOrdenado);
-      
-      if (historialOrdenado.length === 0) {
-        setError("No se encontró historial de compras para este producto.");
+      // Verificar que la respuesta contiene los datos esperados
+      if (data && data.compras) {
+        // Actualizar el historial de compras con los datos del backend
+        setHistorialCompras(data.compras);
+        
+        if (data.compras.length === 0) {
+          setError("No se encontró historial de compras para este producto.");
+        } else if (data.resumen) {
+          // Si tenemos datos de resumen, actualizar la información del producto
+          setProductoSeleccionado(prevState => ({
+            ...prevState,
+            nombre: data.resumen.nombre_producto || prevState.nombre,
+            categoria: data.resumen.categoria || prevState.categoria,
+            estadisticas: {
+              total_compras: data.resumen.total_compras || 0,
+              precio_promedio_usd: data.resumen.precio_promedio_usd || 0,
+              cantidad_total: data.resumen.cantidad_total || 0
+            }
+          }));
+        }
+      } else {
+        // Si la respuesta no tiene el formato esperado
+        setHistorialCompras([]);
+        setError("La respuesta del servidor no tiene el formato esperado.");
       }
     } catch (error) {
       console.error("Error al buscar historial de compras:", error);
@@ -163,18 +181,43 @@ const BusquedaProductoHistorial = () => {
             Producto Seleccionado
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Typography variant="subtitle2" color="textSecondary">Nombre</Typography>
               <Typography variant="body1">{productoSeleccionado.nombre}</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Typography variant="subtitle2" color="textSecondary">Categoría</Typography>
               <Typography variant="body1">{productoSeleccionado.categoria || 'Sin categoría'}</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Typography variant="subtitle2" color="textSecondary">Precio Base</Typography>
               <Typography variant="body1">${parseFloat(productoSeleccionado.precio_base || 0).toFixed(2)}</Typography>
             </Grid>
+            <Grid item xs={12} md={3}>
+              <Typography variant="subtitle2" color="textSecondary">SKU</Typography>
+              <Typography variant="body1">{productoSeleccionado.sku || '-'}</Typography>
+            </Grid>
+            
+            {productoSeleccionado.estadisticas && (
+              <>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="subtitle1" gutterBottom>Estadísticas de Compra</Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2" color="textSecondary">Total de Compras</Typography>
+                  <Typography variant="body1">{productoSeleccionado.estadisticas.total_compras}</Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2" color="textSecondary">Cantidad Total Adquirida</Typography>
+                  <Typography variant="body1">{productoSeleccionado.estadisticas.cantidad_total.toFixed(2)}</Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2" color="textSecondary">Precio Promedio (USD)</Typography>
+                  <Typography variant="body1">${productoSeleccionado.estadisticas.precio_promedio_usd.toFixed(2)}</Typography>
+                </Grid>
+              </>
+            )}
           </Grid>
         </Paper>
       )}
@@ -200,26 +243,53 @@ const BusquedaProductoHistorial = () => {
           ) : (
             <>
               {historialCompras.length > 0 && (
-                <Card sx={{ mb: 4, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0' }}>
+                <Card sx={{ mb: 4, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0', boxShadow: 2 }}>
                   <CardContent>
-                    <Typography variant="subtitle1" gutterBottom>
+                    <Typography variant="subtitle1" gutterBottom color="primary">
                       Última Compra
                     </Typography>
                     <Typography variant="h5" color="primary" gutterBottom>
                       {moment(historialCompras[0].fecha).format('DD/MM/YYYY')}
                     </Typography>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                      <Grid item xs={12} sm={4} md={2}>
                         <Typography variant="subtitle2" color="textSecondary">Factura</Typography>
                         <Typography>{historialCompras[0].numero || `#${historialCompras[0].id}`}</Typography>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="subtitle2" color="textSecondary">Precio de Compra</Typography>
-                        <Typography>${parseFloat(historialCompras[0].precio_unitario || 0).toFixed(2)}</Typography>
+                      <Grid item xs={12} sm={4} md={2}>
+                        <Typography variant="subtitle2" color="textSecondary">Cantidad</Typography>
+                        <Typography>{parseFloat(historialCompras[0].cantidad || 0).toFixed(2)}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4} md={2}>
+                        <Typography variant="subtitle2" color="textSecondary">Precio USD</Typography>
+                        <Typography>${parseFloat(historialCompras[0].precio_unitario_usd || 0).toFixed(2)}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4} md={2}>
+                        <Typography variant="subtitle2" color="textSecondary">Precio Bs</Typography>
+                        <Typography>Bs.{parseFloat(historialCompras[0].precio_unitario_bs || 0).toFixed(2)}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4} md={2}>
+                        <Typography variant="subtitle2" color="textSecondary">Moneda Original</Typography>
+                        <Typography>
+                          <Chip size="small" label={historialCompras[0].moneda} 
+                                color={historialCompras[0].moneda === 'USD' ? 'primary' : 'secondary'} />
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4} md={2}>
+                        <Typography variant="subtitle2" color="textSecondary">Sincronizado</Typography>
+                        <Typography>
+                          <Chip size="small" label={historialCompras[0].sincronizado ? 'Sí' : 'No'} 
+                                color={historialCompras[0].sincronizado ? 'success' : 'warning'} />
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} sx={{ mt: 1 }}>
+                        <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                          Tasa de cambio: {historialCompras[0].tasa_cambio ? 
+                            `${historialCompras[0].tasa_cambio.tipo} - ${historialCompras[0].tasa_cambio.valor}` : 
+                            'No disponible'}
+                        </Typography>
                         <Button 
-                          variant="outlined"
+                          variant="contained"
                           size="small"
                           startIcon={<DescriptionIcon />}
                           onClick={() => verDetalleFactura(historialCompras[0].factura_id)}
@@ -239,8 +309,10 @@ const BusquedaProductoHistorial = () => {
                       <TableCell><strong>Fecha</strong></TableCell>
                       <TableCell><strong>Factura</strong></TableCell>
                       <TableCell><strong>Cantidad</strong></TableCell>
-                      <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
+                      <TableCell align="right"><strong>Precio Unit. (USD)</strong></TableCell>
+                      <TableCell align="right"><strong>Precio Unit. (Bs)</strong></TableCell>
                       <TableCell align="right"><strong>Total</strong></TableCell>
+                      <TableCell><strong>Moneda</strong></TableCell>
                       <TableCell align="center"><strong>Acciones</strong></TableCell>
                     </TableRow>
                   </TableHead>
@@ -251,8 +323,19 @@ const BusquedaProductoHistorial = () => {
                           <TableCell>{moment(compra.fecha).format('DD/MM/YYYY')}</TableCell>
                           <TableCell>{compra.numero || `#${compra.id}`}</TableCell>
                           <TableCell>{parseFloat(compra.cantidad || 0).toFixed(2)}</TableCell>
-                          <TableCell align="right">${parseFloat(compra.precio_unitario || 0).toFixed(2)}</TableCell>
-                          <TableCell align="right">${parseFloat(compra.total || 0).toFixed(2)}</TableCell>
+                          <TableCell align="right">${parseFloat(compra.precio_unitario_usd || 0).toFixed(2)}</TableCell>
+                          <TableCell align="right">Bs.{parseFloat(compra.precio_unitario_bs || 0).toFixed(2)}</TableCell>
+                          <TableCell align="right">
+                            {compra.moneda === 'USD' ? '$' : 'Bs.'}
+                            {parseFloat(compra.total || 0).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            {compra.moneda === 'USD' ? (
+                              <Chip size="small" label="USD" color="primary" />
+                            ) : (
+                              <Chip size="small" label="BS" color="secondary" />
+                            )}
+                          </TableCell>
                           <TableCell align="center">
                             <Button
                               variant="text"
@@ -268,7 +351,7 @@ const BusquedaProductoHistorial = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} align="center">
+                        <TableCell colSpan={8} align="center">
                           No hay registros de compra para este producto
                         </TableCell>
                       </TableRow>
