@@ -28,6 +28,7 @@ https://backend-production-a8d3.up.railway.app/api
 |--------|----------|-------------|
 | GET | `/api/facturas/listado_simple/` | Lista paginada de facturas optimizada para evitar timeouts |
 | GET | `/api/facturas/{id}/detalle_simple/` | Obtiene el detalle optimizado de una factura específica |
+| GET | `/api/facturas/buscar-por-producto/{id}/` | Busca todas las facturas que contienen un producto específico |
 
 #### Parámetros para Endpoints Optimizados
 
@@ -53,6 +54,11 @@ Ejemplo:
    - Ubicación: `frontend/src/pages/ListaDeFacturas.js`
    - Componente React que muestra la lista de facturas
    - Utiliza los endpoints optimizados para mejorar el rendimiento
+
+3. **BusquedaProductoHistorial.js** (Nuevo)
+   - Ubicación: `frontend/src/pages/BusquedaProductoHistorial.js`
+   - Componente para buscar un producto y ver su historial de compras
+   - Muestra cuándo fue la última vez que se compró un producto específico
 
 #### Funciones Principales en facturasSlice.js
 
@@ -106,6 +112,10 @@ Si experimentas errores CORS:
    - Mensajes de error más detallados
    - Mejor experiencia de usuario cuando ocurren errores
 
+4. **Búsqueda de productos en historial de facturas**
+   - Nueva interfaz para buscar productos y ver cuándo fueron comprados por última vez
+   - Facilita el análisis de compras históricas de productos específicos
+
 ### Próximos Pasos Recomendados
 
 1. **Monitoreo de rendimiento**
@@ -119,3 +129,64 @@ Si experimentas errores CORS:
 3. **Mejoras en la interfaz de usuario**
    - Añadir más opciones de filtrado para facilitar la búsqueda de facturas
    - Mejorar la visualización de estadísticas y datos agregados
+
+4. **Implementar backend para búsqueda de productos**
+   - Crear el endpoint `GET /api/facturas/buscar-por-producto/{id}/` en el backend
+   - Optimizar la consulta para manejar grandes cantidades de facturas
+   - Incluir información relevante sobre cada aparición del producto en las facturas
+
+### Implementación del Endpoint de Búsqueda de Productos en Facturas
+
+Para implementar el nuevo endpoint de búsqueda de productos en el historial de facturas, se debe agregar lo siguiente al backend:
+
+1. **Añadir nueva acción al ViewSet de Facturas**:
+
+```python
+@action(detail=False, methods=['get'], url_path='buscar-por-producto/(?P<producto_id>[^/.]+)')
+def buscar_por_producto(self, request, producto_id=None):
+    """
+    Endpoint para buscar todas las facturas que contienen un producto específico.
+    Devuelve un listado de apariciones del producto en diferentes facturas.
+    """
+    try:
+        # Verificar que el producto existe
+        try:
+            producto = Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            return Response(
+                {"error": f"No se encontró el producto con ID {producto_id}"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Buscar todas las apariciones del producto en detalles de facturas
+        detalles = DetalleFactura.objects.filter(
+            producto_id=producto_id
+        ).select_related('factura').order_by('-factura__fecha')
+        
+        # Preparar respuesta
+        resultados = []
+        for detalle in detalles:
+            resultados.append({
+                'id': detalle.id,
+                'factura_id': detalle.factura.id,
+                'numero': detalle.factura.numero,
+                'fecha': detalle.factura.fecha,
+                'cantidad': float(detalle.cantidad),
+                'precio_unitario': float(detalle.precio_unitario),
+                'total': float(detalle.total),
+                'moneda': detalle.factura.moneda
+            })
+            
+        return Response(resultados)
+        
+    except Exception as e:
+        import traceback
+        print(f"Error al buscar por producto: {str(e)}")
+        print(traceback.format_exc())
+        return Response(
+            {"error": f"Error al buscar facturas por producto: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+```
+
+Este endpoint se puede llamar desde el frontend usando la URL `/api/facturas/buscar-por-producto/{id}/` y devolverá un listado de todas las apariciones del producto en las diferentes facturas, ordenadas por fecha de factura descendente (más reciente primero).

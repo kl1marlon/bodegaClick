@@ -5,6 +5,10 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { store } from './store';
 import './index.css';
+import { setupProductoFacturasInterceptor } from './services/mockApi';
+
+// Configurar interceptores de API para simular endpoints que aún no están implementados
+setupProductoFacturasInterceptor();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

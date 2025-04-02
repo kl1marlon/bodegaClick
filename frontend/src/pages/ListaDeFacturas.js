@@ -228,6 +228,14 @@ const ListaDeFacturas = () => {
               Actualizar
             </Button>
             <Button
+              variant="outlined"
+              color="info"
+              onClick={() => navigate('/buscar-producto-historial')}
+              sx={{ mr: 1 }}
+            >
+              Buscar Producto
+            </Button>
+            <Button
               variant="contained"
               color="primary"
               onClick={() => navigate('/facturas/nueva')}

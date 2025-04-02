@@ -9,6 +9,7 @@ import DetalleFactura from './pages/DetalleFactura';
 import ListadoProductos from './pages/ListadoProductos';
 import NuevaFactura from './pages/NuevaFactura';
 import ListaDeFacturas from './pages/ListaDeFacturas';
+import BusquedaProductoHistorial from './pages/BusquedaProductoHistorial';
 // Importar otros componentes según sea necesario
 
 // Crear tema personalizado
@@ -56,6 +57,9 @@ function App() {
           
           {/* Ruta de Productos */}
           <Route path="/productos" element={<ListadoProductos />} />
+          
+          {/* Nueva ruta de Historial de Productos */}
+          <Route path="/buscar-producto-historial" element={<BusquedaProductoHistorial />} />
           
           {/* Ruta 404 - No encontrado */}
           <Route path="*" element={

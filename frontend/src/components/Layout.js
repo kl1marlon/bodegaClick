@@ -26,6 +26,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ListIcon from '@mui/icons-material/List';
+import HistoryIcon from '@mui/icons-material/History';
+import SearchIcon from '@mui/icons-material/Search';
 
 const drawerWidth = 240;
 
@@ -44,7 +46,8 @@ function Layout({ children }) {
       icon: <ReceiptIcon />, 
       items: [
         { text: 'Listado de Facturas', icon: <ListIcon />, path: '/facturas' },
-        { text: 'Nueva Factura', icon: <AddCircleIcon />, path: '/facturas/nueva' }
+        { text: 'Nueva Factura', icon: <AddCircleIcon />, path: '/facturas/nueva' },
+        { text: 'Buscar Producto', icon: <SearchIcon />, path: '/buscar-producto-historial' }
       ]
     },
     { text: 'Productos', icon: <InventoryIcon />, path: '/productos' },

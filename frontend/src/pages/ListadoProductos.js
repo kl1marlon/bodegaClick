@@ -521,6 +521,196 @@ const ListadoProductos = () => {
     setSnackbar({ ...snackbar, open: false });
   };
   
+  // Función para consultar el progreso de la tarea
+  const consultarProgresoTarea = async (taskId, intervalId) => {
+    // Variable para controlar si se debe seguir intentando
+    let debeReintentar = true;
+    let respuestaExitosa = false;
+    let data = null;
+    let errorCount = 0; // Contador local de errores
+
+    try {
+      // Realizar intentos con tiempos de espera progresivos
+      for (let intento = 1; intento <= 3 && debeReintentar; intento++) {
+        try {
+          console.log(`Intento ${intento} de consulta de progreso para tarea ${taskId}`);
+          
+          // URL del endpoint de estado
+          const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+          console.log(`Consultando endpoint: ${url}`);
+          
+          // Configurar un timeout más amplio para la petición
+          const controlador = new AbortController();
+          const timeoutId = setTimeout(() => controlador.abort(), 10000); // 10 segundos de timeout
+          
+          const response = await fetch(url, {
+            signal: controlador.signal,
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          
+          // Limpiar el timeout una vez recibida la respuesta
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            data = await response.json();
+            console.log("Respuesta del estado de la tarea:", data);
+            respuestaExitosa = true;
+            debeReintentar = false;
+            errorCount = 0; // Resetear contador de errores si hay éxito
+            break; // Salir del bucle si la respuesta es exitosa
+          } else {
+            const responseText = await response.text();
+            console.warn(`Intento ${intento} falló con status ${response.status}. Respuesta: ${responseText}`);
+            
+            // Si el error es 404 (no encontrado), la tarea puede haber sido eliminada o no existe
+            if (response.status === 404) {
+              console.warn(`La tarea ${taskId} no fue encontrada. Posiblemente ya no exista.`);
+              debeReintentar = false;
+              throw new Error(`Tarea no encontrada (404): ${responseText || 'Sin respuesta'}`);
+            }
+            
+            // Si el error es 500 o 502, puede ser un problema temporal con el servidor
+            if (response.status === 500 || response.status === 502) {
+              console.warn(`Error del servidor (${response.status}). Reintentando...`);
+              
+              // Usar delay progresivo para reintentos (1s, 2s, 4s)
+              const delayMs = Math.pow(2, intento - 1) * 1000;
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+              
+              // Seguir intentando
+              debeReintentar = intento < 3;
+            } else {
+              // Para otros errores, no reintentar
+              debeReintentar = false;
+              throw new Error(`Error al consultar estado: ${response.status} - ${responseText || 'Sin respuesta'}`);
+            }
+          }
+        } catch (fetchError) {
+          // Si hubo un error de red o se abortó la petición
+          const esCancelacion = fetchError.name === 'AbortError';
+          console.warn(`${esCancelacion ? 'Timeout' : 'Error de red'} en intento ${intento}: ${fetchError.message}`);
+          
+          // Usar delay progresivo para reintentos (1s, 2s, 4s)
+          const delayMs = Math.pow(2, intento - 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          
+          // Seguir intentando solo si no es el último intento
+          debeReintentar = intento < 3;
+          
+          // Si es el último intento, lanzar el error para que lo maneje el catch principal
+          if (intento === 3 && !respuestaExitosa) {
+            throw fetchError;
+          }
+        }
+      }
+      
+      // Si llegamos aquí sin datos, es porque todos los intentos fallaron
+      if (!respuestaExitosa || !data) {
+        throw new Error("No se pudo consultar el estado después de varios intentos");
+      }
+      
+      // Interpretar diferentes tipos de respuestas
+      const status = data.status || 'UNKNOWN';
+      let percentage = data.percentage || 0;
+      let current = data.current || 0;
+      let total = data.total || 0;
+      
+      // Si tenemos resultado pero no porcentaje (formatos diferentes)
+      if (status === 'SUCCESS' && data.result && !data.percentage) {
+        const result = data.result;
+        current = result.processed_items || 0;
+        total = result.total_items || 0;
+        percentage = total > 0 ? Math.floor((current / total) * 100) : 100;
+      }
+      
+      // Actualizar el snackbar con la información del progreso
+      if (status === 'SUCCESS') {
+        const productosActualizados = data.result?.productos_actualizados || 0;
+        const productosFallidos = data.result?.productos_fallidos || 0;
+        
+        setSnackbar({
+          open: true,
+          message: `Sincronización completada: ${productosActualizados} productos actualizados, ${productosFallidos} fallidos`,
+          severity: 'success',
+          autoHideDuration: 6000
+        });
+        setSincronizando(false);
+        dispatch(fetchProductos()); // Refrescar la lista de productos
+        clearInterval(intervalId);
+      } else if (status === 'FAILURE' || status === 'ERROR') {
+        const errorMsg = data.error || 'Error desconocido';
+        setSnackbar({
+          open: true,
+          message: `Error en la sincronización: ${errorMsg}`,
+          severity: 'error',
+          autoHideDuration: 8000
+        });
+        setSincronizando(false);
+        clearInterval(intervalId);
+      } else if (status === 'REVOKED') {
+        const msg = data.error || 'Tarea cancelada';
+        setSnackbar({
+          open: true,
+          message: msg,
+          severity: 'warning',
+          autoHideDuration: 6000
+        });
+        setSincronizando(false);
+        clearInterval(intervalId);
+      } else {
+        // En progreso o cualquier otro estado
+        const metadata = data.metadata || {};
+        const productosActualizados = metadata.productos_actualizados || 0;
+        const productosFallidos = metadata.productos_fallidos || 0;
+        
+        let mensaje = `Sincronizando precios: ${percentage}% completado (${current}/${total}).`;
+        if (productosActualizados > 0) {
+          mensaje += ` Actualizados: ${productosActualizados}`;
+        }
+        if (productosFallidos > 0) {
+          mensaje += `, Fallidos: ${productosFallidos}`;
+        }
+        
+        setSnackbar({
+          open: true,
+          message: mensaje,
+          severity: 'info',
+          autoHideDuration: 3000 // Duración corta para que se actualice pronto
+        });
+      }
+    } catch (error) {
+      console.error("Error consultando progreso:", error);
+      
+      // Incrementar contador de errores
+      errorCount++;
+      
+      // Si hay demasiados errores consecutivos, detener la consulta
+      if (errorCount > 5) {
+        console.error("Demasiados errores consecutivos. Deteniendo consulta de progreso.");
+        setSnackbar({
+          open: true,
+          message: "No se pudo obtener el progreso de la sincronización. La tarea podría seguir en curso en segundo plano.",
+          severity: 'warning',
+          autoHideDuration: 8000
+        });
+        setSincronizando(false);
+        clearInterval(intervalId);
+      } else {
+        // Mostrar mensaje de error pero seguir intentando
+        setSnackbar({
+          open: true,
+          message: `Error al consultar progreso (intento ${errorCount}/5). Reintentando...`,
+          severity: 'warning',
+          autoHideDuration: 2000
+        });
+      }
+    }
+  };
+  
   // Función para iniciar la sincronización con las opciones seleccionadas
   const iniciarSincronizacion = () => {
     setSincronizando(true);
@@ -577,12 +767,13 @@ const ListadoProductos = () => {
         // Variable para controlar el intervalId dentro de las funciones
         let intervalId;
         
-        // Contador de errores para detener después de varios fallos consecutivos
-        let errorCount = 0;
+        // Número máximo de errores consecutivos permitidos
+        let maxErrorCount = 5;
         
         // Consultar inmediatamente y luego cada 2 segundos
-        consultarProgresoTarea();
-        intervalId = setInterval(consultarProgresoTarea, 2000);
+        const consultarProgresoWrapper = () => consultarProgresoTarea(taskId, intervalId);
+        consultarProgresoWrapper();
+        intervalId = setInterval(consultarProgresoWrapper, 2000);
         
         // Almacenar el ID del intervalo para poder limpiarlo después
         setIntervalos(prev => [...prev, intervalId]);
