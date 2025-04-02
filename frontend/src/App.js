@@ -8,6 +8,7 @@ import ListadoFacturas from './pages/ListadoFacturas';
 import DetalleFactura from './pages/DetalleFactura';
 import ListadoProductos from './pages/ListadoProductos';
 import NuevaFactura from './pages/NuevaFactura';
+import ListaDeFacturas from './pages/ListaDeFacturas';
 // Importar otros componentes según sea necesario
 
 // Crear tema personalizado
@@ -46,6 +47,9 @@ function App() {
           <Route path="/facturas" element={<ListadoFacturas />} />
           <Route path="/facturas/nueva" element={<NuevaFactura />} />
           <Route path="/facturas/:id" element={<DetalleFactura />} />
+          
+          {/* Ruta para la nueva implementación de facturas */}
+          <Route path="/lista-facturas" element={<ListaDeFacturas />} />
           
           {/* Ruta de Productos */}
           <Route path="/productos" element={<ListadoProductos />} />
