@@ -7,7 +7,7 @@ const getApiBaseUrl = () => {
     return window.ENV.API_URL;
   }
   // Si no está disponible, usar variable de entorno o localhost
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
 };
 
 const api = axios.create({
@@ -18,11 +18,10 @@ const api = axios.create({
 });
 
 // Para depuración
-console.log('API baseURL configurada:', api.defaults.baseURL);
+console.log('API baseURL:', api.defaults.baseURL);
 
-// Endpoints correctos - sin duplicar /api/ si ya está en la baseURL
-export const fetchProductosAPI = () => api.get('/productos/');
-export const fetchTasaCambioAPI = (tipo) => api.get(`/tasas-cambio/?tipo=${tipo}`);
-export const createFacturaAPI = (data) => api.post('/facturas/', data);
+export const fetchProductosAPI = () => api.get('/api/productos/');
+export const fetchTasaCambioAPI = (tipo) => api.get(`/api/tasas-cambio/?tipo=${tipo}`);
+export const createFacturaAPI = (data) => api.post('/api/facturas/', data);
 
 export default api; 

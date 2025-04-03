@@ -28,7 +28,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ListIcon from '@mui/icons-material/List';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
-import BuildIcon from '@mui/icons-material/Build';
 
 const drawerWidth = 240;
 
@@ -53,7 +52,6 @@ function Layout({ children }) {
     },
     { text: 'Productos', icon: <InventoryIcon />, path: '/productos' },
     { text: 'Tasas de Cambio', icon: <CurrencyExchangeIcon />, path: '/tasas' },
-    { text: 'Diagnóstico', icon: <BuildIcon />, path: '/diagnostico' },
     { text: 'Configuración', icon: <SettingsIcon />, path: '/config' }
   ];
 

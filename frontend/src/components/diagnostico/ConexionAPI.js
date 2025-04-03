@@ -9,7 +9,6 @@ const ConexionAPI = () => {
   const [testing, setTesting] = useState(false);
   const [results, setResults] = useState([]);
   const [apiUrl, setApiUrl] = useState(null);
-  const [workerUrl, setWorkerUrl] = useState(null);
   const [dbState, setDbState] = useState(null);
 
   // Función para verificar la conexión a la API
@@ -20,8 +19,7 @@ const ConexionAPI = () => {
     try {
       // Registrar configuración actual
       const configInfo = {
-        api: window.ENV?.API_URL || 'No definido',
-        worker: window.ENV?.WORKER_URL || 'No definido',
+        windowEnv: window.ENV?.API_URL || 'No definido',
         reactEnv: process.env.REACT_APP_API_URL || 'No definido'
       };
       
@@ -31,43 +29,17 @@ const ConexionAPI = () => {
         details: configInfo
       }]);
       
-      // Probar detectando la URL de la API principal
+      // Probar detectando la URL de la API
       const result = await detectApiUrl();
       setApiUrl(result.url);
       
       setResults(prev => [...prev, {
         success: result.success,
         message: result.success 
-          ? `Conexión exitosa a API: ${result.url}` 
-          : 'No se pudo conectar a la API principal',
+          ? `Conexión exitosa a ${result.url}` 
+          : 'No se pudo conectar a ninguna API',
         details: result
       }]);
-      
-      // Probar detectando la URL del worker
-      try {
-        // Si estamos usando rutas relativas, intenta worker-api directamente
-        const workerUrlToTry = window.ENV?.WORKER_URL || '/worker-api';
-        console.log(`Probando conexión al worker: ${workerUrlToTry}`);
-        
-        // Probar usando el endpoint de estado de tareas
-        const workerResponse = await axios.get(`${workerUrlToTry}/tareas/listado/?_=${Date.now()}`, {
-          timeout: 5000
-        });
-        
-        setWorkerUrl(workerUrlToTry);
-        setResults(prev => [...prev, {
-          success: true,
-          message: `Conexión exitosa al Worker: ${workerUrlToTry}`,
-          details: { tareas: workerResponse.data.length }
-        }]);
-      } catch (workerError) {
-        console.error('Error conectando con worker:', workerError);
-        setResults(prev => [...prev, {
-          success: false,
-          message: 'Error al conectar con el worker',
-          details: workerError.message
-        }]);
-      }
       
       if (result.success) {
         // Probar la salud del backend
@@ -148,15 +120,8 @@ const ConexionAPI = () => {
       <Box sx={{ mb: 2 }}>
         <Alert severity={apiUrl ? "success" : "warning"}>
           {apiUrl 
-            ? `API principal detectada: ${apiUrl}`
-            : 'No se ha detectado una API principal funcional'
-          }
-        </Alert>
-        
-        <Alert severity={workerUrl ? "success" : "warning"} sx={{ mt: 1 }}>
-          {workerUrl 
-            ? `Worker API detectada: ${workerUrl}`
-            : 'No se ha detectado una conexión al worker'
+            ? `API detectada: ${apiUrl}`
+            : 'No se ha detectado una API funcional'
           }
         </Alert>
       </Box>
@@ -209,7 +174,7 @@ const ConexionAPI = () => {
         
         <Chip 
           label={testing ? "Probando..." : "Última prueba: " + new Date().toLocaleTimeString()} 
-          color={apiUrl && workerUrl ? "success" : apiUrl ? "warning" : "error"}
+          color={apiUrl ? "success" : "error"}
           variant="outlined"
         />
       </Box>

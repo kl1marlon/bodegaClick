@@ -11,7 +11,6 @@ import NuevaFactura from './pages/NuevaFactura';
 import ListaDeFacturas from './pages/ListaDeFacturas';
 import BusquedaProductoHistorial from './pages/BusquedaProductoHistorial';
 import CrearProducto from './pages/CrearProducto';
-import ConexionAPI from './components/diagnostico/ConexionAPI';
 // Importar otros componentes según sea necesario
 
 // Crear tema personalizado
@@ -63,14 +62,6 @@ function App() {
           
           {/* Nueva ruta de Historial de Productos */}
           <Route path="/buscar-producto-historial" element={<BusquedaProductoHistorial />} />
-          
-          {/* Ruta de diagnóstico de la API */}
-          <Route path="/diagnostico" element={
-            <div style={{ padding: '1rem' }}>
-              <h2>Diagnóstico de Conexión</h2>
-              <ConexionAPI />
-            </div>
-          } />
           
           {/* Ruta 404 - No encontrado */}
           <Route path="*" element={

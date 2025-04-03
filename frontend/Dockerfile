@@ -45,29 +45,9 @@ EXPOSE 80
 # Crear un script de entrada que genere un archivo de configuración dinámico
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'sed -i "s/RAILWAY_PORT/$PORT/g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
-    echo '# Asegurar que BACKEND_URL tenga protocolo https:// al inicio si no tiene ningún protocolo' >> /entrypoint.sh && \
-    echo 'if ! echo $BACKEND_URL | grep -q "^https\?://"; then' >> /entrypoint.sh && \
-    echo '  BACKEND_URL="https://$BACKEND_URL"' >> /entrypoint.sh && \
-    echo '  echo "Añadido protocolo https:// a BACKEND_URL: $BACKEND_URL"' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
-    echo 'if ! echo $WORKER_URL | grep -q "^https\?://"; then' >> /entrypoint.sh && \
-    echo '  WORKER_URL="https://$WORKER_URL"' >> /entrypoint.sh && \
-    echo '  echo "Añadido protocolo https:// a WORKER_URL: $WORKER_URL"' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
     echo 'sed -i "s|RAILWAY_BACKEND_URL|$BACKEND_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
-    echo 'sed -i "s|RAILWAY_WORKER_URL|$WORKER_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
-    echo '# Usamos /worker-api/ como proxy para evitar problemas de Mixed Content' >> /entrypoint.sh && \
-    echo 'FRONTEND_URL="$RAILWAY_PUBLIC_DOMAIN"' >> /entrypoint.sh && \
-    echo 'if [ -z "$FRONTEND_URL" ]; then' >> /entrypoint.sh && \
-    echo '  FRONTEND_URL="$RAILWAY_PUBLIC_URL"' >> /entrypoint.sh && \
-    echo '  if [ -z "$FRONTEND_URL" ]; then' >> /entrypoint.sh && \
-    echo '    FRONTEND_URL="/"' >> /entrypoint.sh && \
-    echo '  fi' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
-    echo 'echo "Usando FRONTEND_URL=$FRONTEND_URL para el proxy"' >> /entrypoint.sh && \
-    echo 'echo "window.ENV = { API_URL: \"/api\", WORKER_URL: \"/worker-api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
+    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
     echo 'echo "Configuración generada con BACKEND_URL=$BACKEND_URL"' >> /entrypoint.sh && \
-    echo 'echo "Configuración generada con WORKER_URL=$WORKER_URL"' >> /entrypoint.sh && \
     echo 'nginx -g "daemon off;"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 

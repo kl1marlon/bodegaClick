@@ -1,29 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import api from '../services/api'; // Importar la instancia de api configurada
 
-// Función auxiliar para obtener URLs completas para casos donde no usamos la instancia de api
+// Usar la configuración dinámica si está disponible
 const getApiUrl = () => {
   if (window.ENV && window.ENV.API_URL) {
-    return window.ENV.API_URL; // Ya incluye /api
+    return window.ENV.API_URL;
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 };
 
 const API_URL = getApiUrl();
 
-// Usar la instancia de API configurada en lugar de axios directamente cuando sea posible
 export const fetchProductos = createAsyncThunk(
   'productos/fetchProductos',
   async () => {
-    console.log('Fetching productos usando API configurada');
-    try {
-      const response = await api.get('/productos/');
-      return response.data;
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-      throw error;
-    }
+    console.log('Fetching productos from:', API_URL);
+    const response = await axios.get(`${API_URL}/productos/`);
+    return response.data;
   }
 );
 
