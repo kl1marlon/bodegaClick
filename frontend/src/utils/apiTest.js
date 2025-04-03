@@ -2,9 +2,12 @@ import axios from 'axios';
 
 // Función para detectar la URL base correcta
 const detectApiUrl = async () => {
-  // URLs a probar en orden de prioridad
+  // URLs a probar en orden de prioridad - usando rutas relativas cuando sea posible
   const urlsToTry = [
     window.ENV?.API_URL, 
+    window.ENV?.WORKER_URL,  // Añadir la URL del worker para probar
+    '/api',  // Ruta relativa para proxy local
+    '/worker-api',  // Ruta relativa para proxy local del worker
     process.env.REACT_APP_API_URL,
     'https://bodegaclick-production.up.railway.app/api',
     'https://backend-production-a8d3.up.railway.app/api',

@@ -264,7 +264,7 @@ def menu_principal():
             mostrar_estructura_producto()
 
         elif opcion == "7":
-            contar_productos_precio()
+            contar_productos_precio()   
         
         elif opcion == "0":
             print("¡Hasta pronto!")
