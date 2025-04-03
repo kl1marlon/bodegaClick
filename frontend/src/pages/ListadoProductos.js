@@ -538,10 +538,9 @@ const ListadoProductos = () => {
         try {
           console.log(`Intento ${intento} de consulta de progreso para tarea ${taskId}`);
           
-          // URL del endpoint de estado - Usar el proxy local
-          const workerUrl = window.ENV?.WORKER_API_URL || '/worker-api';
-          const url = `${workerUrl}/tareas/estado/${taskId}/`;
-          console.log(`Consultando endpoint a través de proxy: ${url}`);
+          // URL del endpoint de estado
+          const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+          console.log(`Consultando endpoint: ${url}`);
           
           // Configurar un timeout más amplio para la petición
           const controlador = new AbortController();
@@ -852,16 +851,7 @@ const ListadoProductos = () => {
               for (let i = 0; i < retries; i++) {
                 try {
                   console.log(`Intento ${i+1} de consulta de progreso para tarea ${taskId}`);
-                  
-                  // URL del endpoint de estado - Usar el proxy local
-                  const workerUrl = window.ENV?.WORKER_API_URL || '/worker-api';
-                  response = await fetch(`${workerUrl}/tareas/estado/${taskId}/`, {
-                    headers: {
-                      'Cache-Control': 'no-cache, no-store, must-revalidate',
-                      'Pragma': 'no-cache',
-                      'Expires': '0'
-                    }
-                  });
+                  response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
                   
                   if (response.ok) {
                     break; // Salir del bucle si la respuesta es exitosa
@@ -1765,7 +1755,7 @@ const ListadoProductos = () => {
             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, color: '#0369a1' }}>
               ¿Cuándo usar la Sincronización de Inventario?
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body2" paragraph>
               Usa la función "Sincronizar Inventario" cuando necesites:
             </Typography>
             <Box component="ul" sx={{ ml: 2 }}>
