@@ -539,7 +539,7 @@ const ListadoProductos = () => {
           console.log(`Intento ${intento} de consulta de progreso para tarea ${taskId}`);
           
           // URL del endpoint de estado
-          const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+          const url = `${window.ENV?.WORKER_URL || process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
           console.log(`Consultando endpoint: ${url}`);
           
           // Configurar un timeout más amplio para la petición
@@ -851,7 +851,7 @@ const ListadoProductos = () => {
               for (let i = 0; i < retries; i++) {
                 try {
                   console.log(`Intento ${i+1} de consulta de progreso para tarea ${taskId}`);
-                  response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+                  response = await fetch(`${window.ENV?.WORKER_URL || process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
                   
                   if (response.ok) {
                     break; // Salir del bucle si la respuesta es exitosa

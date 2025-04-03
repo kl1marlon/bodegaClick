@@ -45,9 +45,19 @@ EXPOSE 80
 # Crear un script de entrada que genere un archivo de configuración dinámico
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'sed -i "s/RAILWAY_PORT/$PORT/g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
+    echo '# Asegurar que BACKEND_URL tenga protocolo http:// al inicio si no tiene ningún protocolo' >> /entrypoint.sh && \
+    echo 'if ! echo $BACKEND_URL | grep -q "^https\?://"; then' >> /entrypoint.sh && \
+    echo '  BACKEND_URL="http://$BACKEND_URL"' >> /entrypoint.sh && \
+    echo '  echo "Añadido protocolo http:// a BACKEND_URL: $BACKEND_URL"' >> /entrypoint.sh && \
+    echo 'fi' >> /entrypoint.sh && \
+    echo 'if ! echo $WORKER_URL | grep -q "^https\?://"; then' >> /entrypoint.sh && \
+    echo '  WORKER_URL="http://$WORKER_URL"' >> /entrypoint.sh && \
+    echo '  echo "Añadido protocolo http:// a WORKER_URL: $WORKER_URL"' >> /entrypoint.sh && \
+    echo 'fi' >> /entrypoint.sh && \
     echo 'sed -i "s|RAILWAY_BACKEND_URL|$BACKEND_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
-    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
+    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\", WORKER_URL: \"$WORKER_URL/api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
     echo 'echo "Configuración generada con BACKEND_URL=$BACKEND_URL"' >> /entrypoint.sh && \
+    echo 'echo "Configuración generada con WORKER_URL=$WORKER_URL"' >> /entrypoint.sh && \
     echo 'nginx -g "daemon off;"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
