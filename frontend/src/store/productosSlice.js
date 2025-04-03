@@ -9,7 +9,16 @@ const getApiUrl = () => {
   return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 };
 
+// Obtener la URL del worker (para tareas asíncronas)
+const getWorkerApiUrl = () => {
+  if (window.ENV && window.ENV.WORKER_API_URL) {
+    return window.ENV.WORKER_API_URL;
+  }
+  return 'https://worker-production-7eb3.up.railway.app/api';
+};
+
 const API_URL = getApiUrl();
+const WORKER_API_URL = getWorkerApiUrl();
 
 export const fetchProductos = createAsyncThunk(
   'productos/fetchProductos',
@@ -39,7 +48,7 @@ export const syncFromLoyverse = createAsyncThunk(
       // Solicitar el inicio de la tarea asíncrona
       const adminToken = 'admin_secret_token_default'; // El mismo que usas en syncInventory
       
-      const response = await axios.post(`${API_URL}/tareas/iniciar/`, {
+      const response = await axios.post(`${WORKER_API_URL}/tareas/iniciar/`, {
         type: 'sync_prices',
         params: opcionesSincronizacion
       }, {
@@ -68,7 +77,7 @@ export const syncInventory = createAsyncThunk(
       const adminToken = 'admin_secret_token_default';
       
       // Usar el nuevo endpoint de tareas asíncronas
-      const response = await axios.post(`${API_URL}/tareas/iniciar/`, {
+      const response = await axios.post(`${WORKER_API_URL}/tareas/iniciar/`, {
         type: 'sync_inventory',
         params: {
           force: opciones.force !== undefined ? opciones.force : false
