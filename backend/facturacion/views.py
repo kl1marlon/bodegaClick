@@ -235,33 +235,11 @@ class ProductoViewSet(viewsets.ModelViewSet):
             # Crear producto primero en Loyverse
             service = LoyverseService()
             
-            # Obtener categoría si existe en Loyverse
-            categoria_id = None
-            categoria_nombre = request.data.get('categoria', '')
-            if categoria_nombre:
-                # Obtener la lista de categorías de Loyverse
-                categories_response = service.get_categories()
-                if categories_response and 'categories' in categories_response:
-                    # Buscar la categoría por nombre
-                    for category in categories_response['categories']:
-                        if category.get('name', '').lower() == categoria_nombre.lower():
-                            categoria_id = category.get('id')
-                            logger.info(f"✅ Encontrada categoría en Loyverse con ID: {categoria_id}")
-                            break
-                    
-                    # Si no se encuentra la categoría, crearla
-                    if not categoria_id:
-                        logger.info(f"⚠️ Categoría '{categoria_nombre}' no encontrada en Loyverse, creando...")
-                        category_response = service.create_category(categoria_nombre)
-                        if category_response and 'id' in category_response:
-                            categoria_id = category_response['id']
-                            logger.info(f"✅ Categoría creada con ID: {categoria_id}")
-            
             # Preparar datos para Loyverse
             loyverse_data = {
                 'item_name': request.data.get('nombre'),
                 'description': request.data.get('descripcion', ''),
-                'category_id': categoria_id,  # Ahora usamos el ID obtenido
+                'category_id': None,  # Por ahora no tenemos mapeo de categorías
                 'track_stock': request.data.get('track_stock', True),
                 'sold_by_weight': False,
                 'is_composite': False,
@@ -284,8 +262,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
                 ]
             }
             
-            logger.info(f"📦 Datos a enviar a Loyverse: {loyverse_data}")
-            
             # Crear en Loyverse
             loyverse_response = service.create_item(loyverse_data)
             
@@ -307,7 +283,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
                 variant_id=variant_id,
                 nombre=request.data.get('nombre'),
                 descripcion=request.data.get('descripcion', ''),
-                categoria=categoria_nombre,
+                categoria=request.data.get('categoria', ''),
                 precio_base_usd=float(request.data.get('precio_base_usd', 0)),
                 precio_compra_usd=float(request.data.get('precio_compra_usd', 0)),
                 porcentaje_ganancia=float(request.data.get('porcentaje_ganancia', 30)),

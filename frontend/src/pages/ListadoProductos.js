@@ -524,22 +524,24 @@ const ListadoProductos = () => {
     setSnackbar({ ...snackbar, open: false });
   };
   
-  // Función para consultar el progreso de la tarea
+  // Función para consultar el progreso de una tarea asíncrona
   const consultarProgresoTarea = async (taskId, intervalId) => {
-    // Variable para controlar si se debe seguir intentando
-    let debeReintentar = true;
     let respuestaExitosa = false;
     let data = null;
-    let errorCount = 0; // Contador local de errores
-
+    let debeReintentar = true;
+    
     try {
-      // Realizar intentos con tiempos de espera progresivos
+      // Intentar hasta 3 veces con retraso exponencial
       for (let intento = 1; intento <= 3 && debeReintentar; intento++) {
         try {
-          console.log(`Intento ${intento} de consulta de progreso para tarea ${taskId}`);
+          
+          // Determinar qué URL usar: worker o API normal
+          let baseUrl = window.ENV?.WORKER_URL 
+            ? `https://${window.ENV.WORKER_URL}` 
+            : `${process.env.REACT_APP_API_URL || ''}`;
           
           // URL del endpoint de estado
-          const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+          const url = `${baseUrl}/api/tareas/estado/${taskId}/`;
           console.log(`Consultando endpoint: ${url}`);
           
           // Configurar un timeout más amplio para la petición

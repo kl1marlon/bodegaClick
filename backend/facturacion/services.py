@@ -18,57 +18,6 @@ class LoyverseService:
             'Content-Type': 'application/json'
         }
     
-    def get_categories(self):
-        """
-        Obtiene todas las categorías de Loyverse
-        
-        Returns:
-            dict: Respuesta de la API con las categorías, None en caso de error
-        """
-        try:
-            print("Obteniendo categorías desde Loyverse...")
-            url = f"{self.BASE_URL}/categories"
-            response = requests.get(url, headers=self.headers)
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"Error al obtener categorías: {response.status_code} - {response.text}")
-                return None
-        except Exception as e:
-            print(f"Error obteniendo categorías: {str(e)}")
-            return None
-    
-    def create_category(self, category_name):
-        """
-        Crea una nueva categoría en Loyverse
-        
-        Args:
-            category_name (str): Nombre de la categoría a crear
-            
-        Returns:
-            dict: Datos de la categoría creada, None en caso de error
-        """
-        try:
-            print(f"Creando nueva categoría en Loyverse: {category_name}")
-            url = f"{self.BASE_URL}/categories"
-            
-            payload = {
-                'name': category_name
-            }
-            
-            response = requests.post(url, headers=self.headers, json=payload)
-            
-            if response.status_code == 200 or response.status_code == 201:
-                print(f"Categoría '{category_name}' creada exitosamente")
-                return response.json()
-            else:
-                print(f"Error al crear categoría: {response.status_code} - {response.text}")
-                return None
-        except Exception as e:
-            print(f"Error creando categoría: {str(e)}")
-            return None
-    
     def create_item(self, item_data):
         """
         Crea un nuevo producto en Loyverse
