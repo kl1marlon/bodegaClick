@@ -11,10 +11,12 @@ const getApiUrl = () => {
 
 // Obtener la URL del worker (para tareas asíncronas)
 const getWorkerApiUrl = () => {
+  // Usamos el proxy local que configuramos en nginx
   if (window.ENV && window.ENV.WORKER_API_URL) {
     return window.ENV.WORKER_API_URL;
   }
-  return 'https://worker-production-7eb3.up.railway.app/api';
+  // Fallback al proxy local en caso de que no esté en la configuración
+  return '/worker-api';
 };
 
 const API_URL = getApiUrl();

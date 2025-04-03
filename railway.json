@@ -15,7 +15,8 @@
       "path": "./frontend",
       "envs": {
         "REACT_APP_API_URL": "${{backend.RAILWAY_PUBLIC_URL}}",
-        "BACKEND_URL": "${{backend.RAILWAY_PUBLIC_URL}}"
+        "BACKEND_URL": "${{backend.RAILWAY_PUBLIC_URL}}",
+        "WORKER_URL": "https://worker-production-7eb3.up.railway.app"
       },
       "persistent_folders": [],
       "depends_on": ["backend"],

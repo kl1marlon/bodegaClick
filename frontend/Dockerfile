@@ -47,7 +47,8 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'sed -i "s/RAILWAY_PORT/$PORT/g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
     echo 'sed -i "s|RAILWAY_BACKEND_URL|$BACKEND_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
     echo 'WORKER_URL=${WORKER_URL:-https://worker-production-7eb3.up.railway.app}' >> /entrypoint.sh && \
-    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\", WORKER_API_URL: \"$WORKER_URL/api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
+    echo 'sed -i "s|RAILWAY_WORKER_URL|$WORKER_URL|g" /etc/nginx/conf.d/nginx.conf' >> /entrypoint.sh && \
+    echo 'echo "window.ENV = { API_URL: \"$BACKEND_URL/api\", WORKER_API_URL: \"/worker-api\" };" > /usr/share/nginx/html/config.js' >> /entrypoint.sh && \
     echo 'echo "Configuración generada con BACKEND_URL=$BACKEND_URL y WORKER_URL=$WORKER_URL"' >> /entrypoint.sh && \
     echo 'nginx -g "daemon off;"' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
