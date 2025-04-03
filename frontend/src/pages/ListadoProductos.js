@@ -538,8 +538,10 @@ const ListadoProductos = () => {
         try {
           console.log(`Intento ${intento} de consulta de progreso para tarea ${taskId}`);
           
-          // URL del endpoint de estado
-          const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+          // URL del endpoint de estado - Usar URL del worker
+          const workerUrl = window.ENV?.WORKER_API_URL || 'https://worker-production-7eb3.up.railway.app/api';
+          const mainApiUrl = process.env.REACT_APP_API_URL || '';
+          const url = `${workerUrl}/tareas/estado/${taskId}/`;
           console.log(`Consultando endpoint: ${url}`);
           
           // Configurar un timeout más amplio para la petición
@@ -851,7 +853,10 @@ const ListadoProductos = () => {
               for (let i = 0; i < retries; i++) {
                 try {
                   console.log(`Intento ${i+1} de consulta de progreso para tarea ${taskId}`);
-                  response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+                  
+                  // URL del endpoint de estado - Usar URL del worker
+                  const workerUrl = window.ENV?.WORKER_API_URL || 'https://worker-production-7eb3.up.railway.app/api';
+                  response = await fetch(`${workerUrl}/tareas/estado/${taskId}/`);
                   
                   if (response.ok) {
                     break; // Salir del bucle si la respuesta es exitosa

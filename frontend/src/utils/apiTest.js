@@ -5,7 +5,9 @@ const detectApiUrl = async () => {
   // URLs a probar en orden de prioridad
   const urlsToTry = [
     window.ENV?.API_URL, 
+    window.ENV?.WORKER_API_URL,
     process.env.REACT_APP_API_URL,
+    'https://worker-production-7eb3.up.railway.app/api',
     'https://bodegaclick-production.up.railway.app/api',
     'https://backend-production-a8d3.up.railway.app/api',
     'http://localhost:8000/api'
