@@ -85,6 +85,9 @@ const ListadoProductos = () => {
   // Estado para filtro de productos sin precio
   const [mostrarSinPrecio, setMostrarSinPrecio] = useState(false);
   
+  // Estado para filtro por tipo de tasa
+  const [tipoTasaFiltro, setTipoTasaFiltro] = useState('');
+  
   // Estado para tasas de cambio
   const [tasaBCV, setTasaBCV] = useState(null);
   const [tasaParalelo, setTasaParalelo] = useState(null);
@@ -225,10 +228,17 @@ const ListadoProductos = () => {
         );
       }
       
+      // Filtrar por tipo de tasa
+      if (tipoTasaFiltro !== '') {
+        filtered = filtered.filter(producto => 
+          producto.tipo_tasa === tipoTasaFiltro
+        );
+      }
+      
       setProductosFiltrados(filtered);
       setPage(0); // Resetear a la primera página cuando cambia el filtro
     }
-  }, [searchTerm, categoriaSeleccionada, productos, mostrarSinPrecio]);
+  }, [searchTerm, categoriaSeleccionada, productos, mostrarSinPrecio, tipoTasaFiltro]);
   
   // Manejadores para la paginación
   const handleChangePage = (event, newPage) => {
@@ -283,6 +293,7 @@ const ListadoProductos = () => {
     setSearchTerm('');
     setCategoriaSeleccionada('');
     setMostrarSinPrecio(false);
+    setTipoTasaFiltro('');
   };
   
   // Función para calcular el precio en USD desde BS
@@ -851,7 +862,26 @@ const ListadoProductos = () => {
               for (let i = 0; i < retries; i++) {
                 try {
                   console.log(`Intento ${i+1} de consulta de progreso para tarea ${taskId}`);
-                  response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`);
+                  
+                  // URL del endpoint de estado
+                  const url = `${process.env.REACT_APP_API_URL || ''}/api/tareas/estado/${taskId}/`;
+                  console.log(`Consultando endpoint: ${url}`);
+                  
+                  // Configurar un timeout más amplio para la petición
+                  const controlador = new AbortController();
+                  const timeoutId = setTimeout(() => controlador.abort(), 10000); // 10 segundos de timeout
+                  
+                  const response = await fetch(url, {
+                    signal: controlador.signal,
+                    headers: {
+                      'Cache-Control': 'no-cache, no-store, must-revalidate',
+                      'Pragma': 'no-cache',
+                      'Expires': '0'
+                    }
+                  });
+                  
+                  // Limpiar el timeout una vez recibida la respuesta
+                  clearTimeout(timeoutId);
                   
                   if (response.ok) {
                     break; // Salir del bucle si la respuesta es exitosa
@@ -928,8 +958,6 @@ const ListadoProductos = () => {
               }
             } catch (error) {
               console.error("Error consultando progreso:", error);
-              // No mostramos el error al usuario en cada consulta fallida
-              // para no sobrecargar la interfaz con notificaciones de error
               
               // Incrementar contador de errores
               errorCount++;
@@ -944,6 +972,14 @@ const ListadoProductos = () => {
                 });
                 setSincronizando(false);
                 clearInterval(intervalId);
+              } else {
+                // Mostrar mensaje de error pero seguir intentando
+                setSnackbar({
+                  open: true,
+                  message: `Error al consultar progreso (intento ${errorCount}/5). Reintentando...`,
+                  severity: 'warning',
+                  autoHideDuration: 2000
+                });
               }
             }
           };
@@ -1257,7 +1293,7 @@ const ListadoProductos = () => {
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 Resultados búsqueda
               </Typography>
-              <Typography variant="h3" component="div" color={searchTerm || categoriaSeleccionada || mostrarSinPrecio ? 'secondary' : 'primary'}>
+              <Typography variant="h3" component="div" color={searchTerm || categoriaSeleccionada || mostrarSinPrecio || tipoTasaFiltro ? 'secondary' : 'primary'}>
                 {productosFiltrados.length}
               </Typography>
             </CardContent>
@@ -1339,7 +1375,7 @@ const ListadoProductos = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
             <FormControlLabel
               control={
                 <Switch
@@ -1356,6 +1392,36 @@ const ListadoProductos = () => {
                 bgcolor: mostrarSinPrecio ? '#fef2f2' : 'transparent'
               }}
             />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="tipo-tasa-select-label">Filtrar por Tasa</InputLabel>
+              <Select
+                labelId="tipo-tasa-select-label"
+                id="tipo-tasa-select"
+                value={tipoTasaFiltro}
+                onChange={(e) => setTipoTasaFiltro(e.target.value)}
+                label="Filtrar por Tasa"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <CurrencyExchangeIcon />
+                  </InputAdornment>
+                }
+                sx={{
+                  borderRadius: 1,
+                  '& fieldset': {
+                    borderColor: '#cbd5e1',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#94a3b8',
+                  }
+                }}
+              >
+                <MenuItem value="">Todos los tipos</MenuItem>
+                <MenuItem value="BCV">BCV</MenuItem>
+                <MenuItem value="PARALELO">Paralelo</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} md={2}>
             <Button
@@ -1400,7 +1466,7 @@ const ListadoProductos = () => {
           </Box>
         ) : (
           <>
-            {(categoriaSeleccionada || mostrarSinPrecio) && (
+            {(categoriaSeleccionada || mostrarSinPrecio || tipoTasaFiltro) && (
               <Box sx={{ 
                 p: 2, 
                 bgcolor: mostrarSinPrecio ? '#fee2e2' : '#e0f2fe', 
@@ -1420,6 +1486,11 @@ const ListadoProductos = () => {
                   {mostrarSinPrecio && (
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#b91c1c', ml: categoriaSeleccionada ? 2 : 0 }}>
                       Solo productos sin precio USD
+                    </Typography>
+                  )}
+                  {tipoTasaFiltro && (
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#0369a1', ml: categoriaSeleccionada || mostrarSinPrecio ? 2 : 0 }}>
+                      Tasa: <span style={{ color: '#0284c7' }}>{tipoTasaFiltro}</span>
                     </Typography>
                   )}
                 </Box>
