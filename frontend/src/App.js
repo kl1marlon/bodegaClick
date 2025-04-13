@@ -11,6 +11,9 @@ import NuevaFactura from './pages/NuevaFactura';
 import ListaDeFacturas from './pages/ListaDeFacturas';
 import BusquedaProductoHistorial from './pages/BusquedaProductoHistorial';
 import CrearProducto from './pages/CrearProducto';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
 // Importar otros componentes según sea necesario
 
 // Crear tema personalizado
@@ -38,41 +41,102 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Layout>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Routes>
-          {/* Ruta principal redirige a la implementación optimizada de facturas */}
-          <Route path="/" element={<Navigate to="/lista-facturas" replace />} />
+          {/* Ruta de login */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Rutas protegidas */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout>
+                <Navigate to="/lista-facturas" replace />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Rutas de Facturas - Versión Optimizada (predeterminada) */}
-          <Route path="/facturas" element={<Navigate to="/lista-facturas" replace />} />
-          <Route path="/lista-facturas" element={<ListaDeFacturas />} />
+          <Route path="/facturas" element={
+            <ProtectedRoute>
+              <Layout>
+                <Navigate to="/lista-facturas" replace />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/lista-facturas" element={
+            <ProtectedRoute>
+              <Layout>
+                <ListaDeFacturas />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Rutas de Facturas - Versión Antigua (mantener temporalmente) */}
-          <Route path="/facturas-legacy" element={<ListadoFacturas />} />
+          <Route path="/facturas-legacy" element={
+            <ProtectedRoute>
+              <Layout>
+                <ListadoFacturas />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Rutas compartidas entre ambas implementaciones */}
-          <Route path="/facturas/nueva" element={<NuevaFactura />} />
-          <Route path="/facturas/:id" element={<DetalleFactura />} />
+          <Route path="/facturas/nueva" element={
+            <ProtectedRoute>
+              <Layout>
+                <NuevaFactura />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/facturas/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <DetalleFactura />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Rutas de Productos */}
-          <Route path="/productos" element={<ListadoProductos />} />
-          <Route path="/crear-producto" element={<CrearProducto />} />
+          <Route path="/productos" element={
+            <ProtectedRoute>
+              <Layout>
+                <ListadoProductos />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/crear-producto" element={
+            <ProtectedRoute>
+              <Layout>
+                <CrearProducto />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Nueva ruta de Historial de Productos */}
-          <Route path="/buscar-producto-historial" element={<BusquedaProductoHistorial />} />
+          <Route path="/buscar-producto-historial" element={
+            <ProtectedRoute>
+              <Layout>
+                <BusquedaProductoHistorial />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           {/* Ruta 404 - No encontrado */}
           <Route path="*" element={
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <h2>Página no encontrada</h2>
-              <p>La página que estás buscando no existe o ha sido movida.</p>
-            </div>
+            <ProtectedRoute>
+              <Layout>
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <h2>Página no encontrada</h2>
+                  <p>La página que estás buscando no existe o ha sido movida.</p>
+                </div>
+              </Layout>
+            </ProtectedRoute>
           } />
         </Routes>
-      </Layout>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

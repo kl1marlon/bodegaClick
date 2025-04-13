@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -28,15 +28,24 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ListIcon from '@mui/icons-material/List';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
 
 function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const menuItems = [
@@ -154,12 +163,24 @@ function Layout({ children }) {
               sx={{
                 textTransform: 'none',
                 fontWeight: 600,
-                borderRadius: 1
+                borderRadius: 1,
+                mr: 2
               }}
             >
               Nueva Factura
             </Button>
           )}
+          <Button
+            onClick={handleLogout}
+            color="primary"
+            startIcon={<LogoutIcon />}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+          >
+            Cerrar Sesión
+          </Button>
         </Toolbar>
       </AppBar>
       <Box
@@ -223,4 +244,4 @@ function Layout({ children }) {
   );
 }
 
-export default Layout; 
+export default Layout;
