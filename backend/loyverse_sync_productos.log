@@ -52945,3 +52945,6 @@ LINE 1: ...ucto"."id", "facturacion_producto"."loyverse_id", "facturaci...
 2025-03-31 08:20:48,150 - INFO - /app/config/settings.py changed, reloading.
 2025-03-31 08:28:13,815 - INFO - /app/config/settings.py changed, reloading.
 2025-04-13 20:26:26,948 - INFO - /app/facturacion/urls.py changed, reloading.
+2025-04-14 19:53:09,098 - WARNING - Not Found: /api/health-check
+2025-04-14 21:20:38,725 - WARNING - Not Found: /api/health-check
+2025-04-14 21:24:05,194 - WARNING - Not Found: /api/health-check
