@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
+import logging
 
 # Cargar variables de entorno desde .env
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent.parent, '.env'))
@@ -123,6 +124,17 @@ if 'DATABASE_URL' in os.environ:
         conn_max_age=600,
         conn_health_checks=True,
     )
+
+# Log de conexión a la base de datos
+db_conf = DATABASES['default']
+logging.basicConfig(level=logging.INFO)
+logging.info(
+    f"Conectado a la base de datos: ENGINE={db_conf.get('ENGINE')}, "
+    f"NAME={db_conf.get('NAME')}, USER={db_conf.get('USER')}, "
+    f"HOST={db_conf.get('HOST')}, PORT={db_conf.get('PORT')}"
+)
+if 'DATABASE_URL' in os.environ:
+    logging.info(f"Usando DATABASE_URL: {os.environ.get('DATABASE_URL')}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {

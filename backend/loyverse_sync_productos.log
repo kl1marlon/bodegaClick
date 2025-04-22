@@ -52967,3 +52967,6 @@ LINE 1: ...ucto"."id", "facturacion_producto"."loyverse_id", "facturaci...
 2025-04-21 20:20:40,307 - WARNING - Bad Request: /api/facturas/556/procesar_factura/
 2025-04-21 20:22:10,347 - INFO - /app/facturacion/services.py changed, reloading.
 2025-04-21 20:25:12,375 - WARNING - Bad Request: /api/facturas/557/procesar_factura/
+2025-04-22 11:56:44,647 - WARNING - Not Found: /api/facturas/560/sincronizar/
+2025-04-22 11:56:46,509 - WARNING - Not Found: /api/facturas/560/sincronizar/
+2025-04-22 13:10:06,413 - INFO - /app/config/settings.py changed, reloading.

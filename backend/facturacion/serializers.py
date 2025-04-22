@@ -123,13 +123,48 @@ class CrearFacturaSerializer(serializers.ModelSerializer):
         total_usd = 0
         
         for detalle_data in detalles_data:
-            # También guardamos el precio de compra y las unidades para actualizar el producto después
+            # Extraer datos relevantes para actualizar producto
+            producto_obj = detalle_data.get('producto') # Obtenemos el objeto Producto directamente
+            cantidad_vendida = detalle_data.get('cantidad')
             precio_compra_usd = detalle_data.get('precio_compra_usd')
             unidades_paquete = detalle_data.get('unidades_paquete')
-            
+            precio_base_usd = detalle_data.get('precio_base_usd') # Asumo que quieres actualizar esto también
+
             # Crear el detalle de factura con todos los campos
             detalle = DetalleFactura.objects.create(factura=factura, **detalle_data)
-            
+
+            # ---- INICIO: Actualizar Producto ----
+            if producto_obj:
+                try:
+                    # No necesitamos buscarlo de nuevo si ya lo tenemos del serializer
+                    # Actualizar campos del producto
+                    producto_actualizado = False
+                    if precio_base_usd is not None and producto_obj.precio_base_usd != precio_base_usd:
+                        producto_obj.precio_base_usd = precio_base_usd
+                        producto_actualizado = True
+                    if precio_compra_usd is not None and producto_obj.precio_compra_usd != precio_compra_usd:
+                        producto_obj.precio_compra_usd = precio_compra_usd
+                        producto_actualizado = True
+                    if unidades_paquete is not None and producto_obj.unidades_paquete != unidades_paquete:
+                        producto_obj.unidades_paquete = unidades_paquete
+                        producto_actualizado = True
+                    
+                    # Actualizar stock (restar cantidad vendida)
+                    if cantidad_vendida is not None and producto_obj.stock_actual is not None:
+                        producto_obj.stock_actual -= cantidad_vendida
+                        producto_actualizado = True
+
+                    # Si hubo cambios, actualizar fuente y guardar
+                    if producto_actualizado:
+                        producto_obj.fuente_actualizacion = 'factura' # Marcar que la factura actualizó
+                        producto_obj.save()
+                        print(f"Producto ID {producto_obj.id} actualizado por factura.")
+                except Producto.DoesNotExist:
+                    print(f"Error: Producto con ID {producto_obj.id} no encontrado para actualizar.")
+                except Exception as e:
+                    print(f"Error al actualizar producto ID {producto_obj.id}: {str(e)}")
+            # ---- FIN: Actualizar Producto ----
+
             # Actualizar totales
             if factura.moneda == 'BS':
                 total_bs += detalle.total
