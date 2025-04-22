@@ -3,16 +3,38 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import {
   Box,
-  Paper,
+  Container,
   Typography,
-  TextField,
+  Paper,
   Button,
   Grid,
+  Divider,
   FormControlLabel,
   Switch,
   Snackbar,
-  Alert
+  Alert,
+  AlertTitle,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  CircularProgress,
+  TextField
 } from '@mui/material';
+
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 import { fetchProductos } from '../store/productosSlice';
 import { fetchLatestTasa } from '../store/tasasCambioSlice';
@@ -75,6 +97,17 @@ const NuevaFactura = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  // Estado para productos omitidos y reintentos
+  const [productosOmitidos, setProductosOmitidos] = useState([]);
+  const [mostrarDialogoOmitidos, setMostrarDialogoOmitidos] = useState(false);
+  const [facturaActualId, setFacturaActualId] = useState(null);
+  const [procesandoReintento, setProcesandoReintento] = useState(false);
+
+  // Estado para mensajes
+  const [mensaje, setMensaje] = useState('');
+  const [tipoMensaje, setTipoMensaje] = useState('success');
+  const [mostrarMensaje, setMostrarMensaje] = useState(false);
 
   // Cargar productos al iniciar
   useEffect(() => {
@@ -158,9 +191,9 @@ const NuevaFactura = () => {
 
   // Mostrar mensaje de error o éxito
   const handleShowMessage = (message, severity = 'success') => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
+    setMensaje(message);
+    setTipoMensaje(severity);
+    setMostrarMensaje(true);
   };
 
   // Guardar la edición de un producto
@@ -331,12 +364,26 @@ const NuevaFactura = () => {
         
         // Si está habilitada la opción de actualizar precios, procesamos la factura
         if (actualizarPrecios && response.payload && response.payload.id) {
+          // Guardar el ID de la factura actual para posibles reintentos
+          setFacturaActualId(response.payload.id);
+          
           // Realizar la llamada al endpoint para procesar la factura usando axios
           axios.post(`${API_URL}/facturas/${response.payload.id}/procesar_factura/`)
             .then(res => {
               console.log('Procesamiento de factura:', res.data);
               
-              // Construir mensaje detallado
+              // Verificar si hay productos omitidos
+              if (res.data.productos_omitidos_info && res.data.productos_omitidos_info.length > 0) {
+                // Guardar los productos omitidos y mostrar el diálogo
+                setProductosOmitidos(res.data.productos_omitidos_info);
+                setMostrarDialogoOmitidos(true);
+                
+                // Mostrar mensaje de éxito parcial
+                handleShowMessage(`Factura procesada parcialmente. ${res.data.productos_omitidos_info.length} productos no pudieron actualizarse.`, 'warning');
+                return;
+              }
+              
+              // Construir mensaje detallado para éxito completo
               let mensajeExito = 'Factura procesada correctamente';
               
               if (res.data.detalle_precios && res.data.detalle_precios.productos_actualizados) {
@@ -355,11 +402,20 @@ const NuevaFactura = () => {
             })
             .catch(error => {
               console.error('Error al procesar factura:', error);
+              
+              // Extraer mensaje de error
+              let mensajeError = 'Error al procesar la factura';
+              if (error.response && error.response.data) {
+                if (error.response.data.error) {
+                  mensajeError = error.response.data.error;
+                }
+              }
+              
               // Mostrar mensaje de error
-              handleShowMessage('Error al procesar factura: ' + (error.response?.data?.error || error.message), 'error');
+              handleShowMessage(mensajeError, 'error');
             });
         } else {
-          // Limpiar el formulario si no se van a actualizar precios
+          // Limpiar el formulario si no se procesa la factura
           setProductosSeleccionados([]);
         }
       })
@@ -407,8 +463,50 @@ const NuevaFactura = () => {
       });
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
+  // Manejar reintento de actualización de inventario
+  const handleReintentarActualizacion = () => {
+    if (!facturaActualId) return;
+    
+    setProcesandoReintento(true);
+    
+    // Realizar la llamada al endpoint para procesar la factura nuevamente
+    axios.post(`${API_URL}/facturas/${facturaActualId}/procesar_factura/`)
+      .then(res => {
+        console.log('Reintento de procesamiento:', res.data);
+        
+        // Actualizar la lista de productos omitidos si aún hay algunos
+        if (res.data.productos_omitidos_info && res.data.productos_omitidos_info.length > 0) {
+          setProductosOmitidos(res.data.productos_omitidos_info);
+          handleShowMessage(`Procesamiento parcial. ${res.data.productos_omitidos_info.length} productos siguen sin actualizarse.`, 'warning');
+        } else {
+          // Si no hay más productos omitidos, cerrar el diálogo
+          setMostrarDialogoOmitidos(false);
+          setProductosOmitidos([]);
+          handleShowMessage('Todos los productos han sido actualizados correctamente.', 'success');
+          
+          // Limpiar el formulario
+          setProductosSeleccionados([]);
+        }
+      })
+      .catch(error => {
+        console.error('Error al reintentar procesamiento:', error);
+        handleShowMessage('Error al reintentar el procesamiento de la factura', 'error');
+      })
+      .finally(() => {
+        setProcesandoReintento(false);
+      });
+  };
+
+  // Cerrar diálogo de productos omitidos
+  const handleCerrarDialogoOmitidos = () => {
+    setMostrarDialogoOmitidos(false);
+    // Limpiar el formulario si se decide no reintentar
+    setProductosSeleccionados([]);
+  };
+
+  // Cerrar mensaje
+  const handleCloseMessage = () => {
+    setMostrarMensaje(false);
   };
 
   return (
@@ -566,16 +664,125 @@ const NuevaFactura = () => {
         moneda={moneda}
       />
       
+      {/* Diálogo para productos omitidos */}
+      <Dialog
+        open={mostrarDialogoOmitidos}
+        onClose={handleCerrarDialogoOmitidos}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid #e2e8f0',
+          backgroundColor: '#f8fafc',
+          py: 2
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: '#334155' }}>
+            Productos no actualizados
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, pt: 3 }}>
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <AlertTitle>Actualización parcial</AlertTitle>
+            Los siguientes productos no pudieron ser actualizados porque tienen la opción "Rastrear inventario" desactivada en Loyverse.
+          </Alert>
+          
+          <Typography variant="body2" gutterBottom>
+            Para solucionar este problema, puede:
+          </Typography>
+          
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <CheckCircleOutlineIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Continuar sin estos productos (los precios sí fueron actualizados)" />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <SettingsIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Activar 'Rastrear inventario' en Loyverse para estos productos" 
+                secondary="Vaya a Loyverse POS > Inventario > Seleccione cada producto > Active 'Rastrear inventario'"
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <RefreshIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Reintentar la actualización (después de activar 'Rastrear inventario')" />
+            </ListItem>
+          </List>
+          
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
+                  <TableCell>Producto</TableCell>
+                  <TableCell>Razón</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productosOmitidos.map((producto, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{producto.nombre}</TableCell>
+                    <TableCell>
+                      {producto.reason === 'track_stock: false' 
+                        ? 'Rastreo de inventario desactivado' 
+                        : producto.reason}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
+          <Button 
+            onClick={handleCerrarDialogoOmitidos}
+            variant="outlined"
+            sx={{ 
+              mr: 1,
+              color: '#64748b',
+              borderColor: '#cbd5e1',
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#f1f5f9'
+              }
+            }}
+          >
+            Continuar sin estos productos
+          </Button>
+          <Button 
+            onClick={handleReintentarActualizacion}
+            variant="contained"
+            disabled={procesandoReintento}
+            startIcon={procesandoReintento ? <CircularProgress size={20} /> : <RefreshIcon />}
+            sx={{ 
+              backgroundColor: '#3b82f6',
+              fontWeight: 500,
+              borderRadius: 1,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#2563eb'
+              }
+            }}
+          >
+            {procesandoReintento ? 'Reintentando...' : 'Reintentar actualización'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
       {/* Snackbar para feedback */}
       <Snackbar 
-        open={snackbarOpen} 
+        open={mostrarMensaje} 
         autoHideDuration={6000} 
-        onClose={handleCloseSnackbar}
+        onClose={handleCloseMessage}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbarSeverity}
+          onClose={handleCloseMessage} 
+          severity={tipoMensaje}
           variant="filled"
           sx={{ 
             width: '100%',
@@ -583,7 +790,7 @@ const NuevaFactura = () => {
             borderRadius: 1
           }}
         >
-          {snackbarMessage}
+          {mensaje}
         </Alert>
       </Snackbar>
     </Box>

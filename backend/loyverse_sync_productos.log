@@ -52948,3 +52948,22 @@ LINE 1: ...ucto"."id", "facturacion_producto"."loyverse_id", "facturaci...
 2025-04-14 19:53:09,098 - WARNING - Not Found: /api/health-check
 2025-04-14 21:20:38,725 - WARNING - Not Found: /api/health-check
 2025-04-14 21:24:05,194 - WARNING - Not Found: /api/health-check
+2025-04-20 20:38:33,253 - WARNING - Not Found: /favicon.ico
+2025-04-20 21:58:25,370 - WARNING - Not Found: /favicon.ico
+2025-04-21 19:09:43,839 - INFO - 📦 Iniciando creación de producto con datos: {'nombre': 'Cadenita', 'descripcion': 'Cadena', 'categoria': 'Varios', 'precio_base_usd': 1.27, 'precio_compra_usd': 0.98, 'porcentaje_ganancia': 30, 'aplicar_iva': False, 'track_stock': True, 'tipo_tasa': 'PARALELO', 'es_precio_variable': False, 'unidades_paquete': 1, 'fuente_actualizacion': 'manual'}
+2025-04-21 19:09:45,567 - INFO - ✅ Producto creado en Loyverse con ID: 4c6712bb-b554-477b-8b37-ef08615f8de0
+2025-04-21 19:09:45,577 - ERROR - ❌ Error al calcular precio base en Bs: unsupported operand type(s) for *: 'float' and 'decimal.Decimal'
+2025-04-21 19:09:45,582 - INFO - ✅ Producto guardado en base de datos local con ID: 593
+2025-04-21 19:17:43,516 - INFO - 📦 Iniciando creación de producto con datos: {'nombre': 'Tinte AMG Pequeño', 'descripcion': '', 'categoria': 'Varios', 'precio_base_usd': 1.3, 'precio_compra_usd': 1, 'porcentaje_ganancia': 30, 'aplicar_iva': False, 'track_stock': True, 'tipo_tasa': 'PARALELO', 'es_precio_variable': False, 'unidades_paquete': 1, 'fuente_actualizacion': 'manual'}
+2025-04-21 19:17:45,060 - INFO - ✅ Producto creado en Loyverse con ID: 6d6faf71-559c-4abd-a1e1-25ec38a341d6
+2025-04-21 19:17:45,070 - ERROR - ❌ Error al calcular precio base en Bs: unsupported operand type(s) for *: 'float' and 'decimal.Decimal'
+2025-04-21 19:17:45,074 - INFO - ✅ Producto guardado en base de datos local con ID: 594
+2025-04-21 19:24:38,906 - INFO - 📦 Iniciando creación de producto con datos: {'nombre': 'Jabon Dove', 'descripcion': '', 'categoria': 'Higiene', 'precio_base_usd': 1.3, 'precio_compra_usd': 1, 'porcentaje_ganancia': 30, 'aplicar_iva': False, 'track_stock': True, 'tipo_tasa': 'PARALELO', 'es_precio_variable': False, 'unidades_paquete': 1, 'fuente_actualizacion': 'manual'}
+2025-04-21 19:24:40,338 - INFO - ✅ Producto creado en Loyverse con ID: 800de021-c74d-41ad-8fc1-d53a516e8c93
+2025-04-21 19:24:40,346 - ERROR - ❌ Error al calcular precio base en Bs: unsupported operand type(s) for *: 'float' and 'decimal.Decimal'
+2025-04-21 19:24:40,352 - INFO - ✅ Producto guardado en base de datos local con ID: 595
+2025-04-21 20:06:28,695 - INFO - /app/facturacion/services.py changed, reloading.
+2025-04-21 20:20:09,960 - WARNING - Bad Request: /api/facturas/555/procesar_factura/
+2025-04-21 20:20:40,307 - WARNING - Bad Request: /api/facturas/556/procesar_factura/
+2025-04-21 20:22:10,347 - INFO - /app/facturacion/services.py changed, reloading.
+2025-04-21 20:25:12,375 - WARNING - Bad Request: /api/facturas/557/procesar_factura/

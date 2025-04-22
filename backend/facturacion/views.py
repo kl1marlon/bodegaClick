@@ -427,14 +427,56 @@ class FacturaViewSet(viewsets.ModelViewSet):
         print(f"📦 Resultado de actualizar_inventario_desde_factura: {result_inventario['success']}")
         sys.stdout.flush()
         
+        # Preparar respuesta con información detallada
+        response_data = {
+            'detalle_precios': result_precios,
+            'detalle_inventario': result_inventario,
+            'success': result_precios['success'] and result_inventario['success'],
+        }
+        
+        # Agregar información sobre elementos omitidos para posibles reintentos
+        if 'productos_omitidos' in result_inventario:
+            response_data['productos_omitidos'] = result_inventario['productos_omitidos']
+            
+            # Obtener información adicional sobre los productos omitidos para mostrar en frontend
+            if result_inventario['productos_omitidos']:
+                productos_info = []
+                for item in result_inventario['productos_omitidos']:
+                    try:
+                        # Intentar obtener información del producto por variant_id
+                        variant_id = item.get('variant_id')
+                        if variant_id:
+                            producto = Producto.objects.filter(variant_id=variant_id).first()
+                            if producto:
+                                productos_info.append({
+                                    'variant_id': variant_id,
+                                    'nombre': producto.nombre,
+                                    'reason': item.get('reason', 'Desconocido')
+                                })
+                            else:
+                                productos_info.append({
+                                    'variant_id': variant_id,
+                                    'nombre': 'Producto no encontrado',
+                                    'reason': item.get('reason', 'Desconocido')
+                                })
+                    except Exception as e:
+                        print(f"Error al obtener información de producto: {str(e)}")
+                        
+                response_data['productos_omitidos_info'] = productos_info
+        
         if result_precios['success'] and result_inventario['success']:
             print(f"✅ Ambos procesos ejecutados con éxito")
             sys.stdout.flush()
-            return Response({
-                'message': f"Factura procesada correctamente. Productos con precios actualizados: {result_precios['productos_actualizados']}, Productos con inventario actualizado: {result_inventario['productos_actualizados']}",
-                'detalle_precios': result_precios,
-                'detalle_inventario': result_inventario
-            })
+            response_data['message'] = f"Factura procesada correctamente. Productos con precios actualizados: {result_precios['productos_actualizados']}, Productos con inventario actualizado: {result_inventario['productos_actualizados']}"
+            return Response(response_data)
+        
+        # Si hay elementos omitidos pero el proceso se considera exitoso parcialmente
+        if result_inventario.get('success') and 'productos_omitidos' in result_inventario and result_inventario['productos_omitidos']:
+            print(f"⚠️ Proceso parcialmente exitoso con elementos omitidos")
+            sys.stdout.flush()
+            response_data['message'] = f"Factura procesada parcialmente. Algunos productos no pudieron ser actualizados."
+            response_data['partial_success'] = True
+            return Response(response_data)
         
         errores = []
         if not result_precios['success']:
@@ -444,10 +486,9 @@ class FacturaViewSet(viewsets.ModelViewSet):
         
         print(f"❌ Errores en el proceso: {errores}")
         sys.stdout.flush()
-        return Response({
-            'error': "Error al procesar la factura: " + ", ".join(errores)
-        }, status=status.HTTP_400_BAD_REQUEST)
-
+        response_data['error'] = "Error al procesar la factura: " + ", ".join(errores)
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+    
     @action(detail=False, methods=['get'])
     def listado_simple(self, request):
         """
@@ -1003,11 +1044,6 @@ class CrearColumnaVariantIdView(APIView):
                     return JsonResponse({
                         'success': True,
                         'message': 'Columna variant_id añadida a la tabla facturacion_producto'
-                    })
-                else:
-                    return JsonResponse({
-                        'success': True,
-                        'message': 'La columna variant_id ya existe en la tabla facturacion_producto'
                     })
                 
             except Exception as e:

@@ -8,6 +8,8 @@ from django.utils import timezone
 from datetime import timedelta
 from loyverse_sync.products import aplicar_redondeo_especial
 import sys  # Añadir para poder hacer flush de stdout
+import re
+import time
 
 class LoyverseService:
     BASE_URL = 'https://api.loyverse.com/v1.0'
@@ -413,146 +415,256 @@ class LoyverseService:
             productos_actualizados = 0
             sync_results = []
             
+            # ID específico de la tienda principal de Loyverse
+            # NOTA: Esto debe cambiarse si se usa en otra tienda
+            store_id = '8aa31f38-96ee-4887-ad51-0362dfa034e6'
+            print(f"Usando tienda con ID: {store_id}")
+            
+            # Lista para almacenar los cambios de inventario
+            inventory_updates = []
+            
             # Procesar cada detalle de la factura
-            for detalle in DetalleFactura.objects.filter(factura=factura):
+            detalles = DetalleFactura.objects.filter(factura=factura)
+            print(f"Procesando {detalles.count()} productos en la factura")
+            
+            for detalle in detalles:
                 producto = detalle.producto
-                precio_unitario = detalle.precio_unitario  # El precio unitario introducido en la interfaz
+                print(f"Procesando producto: {producto.nombre} (ID Loyverse: {producto.loyverse_id})")
                 
-                # Guardar información en el modelo de producto para referencia
-                if factura.moneda == 'USD':
-                    # Si la factura es en USD, guardamos directamente el precio en USD
-                    producto.precio_compra_usd = detalle.precio_compra_usd
-                    # Para compatibilidad con el sistema anterior
-                    if factura.tasa_cambio:
-                        producto.precio_compra = detalle.precio_compra_usd * factura.tasa_cambio.valor
-                    else:
-                        producto.precio_compra = detalle.precio_compra_usd
+                # Verificar que el producto tenga ID de Loyverse
+                if not producto.loyverse_id:
+                    print(f"Producto {producto.nombre} no tiene ID de Loyverse")
+                    sync_results.append({
+                        "success": False,
+                        "product": producto.nombre,
+                        "error": "El producto no tiene ID de Loyverse"
+                    })
+                    continue
+                
+                # Usar variant_id si está disponible, de lo contrario obtenerlo
+                variant_id = None
+                if producto.variant_id:
+                    variant_id = producto.variant_id
+                    print(f"Usando variant_id almacenado: {variant_id}")
                 else:
-                    # Si la factura es en BS, convertimos a USD usando la tasa
-                    if factura.tasa_cambio and factura.tasa_cambio.valor > 0:
-                        producto.precio_compra_usd = detalle.precio_compra_usd
-                        producto.precio_compra = detalle.precio_unitario
-                
-                # Guardamos la información de unidades
-                producto.unidades_paquete = detalle.unidades_paquete
-                producto.unidades_compra = detalle.unidades_paquete
-                
-                # Aplicar redondeo especial al precio unitario de la factura si es en BS
-                if factura.moneda == 'BS':
-                    precio_redondeado = aplicar_redondeo_especial(precio_unitario)
-                    # Solo actualizar si el precio redondeado es diferente
-                    if precio_unitario != precio_redondeado:
-                        print(f"Aplicando redondeo a {producto.nombre}: {precio_unitario} -> {precio_redondeado}")
-                        precio_unitario = precio_redondeado
-                
-                # Actualizar el precio base con el precio unitario de la factura (redondeado si es BS)
-                producto.precio_base = precio_unitario
-                producto.precio_venta_calculado = precio_unitario
-                producto.ultima_actualizacion_precio = datetime.datetime.now()
-                producto.fuente_actualizacion = 'factura'  # Registrar que fue actualizado desde factura
-                
-                # Actualizar precio_base_usd y tipo_tasa si están disponibles en el detalle
-                if hasattr(detalle, 'precio_base_usd') and detalle.precio_base_usd:
-                    producto.precio_base_usd = detalle.precio_base_usd
-                    print(f"Precio base USD actualizado para {producto.nombre}: {detalle.precio_base_usd}")
-                
-                if hasattr(detalle, 'tipo_tasa') and detalle.tipo_tasa:
-                    producto.tipo_tasa = detalle.tipo_tasa
-                    print(f"Tipo de tasa actualizado para {producto.nombre}: {detalle.tipo_tasa}")
-                
-                # Guardar el producto actualizado
-                producto.save()
-                
-                print(f"Precio actualizado para {producto.nombre}: Original: {producto.precio_base}, Nuevo: {precio_unitario}")
-                
-                # Sincronizar con Loyverse
-                try:
-                    # Obtener la información completa del producto de Loyverse
-                    url = f"{self.BASE_URL}/items/{producto.loyverse_id}"
-                    response = requests.get(url, headers=self.headers)
-                    print(f"Consultando producto en Loyverse: {url}")
-                    print(f"Status Code: {response.status_code}")
-                    
-                    if response.status_code == 200:
-                        data = response.json()
+                    # Obtener variant_id desde la API de Loyverse
+                    try:
+                        # Obtener datos del producto para encontrar el ID de la variante correcta
+                        item_url = f"{self.BASE_URL}/items/{producto.loyverse_id}"
+                        print(f"Obteniendo datos del producto en: {item_url}")
+                        item_response = requests.get(item_url, headers=self.headers)
                         
-                        # Verificar que existan variantes
-                        if 'variants' in data and len(data['variants']) > 0:
-                            # Crear una copia para mantener toda la información
-                            update_payload = data.copy()
-                            
-                            # Actualizar SOLO el precio en todas las variantes con el precio_unitario
-                            for variant in update_payload['variants']:
-                                print(f"Actualizando precio de {producto.nombre} de {variant['default_price']} a {float(precio_unitario)}")
-                                
-                                # Usar directamente el precio_unitario de la factura
-                                variant['default_price'] = float(precio_unitario)
-                                
-                                # Actualizar también en las tiendas
-                                if 'stores' in variant:
-                                    for store in variant['stores']:
-                                        store['price'] = float(precio_unitario)
-                            
-                            print("Payload para actualización:")
-                            print(update_payload)
-                            
-                            # Enviar la actualización a Loyverse
-                            update_url = f"{self.BASE_URL}/items"
-                            print(f"Actualizando precio en: {update_url}")
-                            
-                            update_headers = self.headers.copy()
-                            update_headers['Content-Type'] = 'application/json'
-                            
-                            update_response = requests.post(
-                                update_url, 
-                                headers=update_headers,
-                                json=update_payload
-                            )
-                            
-                            print(f"Status Code: {update_response.status_code}")
-                            
-                            if update_response.status_code == 200:
-                                productos_actualizados += 1
-                                sync_results.append({
-                                    "success": True,
-                                    "product": producto.nombre,
-                                    "price": float(precio_unitario)
-                                })
-                            else:
-                                sync_results.append({
-                                    "success": False,
-                                    "product": producto.nombre,
-                                    "error": update_response.text
-                                })
-                        else:
+                        if item_response.status_code != 200:
+                            print(f"Error al obtener datos del producto: {item_response.text}")
                             sync_results.append({
                                 "success": False,
                                 "product": producto.nombre,
-                                "error": "No se encontraron variantes"
+                                "error": f"Error obteniendo datos del producto: {item_response.text}"
                             })
-                    else:
+                            continue
+                        
+                        # Obtener el ID de la primera variante (generalmente hay solo una)
+                        item_data = item_response.json()
+                        if not item_data.get('variants') or len(item_data['variants']) == 0:
+                            print(f"No se encontraron variantes para el producto {producto.nombre}")
+                            sync_results.append({
+                                "success": False,
+                                "product": producto.nombre,
+                                "error": "No se encontraron variantes para el producto"
+                            })
+                            continue
+                        
+                        # Obtener el ID de la variante y guardarlo para futuras consultas
+                        variant_id = item_data['variants'][0]['variant_id']
+                        producto.variant_id = variant_id
+                        producto.save(update_fields=['variant_id'])
+                        print(f"ID de variante encontrado y guardado: {variant_id}")
+                    except Exception as e:
+                        print(f"Error al obtener variant_id: {str(e)}")
                         sync_results.append({
                             "success": False,
                             "product": producto.nombre,
-                            "error": f"Error obteniendo producto: {response.text}"
+                            "error": f"Error al obtener variant_id: {str(e)}"
+                        })
+                        continue
+                
+                # Consultar el inventario actual
+                try:
+                    inventory_url = f"{self.BASE_URL}/inventory?variant_ids={variant_id}"
+                    print(f"Consultando inventario en: {inventory_url}")
+                    inventory_response = requests.get(inventory_url, headers=self.headers)
+                    print(f"Respuesta de inventario: {inventory_response.status_code}")
+                    
+                    if inventory_response.status_code == 200:
+                        inventory_data = inventory_response.json()
+                        inventory_levels = inventory_data.get('inventory_levels', [])
+                        print(f"Niveles de inventario recibidos: {len(inventory_levels)}")
+                        
+                        # Buscar el nivel de inventario para la tienda principal
+                        current_stock = 0
+                        for level in inventory_levels:
+                            if level.get('store_id') == store_id and level.get('variant_id') == variant_id:
+                                current_stock = level.get('in_stock', 0)
+                                print(f"Stock actual en Loyverse: {current_stock}")
+                                break
+                        
+                        # Calcular el nuevo stock sumando las unidades del detalle
+                        cantidad = float(detalle.cantidad if detalle.cantidad else 0)
+                        unidades = float(detalle.unidades_paquete if detalle.unidades_paquete else 1)
+                        
+                        cantidad_unidades = cantidad * unidades
+                        print(f"Cantidad: {cantidad}, Unidades por paquete: {unidades}")
+                        nuevo_stock = current_stock + cantidad_unidades
+                        print(f"Añadiendo {cantidad_unidades} unidades para un nuevo stock de: {nuevo_stock}")
+                        
+                        # Agregar a la lista de actualizaciones utilizando el ID de la VARIANTE
+                        inventory_updates.append({
+                            "variant_id": variant_id,
+                            "store_id": store_id,
+                            "stock_after": nuevo_stock
+                        })
+                        
+                        sync_results.append({
+                            "success": True,
+                            "product": producto.nombre,
+                            "current_stock": current_stock,
+                            "added_units": cantidad_unidades,
+                            "new_stock": nuevo_stock,
+                            "variant_id": variant_id
+                        })
+                    else:
+                        print(f"Error al consultar inventario: {inventory_response.text}")
+                        sync_results.append({
+                            "success": False,
+                            "product": producto.nombre,
+                            "error": f"Error consultando inventario: {inventory_response.text}"
                         })
                 except Exception as e:
+                    print(f"Error al consultar inventario: {str(e)}")
                     sync_results.append({
                         "success": False,
                         "product": producto.nombre,
                         "error": str(e)
                     })
             
-            # Actualizar la factura como sincronizada
-            factura.sincronizado_loyverse = True
-            factura.save()
+            # Realizar la actualización de inventario en Loyverse
+            update_url = f"{self.BASE_URL}/inventory"
+            print(f"Enviando actualización de inventario a Loyverse con {len(inventory_updates)} productos")
+            print(f"Payload de actualización: {inventory_updates}")
             
+            # Lista para almacenar los IDs de elementos que fallaron por track_stock: false
+            failed_items = []
+            retry_count = 0
+            max_retries = 3  # Número máximo de reintentos
+            
+            while retry_count <= max_retries and inventory_updates:
+                try:
+                    update_payload = {'inventory_levels': inventory_updates}
+                    update_response = requests.post(update_url, headers=self.headers, json=update_payload)
+                    print(f"Respuesta de actualización de inventario: {update_response.status_code}")
+                    
+                    # Si la actualización fue exitosa, salimos del bucle
+                    if update_response.status_code == 200:
+                        print("Inventario actualizado correctamente en Loyverse")
+                        return {
+                            'success': True,
+                            'message': 'Inventory updated successfully',
+                            'productos_actualizados': len(inventory_updates),
+                            'productos_omitidos': failed_items,
+                            'resultados_detalle': sync_results
+                        }
+                    
+                    # Si hay un error, analizamos la respuesta para identificar el elemento problemático
+                    error_data = update_response.json()
+                    print(f"Error al actualizar inventario: {error_data}")
+                    
+                    # Verificar si el error es por track_stock: false
+                    problem_id = None
+                    reason = None
+                    if 'errors' in error_data and len(error_data['errors']) > 0:
+                        for error in error_data['errors']:
+                            details = error.get('details', '')
+                            is_track_stock_error = 'track_stock' in details and 'false' in details
+                            is_use_production_error = 'use_production' in details and 'false' in details
+                            
+                            if is_track_stock_error or is_use_production_error:
+                                # Extraer el ID del elemento problemático
+                                import re
+                                match = re.search(r"id '([^']+)'", details)
+                                if match:
+                                    problem_id = match.group(1)
+                                    reason = 'track_stock: false' if is_track_stock_error else 'use_production: false'
+                                    print(f"Identificado elemento problemático con ID: {problem_id}, Razón: {reason}")
+                                    
+                                    # Filtrar el elemento problemático de la lista de actualizaciones
+                                    filtered_updates = []
+                                    item_found_for_removal = False
+                                    for item in inventory_updates:
+                                        if item['variant_id'] == problem_id:
+                                            failed_items.append({
+                                                'variant_id': item['variant_id'],
+                                                'reason': reason
+                                            })
+                                            item_found_for_removal = True
+                                        else:
+                                            filtered_updates.append(item)
+                                    
+                                    # Si el item no se encontró (esto no debería pasar pero por seguridad)
+                                    if not item_found_for_removal:
+                                         print(f"No se encontró el item {problem_id} en la lista para filtrar, deteniendo reintentos.")
+                                         return {
+                                            'success': False,
+                                            'error': f"Error interno: No se pudo filtrar el item {problem_id}",
+                                            'productos_omitidos': failed_items,
+                                            'resultados_detalle': sync_results
+                                        }
+                                    
+                                    # Actualizar la lista para el siguiente intento
+                                    inventory_updates = filtered_updates
+                                    print(f"Reintentando con {len(inventory_updates)} elementos después de filtrar")
+                                    
+                                    # Si no quedan elementos para actualizar, salimos
+                                    if not inventory_updates:
+                                        print("No quedan elementos válidos para actualizar")
+                                        return {
+                                            'success': True,
+                                            'message': 'Partial inventory update',
+                                            'productos_actualizados': 0,
+                                            'productos_omitidos': failed_items,
+                                            'resultados_detalle': sync_results
+                                        }
+                                    
+                                    # Incrementar contador de reintentos y continuar el bucle while
+                                    retry_count += 1
+                                    break # Salir del bucle de errores una vez identificado
+                                
+                    # Si no pudimos identificar el elemento problemático o no es por track_stock
+                    if retry_count == 0 or len(inventory_updates) == len(update_payload['inventory_levels']):
+                        return {
+                            'success': False,
+                            'error': f"Error al actualizar inventario: {error_data}",
+                            'productos_omitidos': failed_items,
+                            'resultados_detalle': sync_results
+                        }
+                
+                except Exception as e:
+                    print(f"Excepción durante la actualización de inventario: {str(e)}")
+                    return {
+                        'success': False,
+                        'error': f"Error inesperado durante actualización: {str(e)}",
+                        'productos_omitidos': failed_items,
+                        'resultados_detalle': sync_results
+                    }
+            
+            # Si llegamos aquí, es porque agotamos los reintentos
             return {
-                'success': True,
-                'productos_actualizados': productos_actualizados,
-                'sync_results': sync_results
+                'success': len(failed_items) < len(inventory_updates) + len(failed_items),
+                'message': f"Actualización parcial después de {retry_count} reintentos",
+                'productos_actualizados': len(inventory_updates),
+                'productos_omitidos': failed_items,
+                'resultados_detalle': sync_results
             }
-            
+
         except Factura.DoesNotExist:
             return {
                 'success': False,
@@ -790,7 +902,7 @@ class LoyverseService:
         import datetime
         import sys
         
-        print(f"📦 INICIANDO actualizar_inventario_desde_factura para factura ID: {factura_id}")
+        print(f"INICIANDO actualizar_inventario_desde_factura para factura ID: {factura_id}")
         sys.stdout.flush()
         
         try:
@@ -801,7 +913,7 @@ class LoyverseService:
             # ID específico de la tienda principal de Loyverse
             # NOTA: Esto debe cambiarse si se usa en otra tienda
             store_id = '8aa31f38-96ee-4887-ad51-0362dfa034e6'
-            print(f"📦 Usando tienda con ID: {store_id}")
+            print(f"Usando tienda con ID: {store_id}")
             sys.stdout.flush()
             
             # Lista para almacenar los cambios de inventario
@@ -809,17 +921,17 @@ class LoyverseService:
             
             # Procesar cada detalle de la factura
             detalles = DetalleFactura.objects.filter(factura=factura)
-            print(f"📦 Procesando {detalles.count()} productos en la factura")
+            print(f"Procesando {detalles.count()} productos en la factura")
             sys.stdout.flush()
             
             for detalle in detalles:
                 producto = detalle.producto
-                print(f"📦 Procesando producto: {producto.nombre} (ID Loyverse: {producto.loyverse_id})")
+                print(f"Procesando producto: {producto.nombre} (ID Loyverse: {producto.loyverse_id})")
                 sys.stdout.flush()
                 
                 # Verificar que el producto tenga ID de Loyverse
                 if not producto.loyverse_id:
-                    print(f"❌ Producto {producto.nombre} no tiene ID de Loyverse")
+                    print(f"Producto {producto.nombre} no tiene ID de Loyverse")
                     update_results.append({
                         "success": False,
                         "product": producto.nombre,
@@ -831,18 +943,18 @@ class LoyverseService:
                 variant_id = None
                 if producto.variant_id:
                     variant_id = producto.variant_id
-                    print(f"📦 Usando variant_id almacenado: {variant_id}")
+                    print(f"Usando variant_id almacenado: {variant_id}")
                 else:
                     # Obtener variant_id desde la API de Loyverse
                     try:
                         # Obtener datos del producto para encontrar el ID de la variante correcta
                         item_url = f"{self.BASE_URL}/items/{producto.loyverse_id}"
-                        print(f"📦 Obteniendo datos del producto en: {item_url}")
+                        print(f"Obteniendo datos del producto en: {item_url}")
                         sys.stdout.flush()
                         item_response = requests.get(item_url, headers=self.headers)
                         
                         if item_response.status_code != 200:
-                            print(f"❌ Error al obtener datos del producto: {item_response.text}")
+                            print(f"Error al obtener datos del producto: {item_response.text}")
                             sys.stdout.flush()
                             update_results.append({
                                 "success": False,
@@ -854,7 +966,7 @@ class LoyverseService:
                         # Obtener el ID de la primera variante (generalmente hay solo una)
                         item_data = item_response.json()
                         if not item_data.get('variants') or len(item_data['variants']) == 0:
-                            print(f"❌ No se encontraron variantes para el producto {producto.nombre}")
+                            print(f"No se encontraron variantes para el producto {producto.nombre}")
                             sys.stdout.flush()
                             update_results.append({
                                 "success": False,
@@ -867,10 +979,10 @@ class LoyverseService:
                         variant_id = item_data['variants'][0]['variant_id']
                         producto.variant_id = variant_id
                         producto.save(update_fields=['variant_id'])
-                        print(f"📦 ID de variante encontrado y guardado: {variant_id}")
+                        print(f"ID de variante encontrado y guardado: {variant_id}")
                         sys.stdout.flush()
                     except Exception as e:
-                        print(f"❌ Error al obtener variant_id: {str(e)}")
+                        print(f"Error al obtener variant_id: {str(e)}")
                         update_results.append({
                             "success": False,
                             "product": producto.nombre,
@@ -881,16 +993,16 @@ class LoyverseService:
                 # Consultar el inventario actual
                 try:
                     inventory_url = f"{self.BASE_URL}/inventory?variant_ids={variant_id}"
-                    print(f"📦 Consultando inventario en: {inventory_url}")
+                    print(f"Consultando inventario en: {inventory_url}")
                     sys.stdout.flush()
                     inventory_response = requests.get(inventory_url, headers=self.headers)
-                    print(f"📦 Respuesta de inventario: {inventory_response.status_code}")
+                    print(f"Respuesta de inventario: {inventory_response.status_code}")
                     sys.stdout.flush()
                     
                     if inventory_response.status_code == 200:
                         inventory_data = inventory_response.json()
                         inventory_levels = inventory_data.get('inventory_levels', [])
-                        print(f"📦 Niveles de inventario recibidos: {len(inventory_levels)}")
+                        print(f"Niveles de inventario recibidos: {len(inventory_levels)}")
                         sys.stdout.flush()
                         
                         # Buscar el nivel de inventario para la tienda principal
@@ -898,7 +1010,7 @@ class LoyverseService:
                         for level in inventory_levels:
                             if level.get('store_id') == store_id and level.get('variant_id') == variant_id:
                                 current_stock = level.get('in_stock', 0)
-                                print(f"📦 Stock actual en Loyverse: {current_stock}")
+                                print(f"Stock actual en Loyverse: {current_stock}")
                                 sys.stdout.flush()
                                 break
                         
@@ -907,10 +1019,10 @@ class LoyverseService:
                         unidades = float(detalle.unidades_paquete if detalle.unidades_paquete else 1)
                         
                         cantidad_unidades = cantidad * unidades
-                        print(f"📦 Cantidad: {cantidad}, Unidades por paquete: {unidades}")
+                        print(f"Cantidad: {cantidad}, Unidades por paquete: {unidades}")
                         sys.stdout.flush()
                         nuevo_stock = current_stock + cantidad_unidades
-                        print(f"📦 Añadiendo {cantidad_unidades} unidades para un nuevo stock de: {nuevo_stock}")
+                        print(f"Añadiendo {cantidad_unidades} unidades para un nuevo stock de: {nuevo_stock}")
                         sys.stdout.flush()
                         
                         # Agregar a la lista de actualizaciones utilizando el ID de la VARIANTE
@@ -929,91 +1041,155 @@ class LoyverseService:
                             "variant_id": variant_id
                         })
                     else:
-                        print(f"❌ Error al consultar inventario: {inventory_response.text}")
+                        print(f"Error al consultar inventario: {inventory_response.text}")
                         update_results.append({
                             "success": False,
                             "product": producto.nombre,
                             "error": f"Error consultando inventario: {inventory_response.text}"
                         })
                 except Exception as e:
-                    print(f"❌ Error al consultar inventario: {str(e)}")
+                    print(f"Error al consultar inventario: {str(e)}")
                     update_results.append({
                         "success": False,
                         "product": producto.nombre,
                         "error": str(e)
                     })
             
-            # Si hay actualizaciones pendientes, enviarlas a Loyverse
-            if inventory_updates:
-                print(f"📦 Enviando {len(inventory_updates)} actualizaciones de inventario a Loyverse")
-                sys.stdout.flush()
+            # Realizar la actualización de inventario en Loyverse
+            update_url = f"{self.BASE_URL}/inventory"
+            print(f"Enviando actualización de inventario a Loyverse con {len(inventory_updates)} productos")
+            print(f"Payload de actualización: {inventory_updates}")
+            sys.stdout.flush()
+            
+            # Lista para almacenar los IDs de elementos que fallaron por track_stock: false
+            failed_items = []
+            retry_count = 0
+            max_retries = 3  # Número máximo de reintentos
+            
+            while retry_count <= max_retries and inventory_updates:
                 try:
-                    # Endpoint para actualizar inventario en batch
-                    update_url = f"{self.BASE_URL}/inventory"
-                    update_payload = {"inventory_levels": inventory_updates}
-                    print(f"📦 Actualizando inventario en: {update_url}")
-                    sys.stdout.flush()
-                    print(f"📦 Payload de actualización: {update_payload}")
+                    update_payload = {'inventory_levels': inventory_updates}
+                    update_response = requests.post(update_url, headers=self.headers, json=update_payload)
+                    print(f"Respuesta de actualización de inventario: {update_response.status_code}")
                     sys.stdout.flush()
                     
-                    update_headers = self.headers.copy()
-                    update_headers['Content-Type'] = 'application/json'
-                    
-                    update_response = requests.post(
-                        update_url,
-                        headers=update_headers,
-                        json=update_payload
-                    )
-                    
-                    print(f"📦 Respuesta de actualización de inventario: {update_response.status_code}")
-                    sys.stdout.flush()
+                    # Si la actualización fue exitosa, salimos del bucle
                     if update_response.status_code == 200:
-                        print(f"✅ Inventario actualizado correctamente para {len(inventory_updates)} productos")
+                        print("Inventario actualizado correctamente en Loyverse")
                         sys.stdout.flush()
-                        productos_actualizados = len(inventory_updates)
-                        
-                        # Actualizar también en la base de datos local
-                        for update in update_results:
-                            if update["success"]:
-                                try:
-                                    producto = Producto.objects.get(nombre=update["product"])
-                                    producto.stock_actual = update["new_stock"]
-                                    producto.ultima_actualizacion_stock = datetime.datetime.now()
-                                    producto.save()
-                                    print(f"✅ Stock actualizado localmente para {producto.nombre}: {update['new_stock']}")
-                                    sys.stdout.flush()
-                                except Producto.DoesNotExist:
-                                    print(f"❌ No se encontró el producto localmente: {update['product']}")
-                                    sys.stdout.flush()
-                    else:
-                        print(f"❌ Error al actualizar inventario: {update_response.text}")
-                        sys.stdout.flush()
-                except Exception as e:
-                    print(f"❌ Error al actualizar inventario en lote: {str(e)}")
+                        return {
+                            'success': True,
+                            'message': 'Inventory updated successfully',
+                            'productos_actualizados': len(inventory_updates),
+                            'productos_omitidos': failed_items,
+                            'resultados_detalle': update_results
+                        }
+                    
+                    # Si hay un error, analizamos la respuesta para identificar el elemento problemático
+                    error_data = update_response.json()
+                    print(f"Error al actualizar inventario: {error_data}")
                     sys.stdout.flush()
-                    update_results.append({
-                        "success": False,
-                        "error": f"Error al actualizar inventario en lote: {str(e)}"
-                    })
-            else:
-                print("⚠️ No hay actualizaciones de inventario para enviar")
-                sys.stdout.flush()
+                    
+                    # Verificar si el error es por track_stock: false o use_production: false
+                    problem_id = None
+                    reason = None
+                    if 'errors' in error_data and len(error_data['errors']) > 0:
+                        for error in error_data['errors']:
+                            details = error.get('details', '')
+                            is_track_stock_error = 'track_stock' in details and 'false' in details
+                            is_use_production_error = 'use_production' in details and 'false' in details
+                            
+                            if is_track_stock_error or is_use_production_error:
+                                # Extraer el índice del producto problemático desde el campo 'field' del error de Loyverse
+                                import re
+                                index_match = re.search(r'inventory_levels\[(\d+)\]', error.get('field', ''))
+                                if index_match:
+                                    problematic_index = int(index_match.group(1))
+                                    reason = 'track_stock: false' if is_track_stock_error else 'use_production: false'
+                                    print(f"Identificado elemento problemático en índice: {problematic_index}, Razón: {reason}")
+                                    sys.stdout.flush()
+                                    
+                                    # Filtrar el elemento problemático de la lista de actualizaciones
+                                    filtered_updates = []
+                                    item_found_for_removal = False
+                                    for i, item in enumerate(inventory_updates):
+                                        if i == problematic_index:
+                                            failed_items.append({
+                                                'variant_id': item['variant_id'],
+                                                'reason': reason
+                                            })
+                                            item_found_for_removal = True
+                                        else:
+                                            filtered_updates.append(item)
+                                    
+                                    # Si el item no se encontró (esto no debería pasar pero por seguridad)
+                                    if not item_found_for_removal:
+                                         print(f"No se encontró el item en el índice {problematic_index} en la lista para filtrar, deteniendo reintentos.")
+                                         return {
+                                            'success': False,
+                                            'error': f"Error interno: No se pudo filtrar el item en el índice {problematic_index}",
+                                            'productos_omitidos': failed_items,
+                                            'resultados_detalle': update_results
+                                        }
+                                    
+                                    # Actualizar la lista para el siguiente intento
+                                    inventory_updates = filtered_updates
+                                    print(f"Reintentando con {len(inventory_updates)} elementos después de filtrar")
+                                    sys.stdout.flush()
+                                    
+                                    # Si no quedan elementos para actualizar, salimos
+                                    if not inventory_updates:
+                                        print("No quedan elementos válidos para actualizar")
+                                        sys.stdout.flush()
+                                        return {
+                                            'success': True,
+                                            'message': 'Partial inventory update',
+                                            'productos_actualizados': 0,
+                                            'productos_omitidos': failed_items,
+                                            'resultados_detalle': update_results
+                                        }
+                                    
+                                    # Incrementar contador de reintentos y continuar el bucle while
+                                    retry_count += 1
+                                    break # Volver al inicio del while para reintentar
+                                
+                    # Si no pudimos identificar el elemento problemático o no es por track_stock
+                    if retry_count == 0 or len(inventory_updates) == len(update_payload['inventory_levels']):
+                        return {
+                            'success': False,
+                            'error': f"Error al actualizar inventario: {error_data}",
+                            'productos_omitidos': failed_items,
+                            'resultados_detalle': update_results
+                        }
+                
+                except Exception as e:
+                    print(f"Excepción durante la actualización de inventario: {str(e)}")
+                    sys.stdout.flush()
+                    return {
+                        'success': False,
+                        'error': f"Error inesperado durante actualización: {str(e)}",
+                        'productos_omitidos': failed_items,
+                        'resultados_detalle': update_results
+                    }
             
+            # Si llegamos aquí, es porque agotamos los reintentos
             return {
-                'success': True,
-                'productos_actualizados': productos_actualizados,
-                'update_results': update_results
+                'success': len(failed_items) < len(inventory_updates) + len(failed_items),
+                'message': f"Actualización parcial después de {retry_count} reintentos",
+                'productos_actualizados': len(inventory_updates),
+                'productos_omitidos': failed_items,
+                'resultados_detalle': update_results
             }
-            
+
         except Factura.DoesNotExist:
-            print(f"❌ No se encontró la factura con ID {factura_id}")
+            print(f"No se encontró la factura con ID {factura_id}")
             sys.stdout.flush()
             return {
                 'success': False,
                 'error': f'No se encontró la factura con ID {factura_id}'
             }
         except Exception as e:
-            print(f"❌ Error general: {str(e)}")
+            print(f"Error general: {str(e)}")
             sys.stdout.flush()
             return {
                 'success': False,
