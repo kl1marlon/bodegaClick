@@ -1,0 +1,114 @@
+[
+    {
+        "id": "3c7cf779-2db5-4278-b8a3-e0a361d2ffdc",
+        "name": "Panaderia",
+        "color": "GREY",
+        "created_at": "2025-02-12T22:13:25.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "59e7c6ad-46e3-435b-ab21-6efea45a2cc7",
+        "name": "Helado",
+        "color": "GREY",
+        "created_at": "2025-02-06T23:24:09.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "19276bd4-84ac-4835-8bf3-529e4f647231",
+        "name": "Charcuteria",
+        "color": "GREY",
+        "created_at": "2025-02-05T21:28:52.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "cde3b647-02aa-4702-a0d2-e38951bc4c60",
+        "name": "Coche",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:43.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "d83295c2-90b2-4a82-bc5e-d7d4cb62bb60",
+        "name": "Vicio",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:43.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "a5ea283e-499f-407e-9242-bce590a2408c",
+        "name": "Papeleria",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:42.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "f77f2a50-a804-494c-9568-84f4a9dbac32",
+        "name": "Farmacia",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:42.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "fb81181b-1396-44b0-b8ca-56c012b24715",
+        "name": "Varios",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:42.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "cb646a7b-b277-4900-a5b5-536599b11641",
+        "name": "Higiene",
+        "color": "GREY",
+        "created_at": "2025-02-03T12:46:42.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "a02abdbb-2480-4f28-9fe4-26770e1de71e",
+        "name": "Bebidas",
+        "color": "GREY",
+        "created_at": "2025-02-02T18:55:39.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "4966f8b8-fb00-446d-9e85-34e06f3aea7c",
+        "name": "Papelería",
+        "color": "GREY",
+        "created_at": "2025-01-29T20:17:44.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "940d19fb-d690-43ee-b48d-7c721d7b5071",
+        "name": "Cuidado personal",
+        "color": "GREY",
+        "created_at": "2025-01-29T20:13:37.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "7b65fc7b-4778-446a-b383-88fe98430c89",
+        "name": "Impresiones",
+        "color": "GREY",
+        "created_at": "2025-01-29T20:08:06.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "aede525f-29c1-4b6e-9f01-f0757651b11e",
+        "name": "Cigarros",
+        "color": "GREY",
+        "created_at": "2025-01-29T13:07:29.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "f6f58312-97e9-4f1b-ab5e-e66feb284d1e",
+        "name": "Chucheria",
+        "color": "GREY",
+        "created_at": "2025-01-29T13:01:53.000Z",
+        "deleted_at": null
+    },
+    {
+        "id": "2d185611-5016-49a0-9348-3b27d7df11da",
+        "name": "Comida",
+        "color": "GREY",
+        "created_at": "2025-01-29T12:47:58.000Z",
+        "deleted_at": null
+    }
+]

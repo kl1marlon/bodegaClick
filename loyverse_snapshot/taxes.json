@@ -1,0 +1,14 @@
+[
+    {
+        "id": "a76974c2-791d-4141-a71f-11523d6d625a",
+        "type": "ADDED",
+        "name": "fiado",
+        "rate": 10.0,
+        "stores": [
+            "8aa31f38-96ee-4887-ad51-0362dfa034e6"
+        ],
+        "created_at": "2025-01-29T14:13:01.000Z",
+        "updated_at": "2025-04-03T00:56:32.000Z",
+        "deleted_at": null
+    }
+]
