@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import views_tasks
 from .views_info import DatabaseInfoView
+from .views_actualizar_precios import ActualizarPreciosBaseAPIView
 
 urlpatterns = [
     # ... rutas existentes ...
@@ -15,6 +16,9 @@ urlpatterns = [
     # Ruta de prueba CORS
     path('test-cors/', views_tasks.test_cors, name='test_cors'),
 
+    # Endpoints para actualización de precios
+    path('productos/actualizar-precios-base/', ActualizarPreciosBaseAPIView.as_view(), name='actualizar_precios_base'),
+
     # Endpoints de información y diagnóstico
     path('info/database/', DatabaseInfoView.as_view(), name='database-info'),
-] 
+]
