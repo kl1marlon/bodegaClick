@@ -57,7 +57,7 @@ import WarehouseIcon from '@mui/icons-material/Warehouse';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import EditIcon from '@mui/icons-material/Edit';
-import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory, updateProducto } from '../store/productosSlice';
+import { fetchProductos, syncFromLoyverse, updateProductoTipoTasa, syncInventory, updateProducto, actualizarPreciosBase } from '../store/productosSlice';
 import { fetchTasasCambio, fetchLatestTasa, createTasaCambio } from '../store/tasasCambioSlice';
 import { aplicarRedondeoEspecial } from '../utils/calculosPrecios';
 import DialogoEditarProducto from '../components/factura/DialogoEditarProducto';
@@ -1084,6 +1084,54 @@ const ListadoProductos = () => {
     }
   };
   
+  // Función para actualizar precios base con la tasa actual
+  const handleActualizarPreciosBase = () => {
+    // Determinar qué tasa usar: por defecto usar la tasa de PARALELO si existe
+    const tasaActual = tasaParalelo ? tasaParalelo.valor : (tasaBCV ? tasaBCV.valor : null);
+
+    if (!tasaActual) {
+      setSnackbar({
+        open: true,
+        message: 'No hay tasa de cambio disponible para actualizar los precios base',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Confirmar con el usuario
+    if (!window.confirm(`¿Confirma que desea actualizar los precios base de todos los productos usando la tasa de ${tasaActual}?`)) {
+      return;
+    }
+
+    // Mostrar indicador de proceso
+    setSnackbar({
+      open: true,
+      message: "Actualizando precios base...",
+      severity: 'info'
+    });
+
+    dispatch(actualizarPreciosBase(tasaActual))
+      .unwrap()
+      .then((result) => {
+        // Refrescar la lista de productos
+        dispatch(fetchProductos());
+        
+        setSnackbar({
+          open: true,
+          message: `Precios base actualizados correctamente. ${result.actualizados} productos modificados con tasa ${result.tasa}.`,
+          severity: 'success'
+        });
+      })
+      .catch((error) => {
+        console.error("Error al actualizar precios base:", error);
+        setSnackbar({
+          open: true,
+          message: `Error al actualizar precios base: ${error}`,
+          severity: 'error'
+        });
+      });
+  };
+  
   return (
     <Box sx={{ 
       maxWidth: 1200, 
@@ -1180,6 +1228,23 @@ const ListadoProductos = () => {
             >
               {sincronizandoInventario ? 'Sincronizando...' : 'Sincronizar inventario'}
               {sincronizandoInventario && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<CalculateIcon />}
+              onClick={handleActualizarPreciosBase}
+              disabled={sincronizando || (!tasaParalelo && !tasaBCV)}
+              sx={{
+                borderRadius: '4px',
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600,
+                ml: 2
+              }}
+            >
+              Actualizar Precios Base
             </Button>
           </ButtonGroup>
         </Box>
@@ -1433,7 +1498,7 @@ const ListadoProductos = () => {
                 borderRadius: 1,
                 height: '56px',
                 textTransform: 'none',
-                fontWeight: 600
+                fontWeight: 500
               }}
             >
               Limpiar filtros
@@ -1851,9 +1916,8 @@ const ListadoProductos = () => {
             <Typography variant="body1" gutterBottom>
               Puede cambiar la tasa utilizada para cada producto haciendo clic en los botones "BCV" o "Paralelo" en la columna "Tasa".
             </Typography>
-            <Typography variant="body1" gutterBottom sx={{ fontWeight: 500, color: '#0284c7' }}>
-              ¡Importante! La tasa mostrada en cada producto ahora refleja el valor almacenado en la base de datos (tipo_tasa).
-              Al cambiarla, se actualizará permanentemente para ese producto.
+            <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary', fontStyle: 'italic' }}>
+              Nota: Al cambiar el tipo de tasa de un producto (BCV o Paralelo), este cambio se guardará en la base de datos y afectará los cálculos de precios en futuras facturas.
             </Typography>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
@@ -2237,7 +2301,12 @@ const ListadoProductos = () => {
                 variant="outlined"
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 1
+                    '& fieldset': {
+                      borderColor: '#cbd5e1',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#94a3b8',
+                    }
                   }
                 }}
               />

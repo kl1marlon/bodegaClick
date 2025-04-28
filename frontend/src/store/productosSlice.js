@@ -167,6 +167,21 @@ export const testCorsConnection = createAsyncThunk(
   }
 );
 
+// Nueva función para actualizar precios base masivamente
+export const actualizarPreciosBase = createAsyncThunk(
+  'productos/actualizarPreciosBase',
+  async (tasa, { rejectWithValue }) => {
+    try {
+      console.log('Actualizando precios base con tasa:', tasa);
+      const response = await axios.post(`${API_URL}/productos/actualizar-precios-base/`, { tasa });
+      return response.data;
+    } catch (error) {
+      console.error('Error al actualizar precios base:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || error.message || 'Error al actualizar precios base');
+    }
+  }
+);
+
 const productosSlice = createSlice({
   name: 'productos',
   initialState: {
@@ -206,7 +221,7 @@ const productosSlice = createSlice({
       })
       .addCase(syncInventory.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(updateProductoTipoTasa.fulfilled, (state, action) => {
         const index = state.items.findIndex(producto => producto.id === action.payload.id);
@@ -220,6 +235,16 @@ const productosSlice = createSlice({
           // Actualizar el producto en el estado con los nuevos datos
           state.items[index] = {...state.items[index], ...action.payload};
         }
+      })
+      .addCase(actualizarPreciosBase.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(actualizarPreciosBase.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(actualizarPreciosBase.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || action.error.message;
       })
       .addCase(testCorsConnection.pending, (state) => {
         state.status = 'loading';
