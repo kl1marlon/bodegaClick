@@ -16,8 +16,8 @@ urlpatterns = [
     # Ruta de prueba CORS
     path('test-cors/', views_tasks.test_cors, name='test_cors'),
 
-    # Endpoints para actualización de precios
-    path('productos/actualizar-precios-base/', ActualizarPreciosBaseAPIView.as_view(), name='actualizar_precios_base'),
+    # Endpoint personalizado para actualizar precios base fuera del router
+    path('api/actualizar-precios-base/', ActualizarPreciosBaseAPIView.as_view(), name='actualizar-precios-base'),
 
     # Endpoints de información y diagnóstico
     path('info/database/', DatabaseInfoView.as_view(), name='database-info'),

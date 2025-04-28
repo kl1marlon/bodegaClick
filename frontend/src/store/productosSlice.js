@@ -173,7 +173,8 @@ export const actualizarPreciosBase = createAsyncThunk(
   async (tasa, { rejectWithValue }) => {
     try {
       console.log('Actualizando precios base con tasa:', tasa);
-      const response = await axios.post(`${API_URL}/productos/actualizar-precios-base/`, { tasa });
+      // Actualizar precios base usando la nueva URL
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/actualizar-precios-base/`, { tasa });
       return response.data;
     } catch (error) {
       console.error('Error al actualizar precios base:', error.response?.data || error.message);
