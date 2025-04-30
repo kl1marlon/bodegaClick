@@ -50,22 +50,120 @@ def conectar_bd():
         log_mensaje(f"ERROR al conectar a la base de datos: {e}")
         sys.exit(1)
 
-def obtener_tasa_paralelo():
-    """Solicita y confirma la tasa paralelo a utilizar."""
-    tasa = input('Introduce la tasa paralelo a usar: ')
+def obtener_tasas_actuales(conn):
+    """Obtiene las tasas actuales (BCV y PARALELO) desde la base de datos."""
     try:
-        tasa = Decimal(tasa)
-    except Exception:
-        log_mensaje('Tasa inválida. Debe ser un número decimal.')
-        sys.exit(1)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT tipo, valor 
+            FROM facturacion_tasacambio 
+            WHERE tipo IN ('BCV', 'PARALELO')
+            ORDER BY fecha DESC
+            LIMIT 2
+        """)
+        
+        tasas = {}
+        for tipo, valor in cursor.fetchall():
+            tasas[tipo] = valor
+        
+        cursor.close()
+        
+        # Verificar que se obtuvieron ambas tasas
+        if 'BCV' not in tasas:
+            log_mensaje("ADVERTENCIA: No se encontró la tasa BCV en la base de datos.")
+            tasas['BCV'] = Decimal('0.0')
+        if 'PARALELO' not in tasas:
+            log_mensaje("ADVERTENCIA: No se encontró la tasa PARALELO en la base de datos.")
+            tasas['PARALELO'] = Decimal('0.0')
+            
+        return tasas
+    except Exception as e:
+        log_mensaje(f"ERROR al obtener tasas actuales: {e}")
+        return {'BCV': Decimal('0.0'), 'PARALELO': Decimal('0.0')}
+
+def actualizar_tasa(conn, tipo, valor):
+    """Actualiza o crea una tasa en la base de datos."""
+    try:
+        cursor = conn.cursor()
+        # Verificar si ya existe una tasa de este tipo
+        cursor.execute("""
+            SELECT id FROM facturacion_tasacambio 
+            WHERE tipo = %s
+            ORDER BY fecha DESC
+            LIMIT 1
+        """, (tipo,))
+        
+        resultado = cursor.fetchone()
+        
+        if resultado:
+            # Actualizar la tasa existente
+            tasa_id = resultado[0]
+            cursor.execute("""
+                UPDATE facturacion_tasacambio 
+                SET valor = %s, fecha = NOW()
+                WHERE id = %s
+            """, (valor, tasa_id))
+            log_mensaje(f"Tasa {tipo} actualizada a {valor}")
+        else:
+            # Crear una nueva tasa
+            cursor.execute("""
+                INSERT INTO facturacion_tasacambio (tipo, valor, fecha)
+                VALUES (%s, %s, NOW())
+            """, (tipo, valor))
+            log_mensaje(f"Nueva tasa {tipo} creada con valor {valor}")
+        
+        conn.commit()
+        cursor.close()
+        return True
+    except Exception as e:
+        conn.rollback()
+        log_mensaje(f"ERROR al actualizar tasa {tipo}: {e}")
+        return False
+
+def obtener_y_confirmar_tasas(conn):
+    """Solicita y confirma las tasas a utilizar."""
+    # Obtener tasas actuales
+    tasas_actuales = obtener_tasas_actuales(conn)
     
-    confirm = input(f'¿Confirmas la tasa {tasa}? (s/n): ')
+    log_mensaje(f"Tasas actuales: BCV = {tasas_actuales.get('BCV', 'No disponible')}, PARALELO = {tasas_actuales.get('PARALELO', 'No disponible')}")
+    
+    # Solicitar nuevas tasas
+    nuevas_tasas = {}
+    
+    # Tasa BCV
+    tasa_bcv = input(f'Introduce la tasa BCV (actual: {tasas_actuales.get("BCV", "No disponible")}): ')
+    if tasa_bcv:
+        try:
+            nuevas_tasas['BCV'] = Decimal(tasa_bcv)
+        except Exception:
+            log_mensaje('Tasa BCV inválida. Debe ser un número decimal.')
+            sys.exit(1)
+    else:
+        nuevas_tasas['BCV'] = tasas_actuales.get('BCV', Decimal('0.0'))
+    
+    # Tasa PARALELO
+    tasa_paralelo = input(f'Introduce la tasa PARALELO (actual: {tasas_actuales.get("PARALELO", "No disponible")}): ')
+    if tasa_paralelo:
+        try:
+            nuevas_tasas['PARALELO'] = Decimal(tasa_paralelo)
+        except Exception:
+            log_mensaje('Tasa PARALELO inválida. Debe ser un número decimal.')
+            sys.exit(1)
+    else:
+        nuevas_tasas['PARALELO'] = tasas_actuales.get('PARALELO', Decimal('0.0'))
+    
+    # Confirmar tasas
+    log_mensaje(f"Tasas a utilizar: BCV = {nuevas_tasas['BCV']}, PARALELO = {nuevas_tasas['PARALELO']}")
+    confirm = input('¿Confirmas estas tasas? (s/n): ')
     if confirm.lower() != 's':
         log_mensaje('Operación cancelada por el usuario.')
         sys.exit(0)
     
-    log_mensaje(f"Tasa confirmada: {tasa}")
-    return tasa
+    # Actualizar tasas en la base de datos
+    for tipo, valor in nuevas_tasas.items():
+        actualizar_tasa(conn, tipo, valor)
+    
+    return nuevas_tasas
 
 def aplicar_redondeo_especial(precio):
     """
@@ -116,15 +214,15 @@ def aplicar_redondeo_especial(precio):
     proximo_multiplo_5 = entero + (5 - resto) if resto != 0 else entero
     return float(proximo_multiplo_5)
 
-def actualizar_precios(conn, tasa):
-    """Actualiza los precios base de todos los productos usando la tasa indicada."""
+def actualizar_precios(conn, tasas):
+    """Actualiza los precios base de todos los productos usando la tasa correspondiente según tipo_tasa."""
     try:
         cursor = conn.cursor()
         
-        # Primero, obtener todos los productos con precio_base_usd > 0
+        # Obtener todos los productos con precio_base_usd > 0
         log_mensaje("Consultando productos con precio_base_usd > 0...")
         cursor.execute("""
-            SELECT id, precio_base_usd, precio_base 
+            SELECT id, nombre, precio_base_usd, precio_base, tipo_tasa 
             FROM facturacion_producto 
             WHERE precio_base_usd > 0
         """)
@@ -136,12 +234,32 @@ def actualizar_precios(conn, tasa):
         # Preparar para actualización
         actualizados = 0
         sin_cambios = 0
+        productos_sin_cambios = []
         start_time = time.time()
         
+        # Estadísticas por tipo de tasa
+        stats_por_tasa = {'BCV': 0, 'PARALELO': 0, 'DESCONOCIDO': 0}
+        
         # Actualizar cada producto si es necesario
-        for i, (producto_id, precio_base_usd, precio_base_actual) in enumerate(productos):
+        for i, (producto_id, nombre, precio_base_usd, precio_base_actual, tipo_tasa) in enumerate(productos):
+            # Normalizar tipo_tasa a mayúsculas y asegurarse que sea uno de los tipos válidos
+            if tipo_tasa:
+                tipo_tasa_norm = tipo_tasa.upper()
+            else:
+                tipo_tasa_norm = None
+            
+            # Determinar qué tasa usar
+            if tipo_tasa_norm in tasas:
+                tasa_a_usar = tasas[tipo_tasa_norm]
+                stats_por_tasa[tipo_tasa_norm] += 1
+            else:
+                # Si el tipo_tasa no es válido o es None, usar BCV por defecto
+                tasa_a_usar = tasas['BCV']
+                stats_por_tasa['DESCONOCIDO'] += 1
+                log_mensaje(f"ADVERTENCIA: Producto ID {producto_id} tiene tipo_tasa '{tipo_tasa}' no reconocido. Usando tasa BCV.")
+            
             # Calcular nuevo precio
-            nuevo_precio = float(precio_base_usd) * float(tasa)
+            nuevo_precio = float(precio_base_usd) * float(tasa_a_usar)
             nuevo_precio_redondeado = aplicar_redondeo_especial(nuevo_precio)
             
             # Mostrar progreso cada 50 productos o al 25%, 50%, 75% y 100%
@@ -159,11 +277,18 @@ def actualizar_precios(conn, tasa):
                 """, (nuevo_precio_redondeado, producto_id))
                 
                 # Registrar detalle del cambio
-                log_mensaje(f"Actualizado: Producto ID {producto_id}: {precio_base_actual} → {nuevo_precio_redondeado}", 
+                log_mensaje(f"Actualizado: Producto ID {producto_id} (Tasa: {tipo_tasa_norm}): {precio_base_actual} → {nuevo_precio_redondeado}", 
                            escribir_archivo=True)
                 actualizados += 1
             else:
                 sin_cambios += 1
+                productos_sin_cambios.append({
+                    'id': producto_id,
+                    'nombre': nombre,
+                    'precio_base_actual': precio_base_actual,
+                    'tipo_tasa': tipo_tasa_norm,
+                    'tasa_aplicada': tasa_a_usar
+                })
         
         # Confirmar cambios
         conn.commit()
@@ -176,9 +301,18 @@ def actualizar_precios(conn, tasa):
         log_mensaje(f"Total productos revisados: {total_productos}")
         log_mensaje(f"Productos actualizados: {actualizados}")
         log_mensaje(f"Productos sin cambios: {sin_cambios}")
-        log_mensaje(f"Tasa aplicada: {tasa}")
+        log_mensaje(f"Tasas aplicadas: BCV = {tasas['BCV']}, PARALELO = {tasas['PARALELO']}")
+        log_mensaje(f"Productos por tipo de tasa: BCV = {stats_por_tasa['BCV']}, PARALELO = {stats_por_tasa['PARALELO']}, DESCONOCIDO = {stats_por_tasa['DESCONOCIDO']}")
         log_mensaje(f"Tiempo total: {tiempo_total:.2f} segundos")
         log_mensaje(f"Velocidad: {total_productos/tiempo_total:.2f} productos/segundo")
+        
+        # Registrar lista de productos sin cambios en el log
+        if productos_sin_cambios:
+            log_mensaje(f"==== LISTA DE PRODUCTOS SIN CAMBIOS ({len(productos_sin_cambios)}) ====")
+            for prod in productos_sin_cambios:
+                log_mensaje(f"ID: {prod['id']} | Nombre: {prod['nombre']} | Precio actual: {prod['precio_base_actual']} | Tipo tasa: {prod['tipo_tasa']} | Tasa aplicada: {prod['tasa_aplicada']}")
+        else:
+            log_mensaje("No hubo productos sin cambios.")
         
     except Exception as e:
         conn.rollback()
@@ -193,11 +327,11 @@ def main():
     # Conectar a la base de datos
     conn = conectar_bd()
     
-    # Obtener y confirmar la tasa
-    tasa = obtener_tasa_paralelo()
+    # Obtener y confirmar las tasas
+    tasas = obtener_y_confirmar_tasas(conn)
     
     # Actualizar precios
-    actualizar_precios(conn, tasa)
+    actualizar_precios(conn, tasas)
     
     # Cerrar conexión
     conn.close()
