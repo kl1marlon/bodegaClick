@@ -133,21 +133,21 @@ class CrearFacturaSerializer(serializers.ModelSerializer):
         total_bs = 0
         total_usd = 0
         
+        # Cambios aquí: sumar precio_compra_usd según la moneda
+        suma_precios = 0
         for detalle_data in detalles_data:
-            # También guardamos el precio de compra y las unidades para actualizar el producto después
-            precio_compra_usd = detalle_data.get('precio_compra_usd')
-            unidades_paquete = detalle_data.get('unidades_paquete')
-            
+            precio_compra = detalle_data.get('precio_compra_usd', 0) or 0
             # Crear el detalle de factura con todos los campos
             detalle = DetalleFactura.objects.create(factura=factura, **detalle_data)
-            
-            # Actualizar totales
-            if factura.moneda == 'BS':
-                total_bs += detalle.total
-                total_usd = total_bs / factura.tasa_cambio.valor if factura.tasa_cambio else 0
-            else:
-                total_usd += detalle.total
-                total_bs = total_usd * factura.tasa_cambio.valor if factura.tasa_cambio else 0
+            suma_precios += float(precio_compra)
+        
+        tasa_valor = factura.tasa_cambio.valor if factura.tasa_cambio else 1
+        if factura.moneda == 'BS':
+            total_bs = suma_precios
+            total_usd = total_bs / tasa_valor if tasa_valor else 0
+        else:
+            total_usd = suma_precios
+            total_bs = total_usd * tasa_valor if tasa_valor else 0
         
         factura.total_bs = total_bs
         factura.total_usd = total_usd
