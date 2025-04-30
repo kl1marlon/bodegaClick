@@ -346,10 +346,11 @@ class FacturaViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, *args, **kwargs):
         """
-        Devuelve el detalle de una factura específica usando FacturaSerializer.
+        Sobrescribir el método retrieve para asegurar que se use el serializer correcto
+        y se incluya el valor de la tasa de cambio en la respuesta.
         """
         instance = self.get_object()
-        serializer = self.get_serializer(instance) # get_serializer usa get_serializer_class
+        serializer = FacturaSerializer(instance)
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):
