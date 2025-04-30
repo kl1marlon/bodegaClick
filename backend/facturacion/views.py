@@ -344,6 +344,14 @@ class FacturaViewSet(viewsets.ModelViewSet):
             return CrearFacturaSerializer
         return FacturaSerializer
     
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Devuelve el detalle de una factura específica usando FacturaSerializer.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance) # get_serializer usa get_serializer_class
+        return Response(serializer.data)
+    
     def create(self, request, *args, **kwargs):
         print("Datos recibidos:", request.data)
         serializer = self.get_serializer(data=request.data)

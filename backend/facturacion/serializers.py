@@ -91,10 +91,21 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
 
 class FacturaSerializer(serializers.ModelSerializer):
     detalles = DetalleFacturaSerializer(many=True, read_only=True)
+    tasa_cambio_valor = serializers.SerializerMethodField()
     
     class Meta:
         model = Factura
-        fields = '__all__'
+        fields = [
+            'id', 'numero', 'fecha', 'moneda', 'tasa_cambio', 'tasa_cambio_valor', 
+            'total_bs', 'total_usd', 'sincronizado_loyverse', 'porcentaje_ganancia', 
+            'detalles'
+        ]
+    
+    def get_tasa_cambio_valor(self, obj):
+        """
+        Devuelve el valor numérico de la tasa de cambio asociada.
+        """
+        return obj.tasa_cambio.valor if obj.tasa_cambio else None
 
 class CrearFacturaSerializer(serializers.ModelSerializer):
     detalles = DetalleFacturaSerializer(many=True)

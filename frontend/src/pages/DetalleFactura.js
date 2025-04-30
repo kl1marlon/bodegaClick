@@ -296,8 +296,8 @@ const DetalleFactura = () => {
                   Tasa de Cambio
                 </Typography>
                 <Typography variant="body1">
-                  {factura.tasa_cambio ? 
-                    `${parseFloat(factura.tasa_cambio.valor).toFixed(2)} (${factura.tasa_cambio.tipo})` : 
+                  {factura.tasa_cambio_valor ? 
+                    `${parseFloat(factura.tasa_cambio_valor).toFixed(2)}` : 
                     'N/A'}
                 </Typography>
               </Grid>
