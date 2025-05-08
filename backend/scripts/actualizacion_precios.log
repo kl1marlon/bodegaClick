@@ -2578,3 +2578,585 @@ LINE 2:             SELECT id, codigo, nombre, precio_base_usd, prec...
 [2025-04-29 17:17:34] ID: 194 | Nombre: Alitas de pollo | Precio actual: 470.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
 [2025-04-29 17:17:34] Conexión cerrada. Proceso completado.
 [2025-04-29 17:17:34] === FIN DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-06 22:37:10] === INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-06 22:37:10] Intentando conectar a bodegaclicktest en ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech...
+[2025-05-06 22:37:11] Conexión exitosa a la base de datos: bodegaclicktest
+[2025-05-06 22:37:11] Tasas actuales: BCV = 90.00, PARALELO = 100.00
+[2025-05-06 22:38:36] Tasas a utilizar: BCV = 90.00, PARALELO = 100.00
+[2025-05-06 22:38:38] Tasa BCV actualizada a 90.00
+[2025-05-06 22:38:38] Tasa PARALELO actualizada a 100.00
+[2025-05-06 22:38:38] Consultando productos con precio_base_usd > 0...
+[2025-05-06 22:38:38] Se encontraron 548 productos para revisar
+[2025-05-06 22:38:39] Actualizado: Producto ID 617 (Tasa: PARALELO): 115.00 → 110.0
+[2025-05-06 22:38:39] Actualizado: Producto ID 615 (Tasa: PARALELO): 0.00 → 130.0
+[2025-05-06 22:38:39] Actualizado: Producto ID 117 (Tasa: PARALELO): 30.00 → 25.0
+[2025-05-06 22:38:39] Actualizado: Producto ID 621 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-06 22:38:39] Progreso: 50/548 (9.1%) - Tiempo: 0.29s
+[2025-05-06 22:38:39] Progreso: 100/548 (18.2%) - Tiempo: 0.29s
+[2025-05-06 22:38:39] Progreso: 137/548 (25.0%) - Tiempo: 0.29s
+[2025-05-06 22:38:39] Progreso: 150/548 (27.4%) - Tiempo: 0.29s
+[2025-05-06 22:38:39] Actualizado: Producto ID 276 (Tasa: PARALELO): 155.00 → 160.0
+[2025-05-06 22:38:39] Progreso: 200/548 (36.5%) - Tiempo: 0.36s
+[2025-05-06 22:38:39] Actualizado: Producto ID 231 (Tasa: PARALELO): 45.00 → 55.0
+[2025-05-06 22:38:39] Progreso: 250/548 (45.6%) - Tiempo: 0.43s
+[2025-05-06 22:38:39] Progreso: 274/548 (50.0%) - Tiempo: 0.43s
+[2025-05-06 22:38:39] Progreso: 300/548 (54.7%) - Tiempo: 0.43s
+[2025-05-06 22:38:39] Actualizado: Producto ID 77 (Tasa: PARALELO): 15.00 → 20.0
+[2025-05-06 22:38:39] Progreso: 350/548 (63.9%) - Tiempo: 0.51s
+[2025-05-06 22:38:39] Progreso: 400/548 (73.0%) - Tiempo: 0.51s
+[2025-05-06 22:38:39] Progreso: 411/548 (75.0%) - Tiempo: 0.51s
+[2025-05-06 22:38:39] Progreso: 450/548 (82.1%) - Tiempo: 0.51s
+[2025-05-06 22:38:39] Progreso: 500/548 (91.2%) - Tiempo: 0.51s
+[2025-05-06 22:38:39] Progreso: 548/548 (100.0%) - Tiempo: 0.52s
+[2025-05-06 22:38:39] ==== RESUMEN DE ACTUALIZACIÓN ====
+[2025-05-06 22:38:39] Total productos revisados: 548
+[2025-05-06 22:38:39] Productos actualizados: 7
+[2025-05-06 22:38:39] Productos sin cambios: 541
+[2025-05-06 22:38:39] Tasas aplicadas: BCV = 90.00, PARALELO = 100.00
+[2025-05-06 22:38:39] Productos por tipo de tasa: BCV = 67, PARALELO = 481, DESCONOCIDO = 0
+[2025-05-06 22:38:39] Tiempo total: 0.58 segundos
+[2025-05-06 22:38:39] Velocidad: 936.91 productos/segundo
+[2025-05-06 22:38:39] ==== LISTA DE PRODUCTOS SIN CAMBIOS (541) ====
+[2025-05-06 22:38:39] ID: 112 | Nombre: Hojas blancas | Precio actual: 1.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 618 | Nombre: Crema de arroz Santoni | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 199 | Nombre: queso amarillo caro | Precio actual: 1465.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 418 | Nombre: consul caja | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 290 | Nombre: parrillita parrilla | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 195 | Nombre: Muslo de pollo | Precio actual: 405.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 565 | Nombre: Trululu Aros | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 320 | Nombre: Marble Por caja | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 603 | Nombre: pizza | Precio actual: 150.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 178 | Nombre: Harina de Trigo Robin hood 1kl | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 616 | Nombre: Estrela Galleta | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 491 | Nombre: aceite vatel 250ml | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 393 | Nombre: flips lonchera | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 21 | Nombre: Queso Arepero | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 170 | Nombre: Lora | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 464 | Nombre: best | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 36 | Nombre: Jamon de pavo | Precio actual: 965.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 267 | Nombre: queso duro | Precio actual: 530.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 191 | Nombre: Jamon de pierna | Precio actual: 1050.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 620 | Nombre: Maiz Dulce Osole 280g | Precio actual: 170.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 619 | Nombre: Cebolla Morada | Precio actual: 165.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 622 | Nombre: Jean Cake Ponque tipo once once | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 623 | Nombre: Bianchi Barra Promocion | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 624 | Nombre: Jugo Botellita 355ml | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 261 | Nombre: Refresco Glup 1L | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 441 | Nombre: cebollin | Precio actual: 245.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 327 | Nombre: malta 1l | Precio actual: 225.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 190 | Nombre: caramelo 3bs combo | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 373 | Nombre: Hojilla Dorco Unidad | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 52 | Nombre: Cortado pan | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 343 | Nombre: Lapiz Mongol | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 237 | Nombre: Speed Speed Max lata | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 240 | Nombre: sobre manila oficio | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 329 | Nombre: Lucky | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 84 | Nombre: Esponja Brillo jabonoso | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 400 | Nombre: Doritos grande | Precio actual: 290.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 386 | Nombre: Gatorade Gatorade 400ml | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 374 | Nombre: Hoja Resma Resma | Precio actual: 2.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 273 | Nombre: plagatox | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 438 | Nombre: Cervezas Polar 255ML | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 396 | Nombre: Flaquito Flaquito | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 293 | Nombre: papel bond | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 424 | Nombre: Cloro Oso Blanco | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 420 | Nombre: colorante carmencita amparito | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 118 | Nombre: Papel tuale individual | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 480 | Nombre: arroz sabrozon | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 485 | Nombre: ajo | Precio actual: 675.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 397 | Nombre: fama de america 100g | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 493 | Nombre: aceite amacorp 900ml | Precio actual: 300.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 472 | Nombre: avena michacha 500g | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 423 | Nombre: club social puig | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 269 | Nombre: puffy grande unidad | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 410 | Nombre: crocante mani pequeño | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 27 | Nombre: Incienso detallado premium | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 287 | Nombre: pasta larga oba 500g | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 475 | Nombre: Atlantic detallado | Precio actual: 2.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 496 | Nombre: 301  detallado | Precio actual: 5.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 388 | Nombre: galleta soda puig | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 242 | Nombre: sardinas el norteño | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 365 | Nombre: Jabon Anita 125g | Precio actual: 100.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 272 | Nombre: platano | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 168 | Nombre: Agogo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 439 | Nombre: cerelac 100g | Precio actual: 190.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 280 | Nombre: Pepito Grande Super Popy Tira | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 303 | Nombre: oreo oreo | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 268 | Nombre: puffy pequenio tira | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 317 | Nombre: Maria italia | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 165 | Nombre: Miami por caja | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 124 | Nombre: Bombon combo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 132 | Nombre: Ibuprofeno | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 486 | Nombre: AJI | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 54 | Nombre: Pan de coco | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 416 | Nombre: Copias blanco negro | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 32 | Nombre: Sardina willinger | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 278 | Nombre: Pigsy Grande | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 473 | Nombre: atun willinger | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 225 | Nombre: togo bitter palito | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 153 | Nombre: Tabaco Artesanal | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 66 | Nombre: Condimentos 10 bs | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 130 | Nombre: Cetirizina | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 427 | Nombre: cloro kins | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 443 | Nombre: Cartas Naipes | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 134 | Nombre: Tetas Cremosas | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 198 | Nombre: queso amarillo barato | Precio actual: 875.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 162 | Nombre: Pepino | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 164 | Nombre: Miami Combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 90 | Nombre: Chupeta Combo | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 154 | Nombre: Tabaco Corona | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 144 | Nombre: Porleo Tipo oreo grande | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 433 | Nombre: Cheese  tris tira pequeño | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 160 | Nombre: Lechuga | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 65 | Nombre: Curita Cura | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 586 | Nombre: consul combo | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 233 | Nombre: TAM Galletas unidad | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 232 | Nombre: tango galletas | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 306 | Nombre: nutrichicha los andes | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 411 | Nombre: crocante mani grande | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 143 | Nombre: Porleo pequena | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 312 | Nombre: Mayonesa mavesa 175G | Precio actual: 175.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 432 | Nombre: Chimo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 51 | Nombre: Dale | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 101 | Nombre: Maiz de Cotufa michacha 400 | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 113 | Nombre: Acetona | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 187 | Nombre: borras | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 351 | Nombre: JUGO PULP | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 450 | Nombre: caramelos 3bs | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 476 | Nombre: atlantic combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 44 | Nombre: Pepito Pequeño super popy | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 224 | Nombre: togo fresa | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 404 | Nombre: desodorante blanco Lady Speed Stick | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 323 | Nombre: mantequilla mavesa 500g | Precio actual: 255.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 347 | Nombre: keks roll | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 302 | Nombre: Paletas cítricas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 11 | Nombre: Cloro Kiss | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 367 | Nombre: inyectadora JERINGA 3cc 5cc | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 494 | Nombre: 301 combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 413 | Nombre: crema alident pasta de diente | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 163 | Nombre: Zanahoria | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 348 | Nombre: kataboom caramelo | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 255 | Nombre: rulass papa | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 412 | Nombre: crocan nachos | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 274 | Nombre: pirueta le biscuit | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 366 | Nombre: Italiano Waffle | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 390 | Nombre: GALLETA creme | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 167 | Nombre: Cheese Cronch | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 265 | Nombre: Recolector De orina | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 171 | Nombre: Nucita nutellini | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 417 | Nombre: Consul consul | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 223 | Nombre: Tom grande | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 430 | Nombre: Chupeta BigBom | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 434 | Nombre: Cheese tris grande | Precio actual: 195.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 257 | Nombre: Revolcon Chicle | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 471 | Nombre: Avena tigo 200g | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 345 | Nombre: kraker bran puig | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 581 | Nombre: Nutiva Jugo | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 215 | Nombre: Universal | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 395 | Nombre: flips 120gr mediano | Precio actual: 210.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 582 | Nombre: Cash | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 204 | Nombre: Yesquero Hugme | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 391 | Nombre: gala pequeño | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 17 | Nombre: OKA LOKA NANO MINI PEQUEÑO | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 600 | Nombre: charmy individual | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 394 | Nombre: flips caja | Precio actual: 365.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 326 | Nombre: Malta 255ML | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 349 | Nombre: Justy Justy Naranja 1,5L | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 220 | Nombre: Tom Pequeño | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 406 | Nombre: dandy | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 246 | Nombre: saltitacos saltitacos | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 72 | Nombre: Borra nata | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 428 | Nombre: CILANTRO | Precio actual: 245.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 295 | Nombre: papa | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 221 | Nombre: tomate | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 578 | Nombre: Condon | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 114 | Nombre: Crack it | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 452 | Nombre: cafe sello rojo 50g | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 212 | Nombre: Vainilla La favorita 250ML | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 219 | Nombre: Tostoncito | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 127 | Nombre: Catalina | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 304 | Nombre: omeprazol medicina | Precio actual: 5.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 321 | Nombre: Marble detallado | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 259 | Nombre: refresco glup 400ml | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 202 | Nombre: yupi tubito unidad | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 371 | Nombre: huevos | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 29 | Nombre: Azucar maite | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 244 | Nombre: samy le biscuit | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 442 | Nombre: cebolla | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 601 | Nombre: JyJ | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 465 | Nombre: Belmont detallado | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 421 | Nombre: coco crunch ranchero | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 440 | Nombre: CEREAL cronch flakes Maizoritos | Precio actual: 275.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 266 | Nombre: Recolector De heces | Precio actual: 15.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 590 | Nombre: Tira afeitadora trio | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 318 | Nombre: Marcador permanente | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 579 | Nombre: producto prueba BC | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 78 | Nombre: Incienso detallado | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 462 | Nombre: boka | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 580 | Nombre: Bicarbonato Amparito Sobre | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 594 | Nombre: cereal kellogs pequeño | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 35 | Nombre: Picadillo de pollo | Precio actual: 515.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 10 | Nombre: Yogurt Migurt | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 360 | Nombre: Jabon en polvo alive 500g | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 591 | Nombre: Tira afeitadora Duo | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 364 | Nombre: Jabon Anita 90g | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 597 | Nombre: Monte cilantro y cebollin | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 587 | Nombre: consul media caja | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 585 | Nombre: Liga de Niña Carton pequeño | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 584 | Nombre: Gel Frio Alive Mentol | Precio actual: 200.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 148 | Nombre: GUT de Pollo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 119 | Nombre: Medio carton huevo | Precio actual: 360.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 325 | Nombre: mantequilla Deline 250g | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 588 | Nombre: Jugo Frutea | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 196 | Nombre: Salchicha pollo | Precio actual: 305.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 377 | Nombre: harina Pan Pan | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 469 | Nombre: azucar 100% 400g | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 609 | Nombre: Papelon Panela  | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 177 | Nombre: Cafe de Madrid 100g | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 324 | Nombre: mantequilla mavesa 250g | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 260 | Nombre: Refresco Glup 2L | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 610 | Nombre: Pasta mary dedal 500g | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 277 | Nombre: Pigsy Pequeño | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 611 | Nombre: Bolsa Marron | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 147 | Nombre: Lisso Liso inteligente | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 568 | Nombre: Patroncito detallado | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 612 | Nombre: Jabon las llaves 250g | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 614 | Nombre: Pepsi 2l | Precio actual: 140.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 613 | Nombre: Pepsi 1L | Precio actual: 100.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 69 | Nombre: Bomba normal Carnaval | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 577 | Nombre: Media universal | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 239 | Nombre: Socate | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 94 | Nombre: Refresco bombita Cool | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 192 | Nombre: Pasta de chorizo | Precio actual: 150.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 182 | Nombre: Algodon | Precio actual: 70.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 569 | Nombre: Jabon Polvo Hugme | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 208 | Nombre: Vinagre capital 250ml | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 22 | Nombre: Choripan | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 186 | Nombre: Mistolin | Precio actual: 195.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 71 | Nombre: Sacapunta | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 174 | Nombre: Pan redondo | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 466 | Nombre: Belmont caja | Precio actual: 220.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 12 | Nombre: Azucar Montalban | Precio actual: 155.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 55 | Nombre: Pestaña por punto | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 308 | Nombre: Mortadela  don ramon 600g | Precio actual: 170.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 344 | Nombre: lapicero bernice unidad | Precio actual: 20.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 309 | Nombre: Mortadela  Don Ramon 400G | Precio actual: 105.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 572 | Nombre: Arroz con Pollo Gut | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 99 | Nombre: Marshmellow malvavisco gomita | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 19 | Nombre: Pega de uñas | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 40 | Nombre: Bombillo blanco 12w | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 159 | Nombre: Aguacate | Precio actual: 2600.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 58 | Nombre: Colonia 2$ | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 573 | Nombre: Te limon MR TEA | Precio actual: 190.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 357 | Nombre: Jabon Las Llaves | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 281 | Nombre: pega mosca | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 355 | Nombre: jabon mennen | Precio actual: 60.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 352 | Nombre: jugo natulac 1l | Precio actual: 210.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 316 | Nombre: masa facil | Precio actual: 110.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 332 | Nombre: lentejas michacha | Precio actual: 195.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 229 | Nombre: Toalla modes Wanita | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 331 | Nombre: Liga de Cabello | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 566 | Nombre: Bonucci | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 356 | Nombre: Jabon Medicare 90G | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 68 | Nombre: Bomba carnaval caucho | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 236 | Nombre: Suavizante Aromatel | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 213 | Nombre: Uñas | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 243 | Nombre: sardinas el arca | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 319 | Nombre: marcador pizarra | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 489 | Nombre: Acetaminofen | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 254 | Nombre: Sal | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 228 | Nombre: Toallas hugme humedas | Precio actual: 110.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 405 | Nombre: desinfectante oso blanco | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 271 | Nombre: mata polvo chiripa amarillo | Precio actual: 35.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 575 | Nombre: Pasta corta capri 500g | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 436 | Nombre: caramelo 2bs combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 342 | Nombre: lavaplato oso blanco | Precio actual: 115.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 205 | Nombre: wiki wiki pinta ropa | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 210 | Nombre: veneno para ratas | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 482 | Nombre: arroz la musia | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 483 | Nombre: arroz don julian | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 184 | Nombre: Pasta de tomate COMA | Precio actual: 180.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 155 | Nombre: Tabaco Paramaconi | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 133 | Nombre: Paletas Cremosas | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 426 | Nombre: Cloro kris pequeño | Precio actual: 90.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 136 | Nombre: Cepillo de diente | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 60 | Nombre: Colonia 5$ | Precio actual: 520.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 449 | Nombre: caraota amanecer 400g | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 282 | Nombre: Pega Loka | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 108 | Nombre: Mantequilla deline grande | Precio actual: 215.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 385 | Nombre: Gelatina Rolda | Precio actual: 195.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 607 | Nombre: JYJ MEDIA CAJA | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 283 | Nombre: pega blanca 60g | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 188 | Nombre: Pilas | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 437 | Nombre: champu head and shoulder | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 484 | Nombre: alcohol spray 120ml | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 602 | Nombre: JyJ Caja cigarro | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 387 | Nombre: ganchetas accesorios | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 478 | Nombre: arvejas mary 400g | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 275 | Nombre: pintura al frio | Precio actual: 90.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 294 | Nombre: papel aluminio | Precio actual: 120.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 264 | Nombre: refresco coca cola 1.5lt | Precio actual: 125.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 446 | Nombre: carpeta manila amarilla oficio | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 479 | Nombre: Arroz Santoni | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 336 | Nombre: leche liquida purissima 1l | Precio actual: 200.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 492 | Nombre: aceite ideal 250ml | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 358 | Nombre: Jabon Harmony | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 126 | Nombre: Colas de cabello | Precio actual: 35.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 156 | Nombre: Barquilla | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 138 | Nombre: Tempera | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 161 | Nombre: Guayaba | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 83 | Nombre: Hilo de coser | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 445 | Nombre: carpeta marron carta | Precio actual: 70.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 180 | Nombre: Colgate | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 158 | Nombre: Crema de Zapato | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 368 | Nombre: incienso caja | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 354 | Nombre: jabon popular 150g | Precio actual: 70.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 181 | Nombre: Sabroseador GUT | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 468 | Nombre: azucar dacana | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 150 | Nombre: Guisantes | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 451 | Nombre: Caja de Lucky | Precio actual: 255.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 149 | Nombre: Mostaza fergo | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 252 | Nombre: Salsa de Tomate Fergos 397G | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 139 | Nombre: Axion Grande 235g | Precio actual: 155.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 608 | Nombre: chorizo kilo | Precio actual: 320.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 13 | Nombre: Harina Maiz Masantoni | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 330 | Nombre: limon | Precio actual: 225.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 470 | Nombre: Axion 150g | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 106 | Nombre: Aceite ideal 110ml | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 85 | Nombre: Toallas Diarias Nosotras | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 490 | Nombre: aceite vatel 500ml | Precio actual: 175.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 251 | Nombre: salsa de tomate Heinz 198g | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 372 | Nombre: hony bran puig | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 495 | Nombre: 301 caja | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 227 | Nombre: tocineta limon | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 24 | Nombre: Esponja brillo normal | Precio actual: 40.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 340 | Nombre: Leche Condensada Cremor | Precio actual: 170.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 422 | Nombre: Club Social | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 41 | Nombre: Silicon Barra grande | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 5 | Nombre: Rikesa | Precio actual: 360.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 48 | Nombre: Tikotin | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 53 | Nombre: Pan de guayaba | Precio actual: 15.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 463 | Nombre: Bianchi barra | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 92 | Nombre: Belmont media caja | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 338 | Nombre: leche dobon 200g | Precio actual: 200.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 4 | Nombre: Yogurt Tigo | Precio actual: 105.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 145 | Nombre: Tinte AMG Grande | Precio actual: 210.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 285 | Nombre: pasta mary larga 1kg | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 38 | Nombre: Magnum magno | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 31 | Nombre: Te de Durazno | Precio actual: 170.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 3 | Nombre: Gelatina Every Night | Precio actual: 155.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 6 | Nombre: Maiz en lata PAFFIA | Precio actual: 175.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 16 | Nombre: Carne molida | Precio actual: 935.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 209 | Nombre: Vinagre capital 1lt | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 226 | Nombre: toddy | Precio actual: 165.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 238 | Nombre: sopa maggi | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 310 | Nombre: milka | Precio actual: 150.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 45 | Nombre: Cheese Cronch Grande | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 197 | Nombre: Salchicha Polaca | Precio actual: 370.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 382 | Nombre: Gomitas Play (snacks) Paquete | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 460 | Nombre: Bombillos amarillo 100w | Precio actual: 35.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 185 | Nombre: Agua oxigenada | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 179 | Nombre: Harina de Trigo Dulce Mar 1kl | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 467 | Nombre: azucar hiperlider | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 9 | Nombre: Golden Manzana 1.5l | Precio actual: 105.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 258 | Nombre: Refresco The Sun 400ml | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 454 | Nombre: favorito100g | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 87 | Nombre: Sardinas los roques | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 172 | Nombre: Leche mama conchita | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 80 | Nombre: Pega en barra | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 81 | Nombre: Vick vaporub Mentol | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 339 | Nombre: Leche Dobon 120g | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 89 | Nombre: Doritos mega queso Promocion XXL | Precio actual: 490.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 97 | Nombre: Pan para perros | Precio actual: 130.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 100 | Nombre: Mostaza Coma | Precio actual: 160.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 104 | Nombre: Compota Natulac | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 79 | Nombre: Champu Colorante tinte | Precio actual: 65.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 70 | Nombre: Pega loka astro glue | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 137 | Nombre: Silicon Liquido | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 88 | Nombre: Pasta capri dedal | Precio actual: 190.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 86 | Nombre: Cotufa de maiz Mary | Precio actual: 155.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 25 | Nombre: Jabon Panela oso blanco | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 474 | Nombre: atun california | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 105 | Nombre: Compota Heinz | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 34 | Nombre: Salsa para pasta Osole 200G | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 102 | Nombre: Jabon las llaves bebe | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 67 | Nombre: Vainilla MAS | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 429 | Nombre: Chupis-mamilo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 173 | Nombre: Pan Hamburguesa | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 107 | Nombre: Crema de arroz Mary | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 75 | Nombre: Trifogon | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 346 | Nombre: keramix champu | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 247 | Nombre: salsa picante fritz 250g | Precio actual: 225.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 407 | Nombre: Dalvito | Precio actual: 340.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 128 | Nombre: Zucarita | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 125 | Nombre: Cacao | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 230 | Nombre: toalla modes alive | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 151 | Nombre: Arroz mary rojo | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 82 | Nombre: Celoven | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 56 | Nombre: Pestaña corrida | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 91 | Nombre: Foami | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 93 | Nombre: Doritos Super Promocion | Precio actual: 360.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 111 | Nombre: Loratadina | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 96 | Nombre: Pan para hamburguesa | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 477 | Nombre: Atlantic caja | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 98 | Nombre: Pan Gourmet | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 74 | Nombre: Pabilo | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 459 | Nombre: Bombillos led 15w | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 398 | Nombre: fabuloso detergente | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 415 | Nombre: cosmilk | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 122 | Nombre: VICEROY | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 121 | Nombre: Caja de viceroy | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 123 | Nombre: Servilletas | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 300 | Nombre: Pall Mall detallado | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 59 | Nombre: Colonia 4$ | Precio actual: 370.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 288 | Nombre: pasta corta oba 500g | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 216 | Nombre: Trululu Snacks Paquete | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 57 | Nombre: Lapiz bicolor dos colores | Precio actual: 35.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 14 | Nombre: Aceite Ideal 500ML | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 235 | Nombre: Suavizante Suavitel | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 313 | Nombre: Mayonesa Kraft 175G | Precio actual: 160.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 15 | Nombre: Suavizante Alive | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 131 | Nombre: Diclofenac | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:39] ID: 337 | Nombre: leche liquida carabobo 1l | Precio actual: 200.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 305 | Nombre: oki doki bombom | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 166 | Nombre: Miami detallado | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:39] ID: 183 | Nombre: Tinte Hugme Barato | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 47 | Nombre: Barquillon | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 481 | Nombre: arroz mary tradicional | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 297 | Nombre: Panelada | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 256 | Nombre: rizada rizada | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 286 | Nombre: pasta mary corta 500g | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 284 | Nombre: pasta Mary plumita 1kg | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 333 | Nombre: lentejas Mary | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 270 | Nombre: pote figura ojos ojitos | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 380 | Nombre: kaly premium | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 379 | Nombre: harina de maiz mary | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 234 | Nombre: Takis Pequeño | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 115 | Nombre: aromax | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 33 | Nombre: Bolsa de pan salado | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 461 | Nombre: bolsa basura 40kg | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 301 | Nombre: Pall Mall Caja | Precio actual: 230.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 245 | Nombre: samba | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 28 | Nombre: Aceite soya cristalino 430ml | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 311 | Nombre: Mayonesa mavesa 445g | Precio actual: 350.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 341 | Nombre: leche purelac 200g | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 135 | Nombre: Condimentos 15bs | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 142 | Nombre: Savoy | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 335 | Nombre: leche los andes 200g | Precio actual: 215.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 359 | Nombre: Jabon en polvo Vea | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 322 | Nombre: mantequilla nelly 250g | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 109 | Nombre: Adobo Completo | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 250 | Nombre: salsa de tomate pampero 198g | Precio actual: 150.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 444 | Nombre: carpeta marron oficio | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 189 | Nombre: queso de año 200g concha negra | Precio actual: 325.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 389 | Nombre: galleta geo | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 50 | Nombre: Deleitina | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 291 | Nombre: Papel Luciano | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 315 | Nombre: Maxcoco Maxcoco | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 370 | Nombre: iancarina tip top | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 146 | Nombre: Lady speed stick | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 116 | Nombre: Acetona | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 214 | Nombre: universal por caja | Precio actual: 130.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 140 | Nombre: Palitos | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 141 | Nombre: Cri Cri | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 299 | Nombre: Palmerita Palmerita Paquete | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 361 | Nombre: Jabon en polvo alive 200g | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 76 | Nombre: Yesquero soplete | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 497 | Nombre: 77 | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 207 | Nombre: Vinagre capital 500ml | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 363 | Nombre: Jabon azul rombo | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 399 | Nombre: esponja doble uso | Precio actual: 45.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 95 | Nombre: Pan piñas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 222 | Nombre: Tom Familiar | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 392 | Nombre: fulltop | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 289 | Nombre: pasta corta capri PLUMITA 1kg | Precio actual: 160.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 152 | Nombre: Jabon avena | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 217 | Nombre: Trululu Sabores | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 169 | Nombre: Freegells | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 447 | Nombre: caraota pantera | Precio actual: 150.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 203 | Nombre: yupi waffle unidad | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 334 | Nombre: leche san simon 125g | Precio actual: 155.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 23 | Nombre: Maizina americana 200g | Precio actual: 165.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 193 | Nombre: Chuleta | Precio actual: 785.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 378 | Nombre: harina pan arroz | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 103 | Nombre: OKA LOKA NANO GRANDE | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 605 | Nombre: Colador | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 8 | Nombre: Cremadita Cremadito | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 403 | Nombre: Desodorante Lady Speed Stick | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 253 | Nombre: salsa ajo soya inglesa tripack Unidad | Precio actual: 225.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 249 | Nombre: salsa de tomate pampero 397g | Precio actual: 200.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 129 | Nombre: leche liquida carabobo pequeña | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 49 | Nombre: Barryton | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 448 | Nombre: caraota michacha | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 595 | Nombre: Frutimelo | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 362 | Nombre: Jabon en polvo alive 1kg | Precio actual: 190.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 42 | Nombre: Aliclean | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 2 | Nombre: Mega Bol Mega Aros | Precio actual: 185.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 384 | Nombre: Golpe Ranchero grande | Precio actual: 205.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 606 | Nombre: Queso Mozzarella | Precio actual: 750.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 383 | Nombre: Golpe Ranchero tira pequeño | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 532 | Nombre: Aguacatex | Precio actual: 215.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 596 | Nombre: Arroz Doña Blanca | Precio actual: 105.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 262 | Nombre: refresco coca cola 2 litro | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 26 | Nombre: Incienso Caja Premium | Precio actual: 205.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 604 | Nombre: Botecito Once Once | Precio actual: 95.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 353 | Nombre: jugo frutsi pequeño | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 583 | Nombre: Crema de arroz Primor 450g | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 599 | Nombre: Charmy paquete | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 376 | Nombre: Harina de Trigo Doña Maria KG | Precio actual: 175.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 456 | Nombre: Cafe fama de america kilo | Precio actual: 650.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 589 | Nombre: Maria paquete | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 30 | Nombre: Aceite girasol Gocciolio | Precio actual: 290.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 1 | Nombre: Harina Juana | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 487 | Nombre: Afeitadora Max3 | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 598 | Nombre: Doritos Picante pequeño | Precio actual: 110.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 296 | Nombre: Pañales Hugme | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 175 | Nombre: Pan Sanguche Sandwich | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 298 | Nombre: Pan andino unidad | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 574 | Nombre: Pasta Larga Mutlu 1kg | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 567 | Nombre: Patroncito Caja | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 218 | Nombre: Trululu Chocolores | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 530 | Nombre: Colgate triple acción | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 529 | Nombre: Plastilina colores | Precio actual: 95.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 328 | Nombre: Maizina Americana PEQUEÑA | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 241 | Nombre: silicon barra pequeña | Precio actual: 45.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 43 | Nombre: Agua mibrisa | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 18 | Nombre: Pega pestañas Ardell | Precio actual: 210.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 431 | Nombre: Chocolate pequeño King Unidad | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 457 | Nombre: café amanecer 250g | Precio actual: 220.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 211 | Nombre: Velas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 37 | Nombre: Tequeños 25 unidades | Precio actual: 145.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 455 | Nombre: café Fama de America 200g | Precio actual: 210.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 292 | Nombre: papel crepe | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 350 | Nombre: jugo valencia 1l | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 401 | Nombre: Doritos pequeño tira | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 414 | Nombre: crakeña bulto | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 263 | Nombre: refresco coca cola 1l | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 593 | Nombre: Jacks Chicharron tira | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 592 | Nombre: Vaselina Labial | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 488 | Nombre: Afeitadora Dorco | Precio actual: 25.00 | Tipo tasa: BCV | Tasa aplicada: 90.00
+[2025-05-06 22:38:40] ID: 435 | Nombre: caramelo 2bs | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 375 | Nombre: harina de trigo mary leudante kg | Precio actual: 125.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 570 | Nombre: Salsa de tomate Tomodore | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 531 | Nombre: Desodorante con tapa clinical | Precio actual: 170.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 39 | Nombre: keramix acondicionador | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 7 | Nombre: Crack it trufas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 307 | Nombre: Nutribela | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 46 | Nombre: Crismelo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 279 | Nombre: Jumby rikos grande | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 571 | Nombre: Salsa de tomate Fergos 198G pequeña | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 409 | Nombre: Cubito Laila | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 248 | Nombre: Salsa Para Pasta GUT | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 206 | Nombre: vitafer vitafer unidad | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 453 | Nombre: grano de  montaña 100g | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 408 | Nombre: Cubitos Maggi | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 381 | Nombre: Kaly | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 419 | Nombre: Compota osole | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 314 | Nombre: mayonesa fergos 175g PEQUEÑA | Precio actual: 150.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 176 | Nombre: Mayonesa Fergos 452g Grande | Precio actual: 260.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 425 | Nombre: Cloro kris | Precio actual: 140.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 402 | Nombre: diablito underwood | Precio actual: 145.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 194 | Nombre: Alitas de pollo | Precio actual: 470.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] ID: 458 | Nombre: café amanecer 100g | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
+[2025-05-06 22:38:40] Conexión cerrada. Proceso completado.
+[2025-05-06 22:38:40] === FIN DE ACTUALIZACIÓN DE PRECIOS BASE ===

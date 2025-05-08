@@ -96,4 +96,39 @@ Supón que quieres mostrar el tipo de tasa ("PARALELO", "BCV"):
 
 ---
 
+## 6. Cálculo y almacenamiento de totales de factura (actualizado 2025-04-30)
+
+### Contexto de la mejora
+Se detectó que el campo `precio_compra_usd` en los detalles de la factura puede representar montos en bolívares o dólares, dependiendo de la moneda seleccionada al crear la factura. Por lo tanto, era necesario ajustar la lógica de cálculo de los totales (`total_bs` y `total_usd`) para reflejar correctamente el valor real de la compra.
+
+### Lógica implementada
+- **Si la moneda es `BS`:**
+    - El campo `precio_compra_usd` de cada detalle representa un monto en bolívares.
+    - El total en bolívares (`total_bs`) es la suma de todos los `precio_compra_usd` de los detalles.
+    - El total en dólares (`total_usd`) es `total_bs` dividido entre el valor de la tasa de cambio seleccionada.
+- **Si la moneda es `USD`:**
+    - El campo `precio_compra_usd` representa un monto en dólares.
+    - El total en dólares (`total_usd`) es la suma de todos los `precio_compra_usd` de los detalles.
+    - El total en bolívares (`total_bs`) es `total_usd` multiplicado por el valor de la tasa de cambio seleccionada.
+
+### Ejemplo práctico
+Supón que se crea una factura con moneda `BS`, tasa de cambio 100 y dos productos:
+- Detalle 1: `precio_compra_usd` = 2500
+- Detalle 2: `precio_compra_usd` = 2550
+
+El cálculo será:
+- `total_bs` = 2500 + 2550 = 5050
+- `total_usd` = 5050 / 100 = 50.5
+
+Si la moneda fuera `USD`, el cálculo sería:
+- `total_usd` = 2500 + 2550 = 5050
+- `total_bs` = 5050 * 100 = 505000
+
+### Consideraciones técnicas
+- Todos los cálculos se realizan usando el tipo de dato `Decimal` para evitar errores de precisión y de mezcla de tipos.
+- El método afectado es `create` del serializer `CrearFacturaSerializer` en `backend/facturacion/serializers.py`.
+- Esta lógica asegura que los totales reflejen correctamente el valor de la compra según la moneda y la tasa de cambio.
+
+---
+
 ¿Dudas o mejoras? ¡Agrega tus notas aquí!
