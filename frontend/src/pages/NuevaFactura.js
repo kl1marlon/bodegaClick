@@ -224,7 +224,7 @@ const NuevaFactura = () => {
       precio_compra_usd: precio_compra,
       unidades_paquete: unidades,
       precio_unitario: precio_venta,
-      total: precio_compra * cantidad, // Usar precio_compra en lugar de precio_venta
+      total: precio_venta * cantidad,
       porcentajeGanancia: porcentaje,
       aplicarIva: productoEditando.aplicarIva,
       precio_base_usd: precio_base_usd,  // Nuevo campo

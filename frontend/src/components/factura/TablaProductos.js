@@ -27,9 +27,9 @@ import { aplicarRedondeoEspecial, calcularPrecioBs } from '../../utils/calculosP
  * @returns {JSX.Element} - Componente de tabla de productos
  */
 const TablaProductos = ({ productos, onEdit, onRemove, moneda, tasaCambio }) => {
-  // Calcular el total de la factura basado en el precio de compra
+  // Calcular el total de la factura
   const calcularTotal = () => {
-    return productos.reduce((sum, item) => sum + (item.precio_compra_usd * item.cantidad), 0);
+    return productos.reduce((sum, item) => sum + item.total, 0);
   };
 
   // Mostrar el precio en bolívares según corresponda
@@ -84,8 +84,8 @@ const TablaProductos = ({ productos, onEdit, onRemove, moneda, tasaCambio }) => 
               </TableCell>
               <TableCell align="right" sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}>
                 {moneda === 'BS' ? 
-                  `${aplicarRedondeoEspecial(item.precio_compra_usd * item.cantidad).toFixed(2)} ${moneda}` : 
-                  `${(item.precio_compra_usd * item.cantidad).toFixed(2)} ${moneda} (${mostrarPrecioEnBs(item.precio_compra_usd * item.cantidad).toFixed(2)} BS)`
+                  `${aplicarRedondeoEspecial(item.total).toFixed(2)} ${moneda}` : 
+                  `${item.total.toFixed(2)} ${moneda} (${mostrarPrecioEnBs(item.total).toFixed(2)} BS)`
                 }
               </TableCell>
               <TableCell align="right" sx={{ color: '#334155', borderBottom: '1px solid #f1f5f9' }}>
