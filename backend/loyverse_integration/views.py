@@ -191,7 +191,7 @@ def loyverse_callback_view(request: HttpRequest):
                 # 'loyverse_merchant_id': loyverse_merchant_id, # Si se obtiene
                 'is_active': True,
                 'last_error_message': None, # Limpiar errores previos
-                'price_sync_status': LoyverseUserConnection.SyncStatusChoices.IDLE, # Resetear estado de sync
+                'price_sync_status': LoyverseUserConnection.SyncStatus.IDLE, # Resetear estado de sync
             }
         )
         logger.info(f"Loyverse connection {'creada' if created else 'actualizada'} para el usuario {request.user.id} con Loyverse subject {loyverse_user_subject}")
