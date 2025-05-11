@@ -139,14 +139,17 @@ Este plan detalla las fases y tareas para crear un módulo que permita a los usu
         *   Si falla: Mostrar un mensaje de error al usuario. Registrar el error.
 *   **Instrucción al Editor IA:** "Implementa la vista `loyverse_callback_view`. Incluye verificación del `state`, la petición POST para intercambiar el código por tokens, el parseo de la respuesta. Para la decodificación del `id_token` con `PyJWT` y JWKS, proporcióna el esqueleto de la lógica o indica los pasos clave y las librerías necesarias."
 
-**Tarea 2.4: Implementar Lógica de Refresco de Token en `LoyverseUserConnection`**
-*   **Acción:** Completar el método `refresh_access_token()` en el modelo `LoyverseUserConnection`.
-    *   Debe obtener `LOYVERSE_APP_CLIENT_ID` y `LOYVERSE_APP_CLIENT_SECRET` de ENV VARS.
-    *   Hacer una petición POST a `https://api.loyverse.com/oauth/token` con `grant_type='refresh_token'`, `refresh_token` (desencriptado), `client_id`, `client_secret`.
-    *   Si es exitoso, actualizar `access_token` (cifrar), `expires_at`, y potencialmente el `refresh_token` si Loyverse devuelve uno nuevo. Actualizar `last_token_refresh_time`.
-    *   Manejar errores (ej. si el refresh_token es inválido, marcar `is_active=False`).
-*   **Acción:** Completar el método `get_valid_access_token()` para que use `is_access_token_expired()` y llame a `refresh_access_token()` si es necesario.
-*   **Instrucción al Editor IA:** "Implementa la lógica completa de los métodos `refresh_access_token()` y `get_valid_access_token()` en el modelo `LoyverseUserConnection`. Asegúrate de manejar el cifrado/descifrado de tokens al interactuar con la base de datos y al hacer la petición."
+**[COMPLETADA] Tarea 2.4: Implementar Lógica de Refresco de Token en `LoyverseUserConnection`**
+*   **Estado:** Completada
+*   **Acción:** 
+    1. Se mejoró el método `refresh_access_token()` en el modelo `LoyverseUserConnection`:
+       * Se implementó la obtención de credenciales desde variables de entorno.
+       * Se añadió timeout de 10 segundos para evitar bloqueos en la petición.
+       * Se mejoró el manejo de errores, incluyendo errores de timeout y ampliando el reconocimiento de errores para incluir `invalid_token` además de `invalid_grant`.
+    2. Se mejoró el método `get_valid_access_token()` para usar `is_access_token_expired()` y llamar a `refresh_access_token()` cuando sea necesario.
+    3. Se implementó un nuevo método `test_token_validity()` que verifica si el token sigue siendo válido haciendo una petición a la API de Loyverse.
+    4. Se mejoró el método `record_sync_attempt()` para usar correctamente las constantes de clase `SyncStatus`.
+*   **Nota:** Los tokens se manejan correctamente con el cifrado/descifrado automático proporcionado por `django-cryptography`. La lógica de refresco ahora es más robusta y maneja mejor los diferentes escenarios de error.
 
 ---
 

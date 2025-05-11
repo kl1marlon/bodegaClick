@@ -74,7 +74,11 @@ class LoyverseUserConnection(models.Model):
         return timezone.now() >= self.expires_at - timedelta(minutes=5)
 
     def get_valid_access_token(self):
-        """Devuelve un access_token válido, refrescándolo si es necesario y posible."""
+        """Devuelve un access_token válido, refrescándolo si es necesario y posible.
+        
+        Returns:
+            str: El token de acceso válido, o None si no se pudo obtener o refrescar.
+        """
         if not self.is_active:
             logger.warning(f"Intento de obtener token para conexión inactiva: user {self.user_id}")
             return None
@@ -84,13 +88,23 @@ class LoyverseUserConnection(models.Model):
             if not self.refresh_access_token(): # refresh_access_token devuelve True en éxito, False en fallo
                 logger.error(f"Fallo al refrescar token para user {self.user_id}. La conexión podría estar inactiva.")
                 return None # Opcionalmente, podrías lanzar una excepción específica aquí
+        elif not self.test_token_validity():
+            # Si el token no ha expirado según el tiempo pero ya no es válido
+            logger.warning(f"Token aparentemente válido para user {self.user_id} falló en prueba de validez. Intentando refrescar.")
+            if not self.refresh_access_token():
+                logger.error(f"Fallo al refrescar token para user {self.user_id} después de fallar prueba de validez.")
+                return None
         
         # Asegurarse de que el token no esté encriptado directamente aquí, ya que el campo es un EncryptedTextField.
         # La desencriptación ocurre cuando accedes al atributo del modelo.
         return self.access_token # Devuelve el valor desencriptado
 
     def refresh_access_token(self):
-        """Refresca el token de acceso usando el refresh_token. Devuelve True si es exitoso, False si falla."""
+        """Refresca el token de acceso usando el refresh_token. 
+        
+        Returns:
+            bool: True si el refresco fue exitoso, False si falló.
+        """
         if not self.refresh_token:
             logger.error(f"No hay refresh token para user {self.user_id}. No se puede refrescar.")
             self.deactivate_connection(error_message="No hay refresh token disponible.")
@@ -114,7 +128,7 @@ class LoyverseUserConnection(models.Model):
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
         try:
-            response = requests.post(LOYVERSE_TOKEN_URL, data=payload, headers=headers)
+            response = requests.post(LOYVERSE_TOKEN_URL, data=payload, headers=headers, timeout=10)  # Añadido timeout
             response.raise_for_status() # Lanza HTTPError para respuestas 4xx/5xx
             token_data = response.json()
 
@@ -155,11 +169,16 @@ class LoyverseUserConnection(models.Model):
             self.last_error_message = f"Error al refrescar token: {error_code} - {error_description}"
 
             # Si el refresh token es inválido, desactivar la conexión
-            if e.response is not None and e.response.status_code in [400, 401] and error_code == 'invalid_grant':
+            if e.response is not None and e.response.status_code in [400, 401] and error_code in ['invalid_grant', 'invalid_token']:
                 logger.warning(f"Refresh token inválido para user {self.user_id}. Desactivando conexión.")
                 self.deactivate_connection(error_message=f"El token de refresco es inválido o ha sido revocado: {error_description}")
             else:
                 self.save(update_fields=['last_error_message'])
+            return False
+        except requests.exceptions.Timeout:
+            logger.error(f"Timeout refrescando token para user {self.user_id}")
+            self.last_error_message = "Timeout al intentar refrescar el token. El servidor de Loyverse no respondió a tiempo."
+            self.save(update_fields=['last_error_message'])
             return False
         except requests.exceptions.RequestException as e:
             logger.error(f"Error de red refrescando token para user {self.user_id}: {e}", exc_info=True)
@@ -195,20 +214,63 @@ class LoyverseUserConnection(models.Model):
         logger.info(f"Conexión Loyverse desactivada para user {self.user_id}. Razón: {error_message}")
         self.save(update_fields=['is_active', 'last_error_message'])
 
+    def test_token_validity(self):
+        """Prueba si el token de acceso actual es válido haciendo una petición a la API de Loyverse.
+        
+        Returns:
+            bool: True si el token es válido, False si no lo es.
+        """
+        if not self.is_active or not self.access_token:
+            return False
+            
+        # Endpoint para probar el token - usamos un endpoint ligero como /merchants/me
+        test_url = "https://api.loyverse.com/v1.0/merchants/me"
+        headers = {
+            'Authorization': f'{self.token_type} {self.access_token}',
+            'Accept': 'application/json'
+        }
+        
+        try:
+            response = requests.get(test_url, headers=headers, timeout=5)
+            # Si la respuesta es 200, el token es válido
+            if response.status_code == 200:
+                return True
+                
+            # Si es 401 o 403, el token no es válido
+            if response.status_code in [401, 403]:
+                logger.warning(f"Token inválido para user {self.user_id}. Status: {response.status_code}")
+                return False
+                
+            # Otros códigos de estado podrían indicar problemas con la API, no necesariamente con el token
+            logger.warning(f"Respuesta inesperada al probar token para user {self.user_id}. Status: {response.status_code}")
+            return False
+            
+        except requests.exceptions.RequestException as e:
+            # Error de red, no podemos determinar si el token es válido
+            logger.warning(f"Error al probar validez del token para user {self.user_id}: {e}")
+            # Asumimos que el token podría ser válido, el problema podría ser de red
+            return True
+            
     def record_sync_attempt(self, success, error_message=None, details=None):
-        """Registra un intento de sincronización de precios."""
+        """Registra un intento de sincronización de precios.
+        
+        Args:
+            success (bool): Si la sincronización fue exitosa.
+            error_message (str, optional): Mensaje de error si la sincronización falló.
+            details (dict, optional): Detalles adicionales sobre la sincronización.
+        """
         if success:
-            self.price_sync_status = 'COMPLETED'
+            self.price_sync_status = self.SyncStatus.COMPLETED
             self.last_price_sync_end_time = timezone.now()
             self.last_error_message = None
             if details:
                 self.last_price_sync_details = details
         else:
-            self.price_sync_status = 'FAILED'
+            self.price_sync_status = self.SyncStatus.FAILED
             self.last_error_message = error_message
             if details:
                 self.last_price_sync_details = details
-        self.save()
+        self.save(update_fields=['price_sync_status', 'last_price_sync_end_time', 'last_error_message', 'last_price_sync_details'])
 
     class Meta:
         verbose_name = "Conexión de Usuario Loyverse"

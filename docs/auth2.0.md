@@ -60,6 +60,47 @@ Este documento servirá como bitácora y guía de trabajo para todos los avances
 
 ---
 
+### [Fecha: 2025-05-11 - Actualización]  
+
+#### 7. Corrección de Error en Referencias a SyncStatusChoices
+- Se identificó un error al guardar o actualizar instancias de `LoyverseUserConnection` después del callback de OAuth2:
+  ```
+  TypeError: type object 'LoyverseUserConnection' has no attribute 'SyncStatusChoices'
+  ```
+- **Problema**: El código intentaba acceder a `LoyverseUserConnection.SyncStatusChoices.IDLE` pero la clase de choices estaba definida como `SyncStatus` en el modelo.
+- **Solución**: Se corrigió la referencia en `views.py` cambiando `LoyverseUserConnection.SyncStatusChoices.IDLE` por `LoyverseUserConnection.SyncStatus.IDLE`.
+- Se verificó que todas las demás referencias a los estados de sincronización usaran la clase correcta.
+
+#### 8. Mejoras en la Lógica de Refresco de Token (Tarea 2.4)
+- Se implementaron las siguientes mejoras en el modelo `LoyverseUserConnection`:
+
+  1. **Nuevo método `test_token_validity()`**:
+     - Realiza una petición a la API de Loyverse para verificar si el token sigue siendo válido.
+     - Utiliza el endpoint `/merchants/me` por ser ligero y requerir autenticación.
+     - Maneja diferentes códigos de estado HTTP para determinar la validez del token.
+     - Incluye timeout de 5 segundos para evitar bloqueos.
+
+  2. **Mejoras en `get_valid_access_token()`**:
+     - Ahora verifica la validez del token incluso si no ha expirado según el tiempo.
+     - Si el token falla la prueba de validez, intenta refrescarlo automáticamente.
+     - Mejor documentación con docstrings detallados.
+
+  3. **Mejoras en `refresh_access_token()`**:
+     - Añadido timeout de 10 segundos para evitar bloqueos en la petición.
+     - Manejo específico para errores de timeout.
+     - Ampliado el reconocimiento de errores para incluir `invalid_token` además de `invalid_grant`.
+     - Mejor documentación con docstrings detallados.
+
+  4. **Mejoras en `record_sync_attempt()`**:
+     - Uso correcto de las constantes de clase `SyncStatus` en lugar de strings literales.
+     - Optimización al guardar solo los campos modificados con `update_fields`.
+     - Mejor documentación con docstrings detallados.
+
+#### 9. Pruebas de Conexión Exitosas
+- Se realizaron pruebas de conexión con Loyverse y se logró establecer la conexión correctamente.
+- Los tokens se almacenan cifrados en la base de datos usando `django-cryptography`.
+- El panel de administración muestra correctamente el estado de las conexiones y los tokens.
+
 ## Notas y Observaciones
 - Todas las configuraciones, errores y soluciones relacionados con autenticación se documentarán aquí antes de pasar a la siguiente fase.
 - Se recomienda mantener este documento actualizado en cada cambio relevante.
@@ -67,8 +108,11 @@ Este documento servirá como bitácora y guía de trabajo para todos los avances
 
 ---
 
-## Pendiente
-- Probar el flujo completo de `/loyverse/connect/` tras iniciar sesión en `/admin/`.
-- Documentar cualquier error y solución aplicada.
-- Validar almacenamiento correcto de tokens y refresco automático.
-- Solo después de esto, avanzar con la tarea de sincronización y Celery.
+## Próximos Pasos
+- ✅ Probar el flujo completo de `/loyverse/connect/` tras iniciar sesión en `/admin/`.
+- ✅ Documentar errores y soluciones aplicadas.
+- ✅ Validar almacenamiento correcto de tokens.
+- ✅ Implementar y mejorar la lógica de refresco automático de tokens.
+- 🔄 Configurar Celery y Redis para tareas asíncronas (Fase 3).
+- 🔄 Implementar tareas de sincronización de precios.
+- 🔄 Crear interfaz de usuario para gestionar la conexión y sincronización.
