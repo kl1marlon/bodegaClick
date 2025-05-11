@@ -10,4 +10,6 @@ whitenoise==6.5.0
 celery==5.4.0
 redis==5.2.1
 django-redis==5.4.0
-django-celery-results==2.5.1 
+django-cryptography
+django-celery-results==2.5.1
+PyJWT[crypto]==2.8.0 # Added for Loyverse id_token decoding (includes cryptography extras)

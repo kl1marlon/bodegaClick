@@ -8,10 +8,17 @@ load_dotenv(os.path.join(Path(__file__).resolve().parent.parent.parent, '.env'))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-your-secret-key-here'
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback_secret_key_for_development')
 
-# Usar el valor de la variable de entorno para DEBUG
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+# Fernet Keys for django-fernet-fields (DEPRECATED - Replaced by django-cryptography)
+# FERNET_KEYS = [os.environ.get('DJANGO_FERNET_KEY')]
+
+# Encryption Keys for django-cryptography
+FIELD_ENCRYPTION_KEYS = [os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')]
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -26,6 +33,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'facturacion',
     'django_celery_results',
+    'loyverse_integration', 
 ]
 
 MIDDLEWARE = [
