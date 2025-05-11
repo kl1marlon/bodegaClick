@@ -20,7 +20,11 @@ FIELD_ENCRYPTION_KEYS = [os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*'] # Para producción, es mejor especificar los dominios exactos.
+# Ejemplo: ALLOWED_HOSTS = ['your-coolify-domain.com', 'www.your-coolify-domain.com']
+# Por ahora, para facilitar la configuración inicial, mantenemos ['*'],
+# pero recuerda ajustarlo para mayor seguridad en un entorno productivo consolidado.
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -87,6 +91,9 @@ CORS_EXPOSE_HEADERS = [
 
 # Configuración de CSRF
 CSRF_TRUSTED_ORIGINS = [
+    # Reemplaza '<tu-dominio-de-coolify>' con tu dominio real en Coolify
+    # Ejemplo: "https://app.mybodega.com"
+    os.environ.get('COOLIFY_DOMAIN', 'http://localhost'), # Asegúrate de definir COOLIFY_DOMAIN en tus variables de entorno de Coolify con https://...
     "https://backend-production-a8d3.up.railway.app",
     "https://backend-production-a8d3.up.railway.app/admin/login/", 
     "https://*.railway.app",
@@ -162,6 +169,14 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuraciones para despliegue detrás de un proxy (como en Coolify)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+# Opcional: Forzar redirección a SSL si no se maneja completamente en el proxy o CDN
+# SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'False') == 'True'
+# SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'False') == 'True'
+# CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'False') == 'True'
 
 # Configuración de logging
 LOGGING = {
