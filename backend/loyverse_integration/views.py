@@ -35,10 +35,16 @@ def connect_loyverse_view(request: HttpRequest):
             return render(request, 'error_page.html', {'message': 'LOYVERSE_APP_CLIENT_ID no está configurado.'}, status=500)
 
         # Construir la REDIRECT_URI de forma absoluta
-        # Asegúrate de que request.scheme y request.get_host() devuelvan lo esperado
-        # en tu entorno de desarrollo y producción (ej. http/https, localhost:8000, tu.dominio.com)
-        redirect_uri_path = reverse('loyverse_integration:loyverse_callback')
-        redirect_uri = request.build_absolute_uri(redirect_uri_path)
+        # En producción, usamos una URL fija para evitar problemas de redirect_uri_mismatch
+        # En desarrollo, construimos la URL dinámicamente
+        if os.environ.get('DJANGO_ENVIRONMENT') == 'production':
+            # URL fija para producción - DEBE coincidir EXACTAMENTE con la configurada en Loyverse Developer Dashboard
+            production_domain = os.environ.get('PRODUCTION_DOMAIN', 'bodegaclick.onrender.com')
+            redirect_uri = f"https://{production_domain}/loyverse/callback/"
+        else:
+            # Construcción dinámica para desarrollo
+            redirect_uri_path = reverse('loyverse_integration:loyverse_callback')
+            redirect_uri = request.build_absolute_uri(redirect_uri_path)
 
         scopes = "OPENID ITEMS_READ ITEMS_WRITE" # Ajusta los scopes según sea necesario
         state = secrets.token_urlsafe(32) # Generar un estado CSRF robusto
@@ -105,6 +111,9 @@ def loyverse_callback_view(request: HttpRequest):
         'code': code,
         'grant_type': 'authorization_code',
     }
+    
+    # Log para depuración de redirect_uri
+    logger.info(f"Usando redirect_uri para intercambio de token: {stored_redirect_uri}")
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
     try:

@@ -1,6 +1,13 @@
 from django.db import models
+from django.conf import settings
 
 class Producto(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='productos',
+        verbose_name="Usuario propietario"
+    )
     loyverse_id = models.CharField(max_length=255, unique=True)
     variant_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=255)
@@ -27,6 +34,12 @@ class Producto(models.Model):
         return self.nombre
 
 class TasaCambio(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tasas_cambio',
+        verbose_name="Usuario propietario"
+    )
     TIPO_CHOICES = [
         ('BCV', 'Tasa BCV'),
         ('PARALELO', 'Tasa Paralelo'),
@@ -40,6 +53,12 @@ class TasaCambio(models.Model):
         return f"{self.tipo} - {self.valor} - {self.fecha.strftime('%Y-%m-%d')}"
 
 class Factura(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='facturas',
+        verbose_name="Usuario propietario"
+    )
     MONEDA_CHOICES = [
         ('USD', 'Dólares'),
         ('BS', 'Bolívares'),
