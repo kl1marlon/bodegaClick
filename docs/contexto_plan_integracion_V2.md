@@ -94,28 +94,26 @@ Crear una nueva app de Django llamada `loyverse_integration` para permitir que c
 
 **Objetivo:** Permitir a un usuario de BodegaClick (ya existente en el sistema) conectar su única cuenta Loyverse y gestionar los tokens.
 
-**[EN PROGRESO - Depurando `redirect_uri`] Tarea B.1: Definir y Configurar URLs para OAuth**
-*   **Estado:** Vistas y URLs base definidas. Error de `redirect_uri mismatch` siendo depurado.
-*   **Acción:**
-    1.  Asegurar que `loyverse_integration/urls.py` (con `connect_loyverse` y `loyverse_callback`) esté correctamente incluido en `config/urls.py` (el `urls.py` principal del proyecto).
-    2.  **Verificar/Corregir `LOYVERSE_REDIRECT_URI`:** La `redirect_uri` configurada en el Developer Dashboard de Loyverse debe coincidir EXACTAMENTE con la URL absoluta generada por `request.build_absolute_uri(reverse('loyverse:loyverse_callback'))` cuando se accede desde el entorno de prueba de Render (HTTPS).
-*   **Instrucción al Editor IA:** "Revisa la configuración de URLs. Ayúdame a asegurar que la `REDIRECT_URI` usada en la vista `connect_loyverse_view` y la configurada en Loyverse para el entorno de Render (`https://<tu-app>.onrender.com/loyverse/callback/`) coincidan perfectamente, incluyendo el protocolo HTTPS."
+**[COMPLETADA] Tarea B.1: Definir y Configurar URLs para OAuth**
+*   **Estado:** Completada. URLs configuradas correctamente y problema de `redirect_uri mismatch` resuelto.
+*   **Solución:**
+    1.  Se verificó que `loyverse_integration/urls.py` (con `connect_loyverse` y `loyverse_callback`) está correctamente incluido en `config/urls.py` con el namespace `loyverse_integration`.
+    2.  **Corregido `LOYVERSE_REDIRECT_URI`:** Se implementó una solución que usa URLs fijas en producción para garantizar que coincidan exactamente con las configuradas en el Developer Dashboard de Loyverse.
+    3.  Se añadieron logs para depuración de la `redirect_uri` utilizada en el intercambio de tokens.
 
-**[EN PROGRESO - Depurando `redirect_uri`] Tarea B.2: Implementar Vista `connect_loyverse_view`**
-*   **Estado:** Implementada, pero el flujo se interrumpe por el error de `redirect_uri`.
-*   **Acción:** Verificar que use `@login_required`, obtenga `LOYVERSE_APP_CLIENT_ID` de ENV, construya correctamente la `REDIRECT_URI` absoluta, defina `SCOPES`, genere y guarde `state` en sesión.
-*   **Instrucción al Editor IA:** "Confirma que la vista `connect_loyverse_view` esté construyendo la `redirect_uri` de forma absoluta y correcta para el entorno de Render."
+**[COMPLETADA] Tarea B.2: Implementar Vista `connect_loyverse_view`**
+*   **Estado:** Completada y funcionando correctamente.
+*   **Implementación:** La vista usa `@login_required`, obtiene `LOYVERSE_APP_CLIENT_ID` de ENV, construye correctamente la `REDIRECT_URI` absoluta (ahora con soporte para URLs fijas en producción), define `SCOPES`, genera y guarda `state` en sesión.
+*   **Mejoras:** Se modificó la construcción de la `redirect_uri` para usar una URL fija en producción que coincide exactamente con la configurada en Loyverse.
 
-**[EN PROGRESO - Se llega aquí después del error de `redirect_uri`] Tarea B.3: Implementar Vista `loyverse_callback_view`**
-*   **Estado:** Implementada, pero el error anterior (`redirect_uri mismatch`) impide probarla completamente. El error `TypeError: type object 'LoyverseUserConnection' has no attribute 'SyncStatusChoices'` fue identificado y la solución es usar las constantes de estado (ej. `LoyverseUserConnection.STATUS_IDLE`).
-*   **Acción:**
-    1.  Verificar `state`.
-    2.  Intercambiar `code` por tokens.
-    3.  **Implementar correctamente la decodificación y VALIDACIÓN del `id_token` JWT (incluyendo obtención de JWKS, verificación de firma, `audience` e `issuer`).**
-    4.  Usar `LoyverseUserConnection.objects.update_or_create(user=request.user, defaults={...})` para guardar/actualizar la conexión. Asegurar que se asignen los estados correctamente usando las constantes del modelo.
-*   **Instrucción al Editor IA:** "Una vez resuelto el problema de `redirect_uri`, revisa `loyverse_callback_view`. Asegúrate de que:
-    *   La validación y decodificación del `id_token` JWT es completa y segura (obtención de claves de JWKS, verificación de firma, `aud`, `iss`).
-    *   Los estados de `price_sync_status` se asignan usando las constantes definidas en el modelo (ej. `LoyverseUserConnection.STATUS_IDLE`) para evitar el `TypeError` anterior."
+**[COMPLETADA] Tarea B.3: Implementar Vista `loyverse_callback_view`**
+*   **Estado:** Completada y funcionando correctamente. Se ha probado el flujo completo con éxito.
+*   **Implementación:**
+    1.  Verificación de `state` funcionando correctamente.
+    2.  Intercambio de `code` por tokens implementado y probado.
+    3.  **Decodificación y VALIDACIÓN del `id_token` JWT implementada correctamente**, incluyendo obtención de JWKS, verificación de firma, `audience` e `issuer`.
+    4.  Uso de `LoyverseUserConnection.objects.update_or_create(user=request.user, defaults={...})` para guardar/actualizar la conexión, con estados asignados correctamente usando las constantes del modelo.
+*   **Mejoras:** Se añadieron logs adicionales para depuración de la `redirect_uri` utilizada en el intercambio de tokens.
 
 **[COMPLETADA - Lógica mejorada] Tarea B.4: Implementar y Probar Métodos de Refresco de Token**
 *   **Estado:** Completada. Métodos `refresh_access_token()`, `get_valid_access_token()`, y `test_token_validity()` en `LoyverseUserConnection` fueron implementados y mejorados.
