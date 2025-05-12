@@ -4,10 +4,12 @@ import time
 import requests
 import os
 import logging
-import json
-from decimal import Decimal
+import jwt
 from math import floor
-
+import base64
+from decimal import Decimal, InvalidOperation
+import json
+from datetime import datetime, timedelta
 from django.db import transaction
 from django.conf import settings
 
@@ -93,11 +95,24 @@ def recalculate_user_base_prices_task(self, user_id):
                 # Calcular nuevo precio base
                 nuevo_precio_base = producto.precio_base_usd * tasa_valor
                 
-                # Aplicar redondeo especial
-                nuevo_precio_base_redondeado = aplicar_redondeo_especial(nuevo_precio_base)
+                # Aplicar redondeo especial (devuelve float)
+                resultado_redondeo_float = aplicar_redondeo_especial(nuevo_precio_base)
                 
-                # Verificar si el precio cambió
-                if abs(producto.precio_base - nuevo_precio_base_redondeado) < 0.01:
+                # Convertir el resultado del redondeo a Decimal para poder compararlo correctamente
+                try:
+                    # Usar str() para evitar problemas de representación binaria de float
+                    nuevo_precio_base_redondeado_decimal = Decimal(str(resultado_redondeo_float))
+                except InvalidOperation:
+                    logger.error(f"Error al convertir el precio redondeado '{resultado_redondeo_float}' a Decimal para producto {producto.id} ({producto.nombre}). Saltando este producto.")
+                    summary['errors'].append({
+                        'product_id': producto.id,
+                        'product_name': producto.nombre,
+                        'error': f"Valor de redondeo inválido no convertible a Decimal: {resultado_redondeo_float}"
+                    })
+                    continue  # Pasar al siguiente producto en el bucle
+                
+                # Verificar si el precio cambió (ahora ambos son Decimal)
+                if abs(producto.precio_base - nuevo_precio_base_redondeado_decimal) < Decimal('0.01'):
                     # El precio no cambió significativamente
                     logger.debug(f"Producto {producto.id} ({producto.nombre}): Precio sin cambios ({producto.precio_base})")
                     summary['unchanged_products'] += 1
@@ -111,11 +126,11 @@ def recalculate_user_base_prices_task(self, user_id):
                 else:
                     # Actualizar el precio
                     precio_anterior = producto.precio_base
-                    producto.precio_base = nuevo_precio_base_redondeado
+                    producto.precio_base = nuevo_precio_base_redondeado_decimal  # Usar el valor Decimal
                     producto.ultima_actualizacion_precio = timezone.now()
                     producto.save(update_fields=['precio_base', 'ultima_actualizacion_precio'])
                     
-                    logger.info(f"Producto {producto.id} ({producto.nombre}): Precio actualizado de {precio_anterior} a {nuevo_precio_base_redondeado}")
+                    logger.info(f"Producto {producto.id} ({producto.nombre}): Precio actualizado de {precio_anterior} a {nuevo_precio_base_redondeado_decimal}")
                     summary['updated_products'] += 1
                     summary['details']['updated'].append({
                         'id': producto.id,
