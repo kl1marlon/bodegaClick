@@ -12,6 +12,7 @@ import ListaDeFacturas from './pages/ListaDeFacturas';
 import BusquedaProductoHistorial from './pages/BusquedaProductoHistorial';
 import CrearProducto from './pages/CrearProducto';
 import Login from './pages/Login';
+import LoyverseDashboard from './pages/LoyverseDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 // Importar otros componentes según sea necesario
@@ -119,6 +120,15 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <BusquedaProductoHistorial />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Ruta de Integración con Loyverse */}
+          <Route path="/loyverse-dashboard" element={
+            <ProtectedRoute>
+              <Layout>
+                <LoyverseDashboard />
               </Layout>
             </ProtectedRoute>
           } />

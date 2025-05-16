@@ -205,3 +205,37 @@ Crear una nueva app de Django llamada `loyverse_integration` para permitir que c
     *   Crear guía de usuario para el proceso de conexión con Loyverse.
     *   Documentar el proceso de sincronización de precios y sus opciones.
     *   Añadir sección de preguntas frecuentes y solución de problemas.
+
+---
+
+## Fase F: Integración API REST para Frontend
+
+**Objetivo:** Implementar endpoints API REST para permitir que el frontend React interactue con la funcionalidad de sincronización de Loyverse.
+
+**[COMPLETADA] Tarea F.1: Implementar Serializers**
+*   **Estado:** Completada. Se han creado serializers para la conexión Loyverse y las opciones de sincronización.
+*   **Archivos implementados:**
+    *   `serializers.py` con `LoyverseConnectionSerializer` y `SyncOptionsSerializer`.
+    *   El serializer de conexión oculta datos sensibles como tokens y expone solo información necesaria para el frontend.
+
+**[COMPLETADA] Tarea F.2: Implementar ViewSets y Endpoints API**
+*   **Estado:** Completada. Se ha creado un ViewSet con múltiples endpoints para todas las operaciones necesarias.
+*   **Endpoints implementados:**
+    *   `GET /loyverse/api/connections/status/`: Devuelve el estado de conexión del usuario.
+    *   `POST /loyverse/api/connections/sync_prices/`: Inicia la sincronización con opciones configurables.
+    *   `GET /loyverse/api/connections/sync_options/`: Devuelve las opciones disponibles para sincronización.
+    *   `GET /loyverse/api/connections/connection_url/`: Devuelve la URL para conectar con Loyverse.
+*   **Seguridad:** Se aplica `IsAuthenticated` para garantizar que un usuario solo puede acceder a su propia conexión.
+
+**[COMPLETADA] Tarea F.3: Configuración de URLs**
+*   **Estado:** Completada. Se han configurado las URLs para los endpoints API utilizando DefaultRouter.
+*   **Características:**
+    *   Las rutas API están bajo el namespace `loyverse_integration`.
+    *   Se mantienen las URLs anteriores para vistas de Django regulares.
+
+**[EN CURSO] Tarea F.4: Pruebas de Endpoints API**
+*   **Estado:** En curso. Se ha verificado el funcionamiento del endpoint `status`, faltan probar los demás endpoints.
+*   **Acciones pendientes:**
+    *   Probar el endpoint `sync_prices` con Postman/cURL.
+    *   Verificar respuestas de error y manejo de casos especiales.
+    *   Realizar pruebas con múltiples usuarios para confirmar aislamiento de datos.

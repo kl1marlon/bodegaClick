@@ -14,14 +14,22 @@ const api = axios.create({
   baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
+  withCredentials: true, // Importante para autenticación por sesión
 });
 
 // Para depuración
 console.log('API baseURL:', api.defaults.baseURL);
 
+// Funciones API existentes
 export const fetchProductosAPI = () => api.get('/api/productos/');
 export const fetchTasaCambioAPI = (tipo) => api.get(`/api/tasas-cambio/?tipo=${tipo}`);
 export const createFacturaAPI = (data) => api.post('/api/facturas/', data);
 
-export default api; 
+// Nuevas funciones API para Loyverse
+export const getLoyverseStatusAPI = () => api.get('/loyverse/api/connections/status/');
+export const getSyncOptionsAPI = () => api.get('/loyverse/api/connections/sync_options/');
+export const getLoyverseConnectionUrlAPI = () => api.get('/loyverse/api/connections/connection_url/');
+export const syncPricesToLoyverseAPI = (options) => api.post('/loyverse/api/connections/sync_prices/', options);
+
+export default api;

@@ -29,6 +29,7 @@ import ListIcon from '@mui/icons-material/List';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
@@ -60,6 +61,7 @@ function Layout({ children }) {
       ]
     },
     { text: 'Productos', icon: <InventoryIcon />, path: '/productos' },
+    { text: 'Loyverse', icon: <StorefrontIcon />, path: '/loyverse-dashboard' },
     { text: 'Tasas de Cambio', icon: <CurrencyExchangeIcon />, path: '/tasas' },
     { text: 'Configuración', icon: <SettingsIcon />, path: '/config' }
   ];
