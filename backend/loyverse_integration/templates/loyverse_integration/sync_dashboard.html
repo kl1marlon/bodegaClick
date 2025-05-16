@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Sincronización con Loyverse{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Panel de Control de Sincronización con Loyverse</h2>
+    
+    {% if not loyverse_connected %}
+        <div class="alert alert-warning">
+            <h4>No estás conectado a Loyverse</h4>
+            <p>Para poder sincronizar tus productos, primero debes conectar tu cuenta de Loyverse.</p>
+            <a href="{{ connection_url }}" class="btn btn-primary">Conectar con Loyverse</a>
+        </div>
+    {% else %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Estado de Conexión</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Cuenta Loyverse:</strong> {{ connection.loyverse_account_name|default:"No especificado" }}</p>
+                        <p><strong>Email:</strong> {{ connection.loyverse_email|default:"No especificado" }}</p>
+                        <p><strong>Estado de conexión:</strong> 
+                            {% if connection.is_active %}
+                                <span class="badge badge-success">Activa</span>
+                            {% else %}
+                                <span class="badge badge-danger">Inactiva</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Última actualización:</strong> {{ connection.updated_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Estado de token:</strong> 
+                            {% if connection.is_access_token_expired %}
+                                <span class="badge badge-warning">Expirado</span>
+                            {% else %}
+                                <span class="badge badge-success">Válido</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Expira:</strong> {{ connection.expires_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Estado de Sincronización</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Estado actual:</strong> 
+                    {% if sync_status == 'IDLE' %}
+                        <span class="badge badge-secondary">Inactivo</span>
+                    {% elif sync_status == 'QUEUED' %}
+                        <span class="badge badge-info">En Cola</span>
+                    {% elif sync_status == 'SYNCING' %}
+                        <span class="badge badge-primary">Sincronizando</span>
+                    {% elif sync_status == 'COMPLETED' %}
+                        <span class="badge badge-success">Completado</span>
+                    {% elif sync_status == 'COMPLETED_WITH_ERRORS' %}
+                        <span class="badge badge-warning">Completado con Errores</span>
+                    {% elif sync_status == 'FAILED' %}
+                        <span class="badge badge-danger">Falló</span>
+                    {% elif sync_status == 'TOKEN_INVALID' %}
+                        <span class="badge badge-danger">Token Inválido</span>
+                    {% endif %}
+                </p>
+                <p><strong>Última sincronización:</strong> {{ last_sync_time|default:"Nunca"|date:"d/m/Y H:i" }}</p>
+                
+                {% if last_sync_details %}
+                    <div class="mt-3">
+                        <h5>Detalles de la última sincronización</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Modo de verificación:</th>
+                                    <td>{% if last_sync_details.check_only %}Solo verificación{% else %}Actualización real{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <th>Productos procesados:</th>
+                                    <td>{{ last_sync_details.items_processed|default:"0" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Productos actualizados:</th>
+                                    <td>{{ last_sync_details.items_updated_in_loyverse|default:"0" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Productos ignorados:</th>
+                                    <td>{{ last_sync_details.items_skipped_matching_price|default:"0" }}</td>
+                                </tr>
+                                {% if last_sync_details.items_skipped_higher_price %}
+                                <tr>
+                                    <th>Con precio superior en Loyverse:</th>
+                                    <td>{{ last_sync_details.items_skipped_higher_price }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if last_sync_details.items_with_errors %}
+                                <tr>
+                                    <th>Con errores:</th>
+                                    <td>{{ last_sync_details.items_with_errors }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Iniciar Sincronización</h4>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'loyverse_integration:start_price_sync' %}" method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="recalculate_first" name="recalculate_first" value="true">
+                        <label class="form-check-label" for="recalculate_first">Recalcular precios base primero</label>
+                        <small class="form-text text-muted">Actualiza los precios base de todos tus productos usando tu tasa de cambio actual antes de sincronizar con Loyverse.</small>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="check_only" name="check_only" value="true">
+                        <label class="form-check-label" for="check_only">Solo verificar diferencias</label>
+                        <small class="form-text text-muted">No realizará cambios reales en Loyverse, solo mostrará las diferencias de precios.</small>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="force_lower_price" name="force_lower_price" value="true">
+                        <label class="form-check-label" for="force_lower_price">Forzar precios menores</label>
+                        <small class="form-text text-muted">Actualizar productos en Loyverse incluso si el precio local es menor que el actual en Loyverse.</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Nota:</strong> La sincronización puede tardar varios minutos dependiendo de la cantidad de productos.
+                        Respeta la limitación de tasa de la API de Loyverse (1 petición por segundo).
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Iniciar Sincronización</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

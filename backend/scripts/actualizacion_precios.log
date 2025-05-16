@@ -3160,3 +3160,601 @@ LINE 2:             SELECT id, codigo, nombre, precio_base_usd, prec...
 [2025-05-06 22:38:40] ID: 458 | Nombre: café amanecer 100g | Precio actual: 135.00 | Tipo tasa: PARALELO | Tasa aplicada: 100.00
 [2025-05-06 22:38:40] Conexión cerrada. Proceso completado.
 [2025-05-06 22:38:40] === FIN DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-12 13:21:54] === INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-12 13:21:54] Intentando conectar a bodegaclicktest en ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech...
+[2025-05-12 13:21:55] ERROR al conectar a la base de datos: connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  password authentication failed for user 'bodegaclicktest_0owner'
+connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  connection is insecure (try using `sslmode=require`)
+
+[2025-05-12 13:27:01] === INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-12 13:27:01] Intentando conectar a bodegaclicktest en ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech...
+[2025-05-12 13:27:02] ERROR al conectar a la base de datos: connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  password authentication failed for user 'bodegaclicktest_0owner'
+connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  connection is insecure (try using `sslmode=require`)
+
+[2025-05-12 13:27:16] === INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-12 13:27:16] Intentando conectar a bodegaclicktest en ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech...
+[2025-05-12 13:27:16] ERROR al conectar a la base de datos: connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  password authentication failed for user 'bodegaclicktest_owner'
+connection to server at "ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech" (52.20.107.131), port 5432 failed: ERROR:  connection is insecure (try using `sslmode=require`)
+
+[2025-05-12 13:28:51] === INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===
+[2025-05-12 13:28:51] Intentando conectar a bodegaclicktest en ep-floral-surf-a4m7e3ws-pooler.us-east-1.aws.neon.tech...
+[2025-05-12 13:28:51] Conexión exitosa a la base de datos: bodegaclicktest
+[2025-05-12 13:28:51] Tasas actuales: BCV = 95.00, PARALELO = 105.00
+[2025-05-12 13:28:57] Tasas a utilizar: BCV = 95, PARALELO = 105
+[2025-05-12 13:28:59] Tasa BCV actualizada a 95
+[2025-05-12 13:28:59] Tasa PARALELO actualizada a 105
+[2025-05-12 13:28:59] Consultando productos con precio_base_usd > 0...
+[2025-05-12 13:29:00] Se encontraron 551 productos para revisar
+[2025-05-12 13:29:00] Actualizado: Producto ID 112 (Tasa: PARALELO): 1.00 → 2.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 603 (Tasa: BCV): 150.00 → 160.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 178 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 491 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 393 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 21 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 191 (Tasa: PARALELO): 1050.00 → 1100.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 620 (Tasa: PARALELO): 170.00 → 175.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 619 (Tasa: PARALELO): 165.00 → 170.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 622 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 623 (Tasa: PARALELO): 20.00 → 25.0
+[2025-05-12 13:29:00] Actualizado: Producto ID 261 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 441 (Tasa: PARALELO): 245.00 → 260.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 327 (Tasa: PARALELO): 225.00 → 235.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 615 (Tasa: PARALELO): 130.00 → 140.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 621 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 240 (Tasa: BCV): 30.00 → 35.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 84 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 400 (Tasa: PARALELO): 290.00 → 300.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 386 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 627 (Tasa: PARALELO): 0.00 → 140.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 626 (Tasa: PARALELO): 0.00 → 115.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 438 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:01] Progreso: 50/551 (9.1%) - Tiempo: 1.50s
+[2025-05-12 13:29:01] Actualizado: Producto ID 424 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 480 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 485 (Tasa: PARALELO): 675.00 → 710.0
+[2025-05-12 13:29:01] Actualizado: Producto ID 397 (Tasa: PARALELO): 125.00 → 135.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 493 (Tasa: PARALELO): 300.00 → 315.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 472 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 269 (Tasa: PARALELO): 80.00 → 85.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 287 (Tasa: PARALELO): 35.00 → 40.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 365 (Tasa: BCV): 100.00 → 105.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 272 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 439 (Tasa: PARALELO): 190.00 → 200.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 165 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 486 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 416 (Tasa: BCV): 10.00 → 15.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 278 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 473 (Tasa: PARALELO): 145.00 → 150.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 427 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 443 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:02] Actualizado: Producto ID 162 (Tasa: PARALELO): 70.00 → 75.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 433 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 160 (Tasa: PARALELO): 20.00 → 25.0
+[2025-05-12 13:29:03] Progreso: 100/551 (18.1%) - Tiempo: 2.92s
+[2025-05-12 13:29:03] Actualizado: Producto ID 586 (Tasa: PARALELO): 20.00 → 25.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 232 (Tasa: BCV): 10.00 → 15.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 306 (Tasa: PARALELO): 30.00 → 35.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 312 (Tasa: PARALELO): 175.00 → 180.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 101 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 113 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 323 (Tasa: PARALELO): 255.00 → 270.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 11 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 367 (Tasa: PARALELO): 25.00 → 30.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 413 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 163 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 255 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 223 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:03] Actualizado: Producto ID 434 (Tasa: PARALELO): 195.00 → 205.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 395 (Tasa: PARALELO): 210.00 → 220.0
+[2025-05-12 13:29:04] Progreso: 150/551 (27.2%) - Tiempo: 3.88s
+[2025-05-12 13:29:04] Actualizado: Producto ID 394 (Tasa: PARALELO): 365.00 → 385.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 326 (Tasa: BCV): 55.00 → 60.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 428 (Tasa: PARALELO): 245.00 → 255.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 295 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 221 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 578 (Tasa: PARALELO): 50.00 → 55.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 452 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 202 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 29 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 442 (Tasa: PARALELO): 125.00 → 135.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 276 (Tasa: PARALELO): 160.00 → 165.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 421 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 440 (Tasa: PARALELO): 275.00 → 285.0
+[2025-05-12 13:29:04] Actualizado: Producto ID 590 (Tasa: PARALELO): 35.00 → 40.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 318 (Tasa: PARALELO): 30.00 → 35.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 462 (Tasa: PARALELO): 25.00 → 30.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 10 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 360 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 597 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 584 (Tasa: PARALELO): 200.00 → 210.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 119 (Tasa: PARALELO): 360.00 → 380.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 325 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 588 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:05] Progreso: 200/551 (36.3%) - Tiempo: 5.44s
+[2025-05-12 13:29:05] Actualizado: Producto ID 196 (Tasa: BCV): 305.00 → 325.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 377 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 469 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 609 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:05] Actualizado: Producto ID 177 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 324 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 260 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 610 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 612 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 614 (Tasa: BCV): 140.00 → 145.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 613 (Tasa: BCV): 100.00 → 105.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 69 (Tasa: PARALELO): 50.00 → 55.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 577 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 94 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 192 (Tasa: BCV): 150.00 → 155.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 182 (Tasa: BCV): 70.00 → 75.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 569 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 186 (Tasa: PARALELO): 195.00 → 205.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 174 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:06] Actualizado: Producto ID 12 (Tasa: PARALELO): 155.00 → 160.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 55 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 308 (Tasa: BCV): 170.00 → 180.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 309 (Tasa: BCV): 105.00 → 110.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 19 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 40 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 159 (Tasa: PARALELO): 2600.00 → 2730.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 58 (Tasa: PARALELO): 125.00 → 130.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 573 (Tasa: PARALELO): 190.00 → 200.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 357 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 281 (Tasa: BCV): 30.00 → 35.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 355 (Tasa: BCV): 60.00 → 65.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 352 (Tasa: PARALELO): 210.00 → 220.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 316 (Tasa: BCV): 110.00 → 115.0
+[2025-05-12 13:29:07] Actualizado: Producto ID 332 (Tasa: PARALELO): 195.00 → 205.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 231 (Tasa: PARALELO): 55.00 → 60.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 229 (Tasa: PARALELO): 70.00 → 75.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 566 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:08] Progreso: 250/551 (45.4%) - Tiempo: 8.00s
+[2025-05-12 13:29:08] Actualizado: Producto ID 356 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 68 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 236 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 213 (Tasa: PARALELO): 130.00 → 140.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 243 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 254 (Tasa: PARALELO): 45.00 → 50.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 228 (Tasa: BCV): 110.00 → 115.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 405 (Tasa: PARALELO): 125.00 → 130.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 271 (Tasa: BCV): 35.00 → 40.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 575 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 342 (Tasa: BCV): 115.00 → 120.0
+[2025-05-12 13:29:08] Actualizado: Producto ID 482 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 483 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 184 (Tasa: PARALELO): 180.00 → 190.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 426 (Tasa: BCV): 90.00 → 95.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 136 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 60 (Tasa: BCV): 520.00 → 545.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 449 (Tasa: PARALELO): 135.00 → 145.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 108 (Tasa: PARALELO): 215.00 → 225.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 385 (Tasa: BCV): 195.00 → 205.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 607 (Tasa: PARALELO): 130.00 → 140.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 188 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 437 (Tasa: PARALELO): 35.00 → 40.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 484 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 387 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 478 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:09] Actualizado: Producto ID 275 (Tasa: BCV): 90.00 → 95.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 294 (Tasa: BCV): 120.00 → 130.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 264 (Tasa: BCV): 125.00 → 130.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 446 (Tasa: BCV): 30.00 → 35.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 479 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 336 (Tasa: PARALELO): 200.00 → 210.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 492 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 126 (Tasa: BCV): 35.00 → 40.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 138 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 161 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 445 (Tasa: BCV): 70.00 → 75.0
+[2025-05-12 13:29:10] Progreso: 300/551 (54.4%) - Tiempo: 10.45s
+[2025-05-12 13:29:10] Actualizado: Producto ID 180 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 158 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 354 (Tasa: BCV): 70.00 → 75.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 468 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:10] Actualizado: Producto ID 150 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 451 (Tasa: PARALELO): 255.00 → 265.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 149 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 252 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 139 (Tasa: PARALELO): 155.00 → 165.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 13 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 330 (Tasa: PARALELO): 225.00 → 235.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 470 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 106 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 85 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 490 (Tasa: PARALELO): 175.00 → 185.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 251 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 340 (Tasa: PARALELO): 170.00 → 175.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 41 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 5 (Tasa: BCV): 360.00 → 380.0
+[2025-05-12 13:29:11] Actualizado: Producto ID 92 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 338 (Tasa: PARALELO): 200.00 → 210.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 4 (Tasa: BCV): 105.00 → 110.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 145 (Tasa: BCV): 210.00 → 220.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 285 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 31 (Tasa: PARALELO): 170.00 → 175.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 3 (Tasa: BCV): 155.00 → 165.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 6 (Tasa: PARALELO): 175.00 → 185.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 16 (Tasa: BCV): 935.00 → 985.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 226 (Tasa: PARALELO): 165.00 → 170.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 238 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 310 (Tasa: PARALELO): 150.00 → 155.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 45 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 197 (Tasa: PARALELO): 370.00 → 390.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 460 (Tasa: BCV): 35.00 → 40.0
+[2025-05-12 13:29:12] Actualizado: Producto ID 185 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:12] Progreso: 350/551 (63.5%) - Tiempo: 12.74s
+[2025-05-12 13:29:12] Actualizado: Producto ID 179 (Tasa: PARALELO): 120.00 → 130.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 467 (Tasa: PARALELO): 135.00 → 145.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 9 (Tasa: BCV): 105.00 → 110.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 454 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 87 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 172 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 80 (Tasa: PARALELO): 50.00 → 55.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 81 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 339 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 89 (Tasa: PARALELO): 490.00 → 515.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 97 (Tasa: BCV): 130.00 → 135.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 100 (Tasa: PARALELO): 160.00 → 165.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 104 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 79 (Tasa: BCV): 65.00 → 70.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 137 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:13] Actualizado: Producto ID 88 (Tasa: BCV): 190.00 → 200.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 86 (Tasa: BCV): 155.00 → 160.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 25 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 474 (Tasa: PARALELO): 120.00 → 130.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 105 (Tasa: PARALELO): 120.00 → 130.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 34 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 102 (Tasa: PARALELO): 80.00 → 85.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 173 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 107 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 247 (Tasa: PARALELO): 225.00 → 235.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 407 (Tasa: PARALELO): 340.00 → 355.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 125 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 230 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 151 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 56 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 93 (Tasa: PARALELO): 360.00 → 375.0
+[2025-05-12 13:29:14] Actualizado: Producto ID 96 (Tasa: PARALELO): 120.00 → 130.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 98 (Tasa: PARALELO): 130.00 → 135.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 74 (Tasa: PARALELO): 50.00 → 55.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 459 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 398 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 121 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:15] Progreso: 400/551 (72.6%) - Tiempo: 15.10s
+[2025-05-12 13:29:15] Actualizado: Producto ID 123 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 59 (Tasa: PARALELO): 370.00 → 385.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 288 (Tasa: PARALELO): 55.00 → 60.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 216 (Tasa: PARALELO): 55.00 → 60.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 57 (Tasa: BCV): 35.00 → 40.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 14 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 235 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 313 (Tasa: PARALELO): 160.00 → 170.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 15 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 337 (Tasa: PARALELO): 200.00 → 205.0
+[2025-05-12 13:29:15] Actualizado: Producto ID 47 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 481 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 256 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 286 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 284 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 333 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 234 (Tasa: PARALELO): 140.00 → 150.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 33 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 461 (Tasa: BCV): 30.00 → 35.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 301 (Tasa: PARALELO): 230.00 → 240.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 245 (Tasa: PARALELO): 80.00 → 85.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 28 (Tasa: PARALELO): 140.00 → 150.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 311 (Tasa: PARALELO): 350.00 → 365.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 341 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 142 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:16] Actualizado: Producto ID 335 (Tasa: PARALELO): 215.00 → 225.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 359 (Tasa: PARALELO): 95.00 → 100.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 322 (Tasa: PARALELO): 120.00 → 130.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 250 (Tasa: PARALELO): 150.00 → 160.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 189 (Tasa: PARALELO): 325.00 → 345.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 291 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 116 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:17] Progreso: 450/551 (81.7%) - Tiempo: 17.23s
+[2025-05-12 13:29:17] Actualizado: Producto ID 214 (Tasa: PARALELO): 130.00 → 140.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 207 (Tasa: PARALELO): 60.00 → 65.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 222 (Tasa: PARALELO): 140.00 → 150.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 289 (Tasa: PARALELO): 160.00 → 170.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 447 (Tasa: PARALELO): 150.00 → 160.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 334 (Tasa: PARALELO): 155.00 → 160.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 23 (Tasa: PARALELO): 165.00 → 175.0
+[2025-05-12 13:29:17] Actualizado: Producto ID 378 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 253 (Tasa: PARALELO): 225.00 → 235.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 249 (Tasa: PARALELO): 200.00 → 210.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 448 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 362 (Tasa: PARALELO): 190.00 → 200.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 42 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 2 (Tasa: BCV): 185.00 → 195.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 384 (Tasa: PARALELO): 205.00 → 215.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 606 (Tasa: PARALELO): 750.00 → 785.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 532 (Tasa: BCV): 215.00 → 230.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 596 (Tasa: PARALELO): 105.00 → 110.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 262 (Tasa: PARALELO): 140.00 → 145.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 26 (Tasa: PARALELO): 205.00 → 215.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 604 (Tasa: BCV): 95.00 → 100.0
+[2025-05-12 13:29:18] Actualizado: Producto ID 353 (Tasa: PARALELO): 35.00 → 40.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 583 (Tasa: PARALELO): 125.00 → 130.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 599 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 376 (Tasa: PARALELO): 175.00 → 185.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 456 (Tasa: PARALELO): 650.00 → 685.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 589 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:19] Progreso: 500/551 (90.7%) - Tiempo: 19.12s
+[2025-05-12 13:29:19] Actualizado: Producto ID 30 (Tasa: PARALELO): 290.00 → 305.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 1 (Tasa: PARALELO): 75.00 → 80.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 487 (Tasa: PARALELO): 35.00 → 40.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 598 (Tasa: PARALELO): 110.00 → 115.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 175 (Tasa: PARALELO): 145.00 → 155.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 298 (Tasa: PARALELO): 80.00 → 85.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 530 (Tasa: PARALELO): 125.00 → 135.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 529 (Tasa: BCV): 95.00 → 100.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 43 (Tasa: PARALELO): 65.00 → 70.0
+[2025-05-12 13:29:19] Actualizado: Producto ID 18 (Tasa: PARALELO): 210.00 → 220.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 431 (Tasa: PARALELO): 120.00 → 125.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 457 (Tasa: PARALELO): 220.00 → 230.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 37 (Tasa: BCV): 145.00 → 155.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 455 (Tasa: PARALELO): 210.00 → 220.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 350 (Tasa: PARALELO): 135.00 → 145.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 401 (Tasa: PARALELO): 85.00 → 90.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 593 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 592 (Tasa: PARALELO): 90.00 → 95.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 375 (Tasa: PARALELO): 125.00 → 135.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 570 (Tasa: PARALELO): 115.00 → 120.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 531 (Tasa: PARALELO): 170.00 → 175.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 571 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 453 (Tasa: PARALELO): 135.00 → 145.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 408 (Tasa: PARALELO): 20.00 → 25.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 381 (Tasa: PARALELO): 100.00 → 105.0
+[2025-05-12 13:29:20] Actualizado: Producto ID 419 (Tasa: PARALELO): 70.00 → 75.0
+[2025-05-12 13:29:21] Actualizado: Producto ID 314 (Tasa: PARALELO): 150.00 → 160.0
+[2025-05-12 13:29:21] Actualizado: Producto ID 176 (Tasa: PARALELO): 260.00 → 275.0
+[2025-05-12 13:29:21] Actualizado: Producto ID 425 (Tasa: PARALELO): 140.00 → 150.0
+[2025-05-12 13:29:21] Actualizado: Producto ID 402 (Tasa: PARALELO): 145.00 → 150.0
+[2025-05-12 13:29:21] Actualizado: Producto ID 194 (Tasa: PARALELO): 470.00 → 495.0
+[2025-05-12 13:29:21] Progreso: 550/551 (99.8%) - Tiempo: 21.09s
+[2025-05-12 13:29:21] Actualizado: Producto ID 458 (Tasa: PARALELO): 135.00 → 140.0
+[2025-05-12 13:29:21] Progreso: 551/551 (100.0%) - Tiempo: 21.15s
+[2025-05-12 13:29:21] ==== RESUMEN DE ACTUALIZACIÓN ====
+[2025-05-12 13:29:21] Total productos revisados: 551
+[2025-05-12 13:29:21] Productos actualizados: 319
+[2025-05-12 13:29:21] Productos sin cambios: 232
+[2025-05-12 13:29:21] Tasas aplicadas: BCV = 95, PARALELO = 105
+[2025-05-12 13:29:21] Productos por tipo de tasa: BCV = 62, PARALELO = 489, DESCONOCIDO = 0
+[2025-05-12 13:29:21] Tiempo total: 21.22 segundos
+[2025-05-12 13:29:21] Velocidad: 25.97 productos/segundo
+[2025-05-12 13:29:21] ==== LISTA DE PRODUCTOS SIN CAMBIOS (232) ====
+[2025-05-12 13:29:21] ID: 618 | Nombre: Crema de arroz Santoni | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 199 | Nombre: queso amarillo caro | Precio actual: 1500.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 320 | Nombre: Marble Por caja | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 195 | Nombre: Muslo de pollo | Precio actual: 415.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 290 | Nombre: parrillita parrilla | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 617 | Nombre: Pan frances | Precio actual: 120.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 565 | Nombre: Trululu Aros | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 616 | Nombre: Estrela Galleta | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 170 | Nombre: Lora | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 464 | Nombre: best | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 267 | Nombre: queso duro | Precio actual: 550.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 36 | Nombre: Jamon de pavo | Precio actual: 970.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 418 | Nombre: consul caja | Precio actual: 115.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 624 | Nombre: Jugo Botellita 355ml | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 190 | Nombre: caramelo 3bs combo | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 117 | Nombre: Teta de azucar | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 373 | Nombre: Hojilla Dorco Unidad | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 52 | Nombre: Cortado pan | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 343 | Nombre: Lapiz Mongol | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 237 | Nombre: Speed Speed Max lata | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 329 | Nombre: Lucky | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 374 | Nombre: Hoja Resma Resma | Precio actual: 2.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 625 | Nombre: Cool | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 273 | Nombre: plagatox | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 396 | Nombre: Flaquito Flaquito | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 293 | Nombre: papel bond | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 420 | Nombre: colorante carmencita amparito | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 118 | Nombre: Papel tuale individual | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 423 | Nombre: club social puig | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 496 | Nombre: 301  detallado | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 410 | Nombre: crocante mani pequeño | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 27 | Nombre: Incienso detallado premium | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 475 | Nombre: Atlantic detallado | Precio actual: 2.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 388 | Nombre: galleta soda puig | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 242 | Nombre: sardinas el norteño | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 168 | Nombre: Agogo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 280 | Nombre: Pepito Grande Super Popy Tira | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 303 | Nombre: oreo oreo | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 268 | Nombre: puffy pequenio tira | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 317 | Nombre: Maria italia | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 124 | Nombre: Bombon combo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 132 | Nombre: Ibuprofeno | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 54 | Nombre: Pan de coco | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 32 | Nombre: Sardina willinger | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 134 | Nombre: Tetas Cremosas | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 225 | Nombre: togo bitter palito | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 153 | Nombre: Tabaco Artesanal | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 66 | Nombre: Condimentos 10 bs | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 130 | Nombre: Cetirizina | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 198 | Nombre: queso amarillo barato | Precio actual: 865.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 164 | Nombre: Miami Combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 90 | Nombre: Chupeta Combo | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 154 | Nombre: Tabaco Corona | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 144 | Nombre: Porleo Tipo oreo grande | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 65 | Nombre: Curita Cura | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 233 | Nombre: TAM Galletas unidad | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 432 | Nombre: Chimo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 411 | Nombre: crocante mani grande | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 143 | Nombre: Porleo pequena | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 51 | Nombre: Dale | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 302 | Nombre: Paletas cítricas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 187 | Nombre: borras | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 351 | Nombre: JUGO PULP | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 450 | Nombre: caramelos 3bs | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 476 | Nombre: atlantic combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 44 | Nombre: Pepito Pequeño super popy | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 224 | Nombre: togo fresa | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 404 | Nombre: desodorante blanco Lady Speed Stick | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 347 | Nombre: keks roll | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 494 | Nombre: 301 combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 348 | Nombre: kataboom caramelo | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 412 | Nombre: crocan nachos | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 274 | Nombre: pirueta le biscuit | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 366 | Nombre: Italiano Waffle | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 390 | Nombre: GALLETA creme | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 167 | Nombre: Cheese Cronch | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 417 | Nombre: Consul consul | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 265 | Nombre: Recolector De orina | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 171 | Nombre: Nucita nutellini | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 430 | Nombre: Chupeta BigBom | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 257 | Nombre: Revolcon Chicle | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 471 | Nombre: Avena tigo 200g | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 345 | Nombre: kraker bran puig | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 581 | Nombre: Nutiva Jugo | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 582 | Nombre: Cash | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 204 | Nombre: Yesquero Hugme | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 215 | Nombre: Universal | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 391 | Nombre: gala pequeño | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 17 | Nombre: OKA LOKA NANO MINI PEQUEÑO | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 600 | Nombre: charmy individual | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 349 | Nombre: Justy Justy Naranja 1,5L | Precio actual: 90.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 220 | Nombre: Tom Pequeño | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 406 | Nombre: dandy | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 246 | Nombre: saltitacos saltitacos | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 72 | Nombre: Borra nata | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 114 | Nombre: Crack it | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 212 | Nombre: Vainilla La favorita 250ML | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 219 | Nombre: Tostoncito | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 127 | Nombre: Catalina | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 304 | Nombre: omeprazol medicina | Precio actual: 5.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 259 | Nombre: refresco glup 400ml | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 371 | Nombre: huevos | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 244 | Nombre: samy le biscuit | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 601 | Nombre: JyJ | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 321 | Nombre: Marble detallado | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 465 | Nombre: Belmont detallado | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 266 | Nombre: Recolector De heces | Precio actual: 15.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 78 | Nombre: Incienso detallado | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 580 | Nombre: Bicarbonato Amparito Sobre | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 594 | Nombre: cereal kellogs pequeño | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 579 | Nombre: producto prueba BC | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 591 | Nombre: Tira afeitadora Duo | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 364 | Nombre: Jabon Anita 90g | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 587 | Nombre: consul media caja | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 585 | Nombre: Liga de Niña Carton pequeño | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 148 | Nombre: GUT de Pollo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 35 | Nombre: Picadillo de pollo | Precio actual: 525.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 277 | Nombre: Pigsy Pequeño | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 611 | Nombre: Bolsa Marron | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 147 | Nombre: Lisso Liso inteligente | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 568 | Nombre: Patroncito detallado | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 239 | Nombre: Socate | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 208 | Nombre: Vinagre capital 250ml | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 22 | Nombre: Choripan | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 71 | Nombre: Sacapunta | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 344 | Nombre: lapicero bernice unidad | Precio actual: 20.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 572 | Nombre: Arroz con Pollo Gut | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 99 | Nombre: Marshmellow malvavisco gomita | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 466 | Nombre: Belmont caja | Precio actual: 225.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 331 | Nombre: Liga de Cabello | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 319 | Nombre: marcador pizarra | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 489 | Nombre: Acetaminofen | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 436 | Nombre: caramelo 2bs combo | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 205 | Nombre: wiki wiki pinta ropa | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 210 | Nombre: veneno para ratas | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 155 | Nombre: Tabaco Paramaconi | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 133 | Nombre: Paletas Cremosas | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 282 | Nombre: Pega Loka | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 283 | Nombre: pega blanca 60g | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 602 | Nombre: JyJ Caja cigarro | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 358 | Nombre: Jabon Harmony | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 156 | Nombre: Barquilla | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 83 | Nombre: Hilo de coser | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 368 | Nombre: incienso caja | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 181 | Nombre: Sabroseador GUT | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 608 | Nombre: chorizo kilo | Precio actual: 330.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 372 | Nombre: hony bran puig | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 227 | Nombre: tocineta limon | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 24 | Nombre: Esponja brillo normal | Precio actual: 40.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 422 | Nombre: Club Social | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 48 | Nombre: Tikotin | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 53 | Nombre: Pan de guayaba | Precio actual: 15.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 463 | Nombre: Bianchi barra | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 38 | Nombre: Magnum magno | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 209 | Nombre: Vinagre capital 1lt | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 495 | Nombre: 301 caja | Precio actual: 70.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 77 | Nombre: Lima | Precio actual: 20.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 382 | Nombre: Gomitas Play (snacks) Paquete | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 258 | Nombre: Refresco The Sun 400ml | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 70 | Nombre: Pega loka astro glue | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 67 | Nombre: Vainilla MAS | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 429 | Nombre: Chupis-mamilo | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 75 | Nombre: Trifogon | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 346 | Nombre: keramix champu | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 128 | Nombre: Zucarita | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 82 | Nombre: Celoven | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 91 | Nombre: Foami | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 111 | Nombre: Loratadina | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 477 | Nombre: Atlantic caja | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 415 | Nombre: cosmilk | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 122 | Nombre: VICEROY | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 300 | Nombre: Pall Mall detallado | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 131 | Nombre: Diclofenac | Precio actual: 10.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 305 | Nombre: oki doki bombom | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 166 | Nombre: Miami detallado | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 183 | Nombre: Tinte Hugme Barato | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 297 | Nombre: Panelada | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 270 | Nombre: pote figura ojos ojitos | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 380 | Nombre: kaly premium | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 379 | Nombre: harina de maiz mary | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 115 | Nombre: aromax | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 135 | Nombre: Condimentos 15bs | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 109 | Nombre: Adobo Completo | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 444 | Nombre: carpeta marron oficio | Precio actual: 85.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 50 | Nombre: Deleitina | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 389 | Nombre: galleta geo | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 315 | Nombre: Maxcoco Maxcoco | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 370 | Nombre: iancarina tip top | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 146 | Nombre: Lady speed stick | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 140 | Nombre: Palitos | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 141 | Nombre: Cri Cri | Precio actual: 100.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 299 | Nombre: Palmerita Palmerita Paquete | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 361 | Nombre: Jabon en polvo alive 200g | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 76 | Nombre: Yesquero soplete | Precio actual: 30.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 497 | Nombre: 77 | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 363 | Nombre: Jabon azul rombo | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 399 | Nombre: esponja doble uso | Precio actual: 45.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 95 | Nombre: Pan piñas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 392 | Nombre: fulltop | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 152 | Nombre: Jabon avena | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 217 | Nombre: Trululu Sabores | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 169 | Nombre: Freegells | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 203 | Nombre: yupi waffle unidad | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 103 | Nombre: OKA LOKA NANO GRANDE | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 605 | Nombre: Colador | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 8 | Nombre: Cremadita Cremadito | Precio actual: 25.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 403 | Nombre: Desodorante Lady Speed Stick | Precio actual: 35.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 193 | Nombre: Chuleta | Precio actual: 730.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 129 | Nombre: leche liquida carabobo pequeña | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 49 | Nombre: Barryton | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 595 | Nombre: Frutimelo | Precio actual: 50.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 383 | Nombre: Golpe Ranchero tira pequeño | Precio actual: 55.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 296 | Nombre: Pañales Hugme | Precio actual: 30.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 574 | Nombre: Pasta Larga Mutlu 1kg | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 567 | Nombre: Patroncito Caja | Precio actual: 80.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 218 | Nombre: Trululu Chocolores | Precio actual: 45.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 328 | Nombre: Maizina Americana PEQUEÑA | Precio actual: 75.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 241 | Nombre: silicon barra pequeña | Precio actual: 45.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 211 | Nombre: Velas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 292 | Nombre: papel crepe | Precio actual: 55.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 414 | Nombre: crakeña bulto | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 263 | Nombre: refresco coca cola 1l | Precio actual: 95.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 488 | Nombre: Afeitadora Dorco | Precio actual: 25.00 | Tipo tasa: BCV | Tasa aplicada: 95
+[2025-05-12 13:29:21] ID: 435 | Nombre: caramelo 2bs | Precio actual: 5.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 39 | Nombre: keramix acondicionador | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 7 | Nombre: Crack it trufas | Precio actual: 15.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 307 | Nombre: Nutribela | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 46 | Nombre: Crismelo | Precio actual: 40.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 279 | Nombre: Jumby rikos grande | Precio actual: 65.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 409 | Nombre: Cubito Laila | Precio actual: 10.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 206 | Nombre: vitafer vitafer unidad | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] ID: 248 | Nombre: Salsa Para Pasta GUT | Precio actual: 60.00 | Tipo tasa: PARALELO | Tasa aplicada: 105
+[2025-05-12 13:29:21] Conexión cerrada. Proceso completado.
+[2025-05-12 13:29:21] === FIN DE ACTUALIZACIÓN DE PRECIOS BASE ===

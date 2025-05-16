@@ -1,71 +1,83 @@
+# --- Inicio del Script de Prueba en el Shell de Django ---
 from django.contrib.auth import get_user_model
-from loyverse_integration.models import LoyverseUserConnection # Asegúrate que la app se llame así
-from django.utils import timezone
-from datetime import timedelta
+from facturacion.models import Producto, TasaCambio
+from loyverse_integration.tasks import recalculate_user_base_prices_task # Asegúrate que la importación sea correcta
+from decimal import Decimal
+import json
 
 User = get_user_model()
 
-# === PASO CRUCIAL: USA UN USERNAME VÁLIDO ===
-# Reemplaza 'admin_bodegaclick' con el username REAL del usuario
-# para el cual ya existe una LoyverseUserConnection.
-# Puedes encontrar los usernames en tu admin de Django.
+# --- CONFIGURACIÓN DE LA PRUEBA (AJUSTA ESTOS VALORES) ---
+USER_USERNAME_PARA_PRUEBA = 'marlon' # CAMBIA ESTO
+TASA_BCV_PRUEBA = Decimal('36.52')
+TASA_PARALELO_PRUEBA = Decimal('40.15')
+
+# --- Preparación (Asegurar que el usuario y las tasas existen) ---
 try:
-    # Intenta con el username que usaste para conectar con Loyverse
-    usuario_bodegaclick = User.objects.get(username='admin_bodegaclick') # O el email, o el id si lo conoces
-    print(f"Usuario de BodegaClick encontrado: {usuario_bodegaclick.username}")
+    user_obj = User.objects.get(username=USER_USERNAME_PARA_PRUEBA)
+    print(f"Usuario de prueba encontrado: {user_obj.username} (ID: {user_obj.id})")
+
+    # Crear/Actualizar tasas para este usuario (asegurar que sean las más recientes)
+    TasaCambio.objects.update_or_create(
+        user=user_obj, tipo='BCV',
+        defaults={'valor': TASA_BCV_PRUEBA}
+    )
+    TasaCambio.objects.update_or_create(
+        user=user_obj, tipo='PARALELO',
+        defaults={'valor': TASA_PARALELO_PRUEBA}
+    )
+    print(f"Tasas para prueba: BCV={TASA_BCV_PRUEBA}, PARALELO={TASA_PARALELO_PRUEBA}")
+
+    # (Opcional) Preparar/Verificar productos de prueba aquí si es necesario
+    # Ejemplo: producto_bcv = Producto.objects.get(id=ID_PRODUCTO_BCV_PRUEBA, user=user_obj)
+    # print(f"Precio base ANTES para producto BCV ({producto_bcv.nombre}): {producto_bcv.precio_base}")
+
 except User.DoesNotExist:
-    print("Error: El usuario de BodegaClick especificado NO existe en la base de datos.")
-    print("Por favor, verifica el username o crea/conecta el usuario primero.")
-    # Aquí deberías salir o intentar con otro usuario si este falla.
-    exit() # Salir del shell si no se encuentra el usuario para no continuar con errores.
+    print(f"ERROR: Usuario de prueba '{USER_USERNAME_PARA_PRUEBA}' no encontrado. Crea el usuario y los datos necesarios.")
+    exit()
+except Exception as e:
+    print(f"Error en la preparación: {e}")
+    exit()
 
-# === Ahora intenta obtener la conexión ===
+print("\n--- EJECUTANDO recalculate_user_base_prices_task DIRECTAMENTE ---")
+# Llamar a la función de la tarea directamente para prueba síncrona
+# Esto NO usa Celery, sino que ejecuta la lógica de la función en el hilo actual.
 try:
-    connection = LoyverseUserConnection.objects.get(user=usuario_bodegaclick)
-    print(f"Conexión Loyverse encontrada para {usuario_bodegaclick.username} (ID: {connection.id})")
-except LoyverseUserConnection.DoesNotExist:
-    print(f"Error: No se encontró una LoyverseUserConnection para el usuario {usuario_bodegaclick.username}.")
-    print("Asegúrate de que este usuario haya completado el flujo OAuth2 con Loyverse.")
-    exit() # Salir si no hay conexión
+    summary_result = recalculate_user_base_prices_task(user_obj.id) # Pasar el ID del usuario
+    print("\n--- RESULTADO DE LA TAREA ---")
+    # Usar json.dumps con default=str para manejar Decimals y otros tipos no serializables por defecto
+    print(json.dumps(summary_result, indent=2, default=str))
 
-# Si llegamos aquí, 'connection' existe.
-print(f"  Token actual expira en: {connection.expires_at}")
-print(f"  Está activo: {connection.is_active}")
-old_access_token_encrypted = connection.access_token # Guardar el token cifrado para comparar luego
-old_expires_at = connection.expires_at
+    # --- VERIFICACIONES POST-EJECUCIÓN ---
+    print("\n--- VERIFICANDO PRODUCTOS EN BASE DE DATOS ---")
+    productos_despues = Producto.objects.filter(user=user_obj)
+    for p in productos_despues:
+        if p.id in [prod_err['product_id'] for prod_err in summary_result.get('errors', [])]:
+            print(f"Producto ID {p.id} ({p.nombre}) tuvo un error, precio_base actual: {p.precio_base}")
+        elif any(upd['id'] == p.id for upd in summary_result.get('details', {}).get('updated', [])):
+            detalle_actualizado = next(item for item in summary_result['details']['updated'] if item['id'] == p.id)
+            print(f"Producto ID {p.id} ({p.nombre}): ACTUALIZADO. Antes: {detalle_actualizado['old_price']}, Después (BD): {p.precio_base}, Calculado: {detalle_actualizado['new_price']}")
+            # Aquí puedes añadir aserciones más específicas si el redondeo es complejo
+        elif any(unc['id'] == p.id for unc in summary_result.get('details', {}).get('unchanged', [])):
+             print(f"Producto ID {p.id} ({p.nombre}): SIN CAMBIOS. precio_base actual: {p.precio_base}")
+        else:
+             print(f"Producto ID {p.id} ({p.nombre}): No listado en detalles de actualizados/sin cambios, precio_base actual: {p.precio_base} (Revisar si tiene precio_base_usd > 0)")
 
-# Forzar la expiración del token (para la prueba de refresco)
-print("\nForzando expiración del token...")
-connection.expires_at = timezone.now() - timedelta(minutes=30) # Asegurar que esté bien expirado
-connection.save()
-connection.refresh_from_db() # Recargar desde BD para confirmar el cambio
-print(f"  Token forzado a expirar en (desde BD): {connection.expires_at}")
 
-# Intentar obtener un token válido (esto debería disparar el refresco)
-print("\nIntentando obtener token válido (esto debería invocar refresh_access_token())...")
-# El método get_valid_access_token() debe devolver el token desencriptado
-valid_token_desencriptado = connection.get_valid_access_token()
+    print("\n--- Resumen del Resultado ---")
+    print(f"Total productos procesados (según tarea): {summary_result.get('total_products')}")
+    print(f"Productos actualizados (según tarea): {summary_result.get('updated_products')}")
+    print(f"Productos sin cambios (según tarea): {summary_result.get('unchanged_products')}")
+    print(f"Número de errores (según tarea): {len(summary_result.get('errors', []))}")
+    if summary_result.get('errors'):
+        print("Detalle de errores:")
+        for err in summary_result['errors']:
+            print(f"  - Producto ID {err.get('product_id', 'N/A')} ({err.get('product_name', 'N/A')}): {err.get('error')}")
 
-# Volver a cargar la conexión desde la BD para ver los cambios guardados por refresh_access_token
-connection.refresh_from_db()
+except Exception as e_task:
+    print(f"\nERROR EJECUTANDO LA TAREA DIRECTAMENTE: {e_task}")
+    import traceback
+    traceback.print_exc()
 
-if valid_token_desencriptado:
-    print(f"  ¡Refresco Exitoso!")
-    print(f"  Nuevo access_token (primeros 20 chars desencriptado): {valid_token_desencriptado[:20]}...")
-    if connection.access_token == old_access_token_encrypted:
-        print("  ADVERTENCIA: El access_token encriptado en la BD NO cambió después del refresco. Verifica la lógica de guardado en refresh_access_token.")
-    else:
-        print("  CONFIRMADO: El access_token encriptado en la BD SÍ cambió.")
-else:
-    print("  FALLÓ el refresco o la obtención del token.")
-
-print(f"  Nuevo expires_at en BD: {connection.expires_at}")
-print(f"  Debería ser mayor que el 'old_expires_at': {old_expires_at}")
-print(f"  Último error (si hubo): {connection.last_error_message}")
-print(f"  Conexión está activa: {connection.is_active}")
-
-# Prueba de validez (opcional, si implementaste test_token_validity)
-# print("\nProbando validez del nuevo token contra la API de Loyverse...")
-# is_valid_now = connection.test_token_validity()
-# print(f"  El nuevo token es actualmente válido según la API de Loyverse: {is_valid_now}")
-# print(f"  Mensaje de error de validación (si hubo): {connection.last_error_message}") # test_token_validity puede actualizar esto
+print("\n--- Prueba Finalizada ---")
+# --- Fin del Script de Prueba ---

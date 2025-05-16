@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado de Sincronización{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-{% if success %}success{% else %}danger{% endif %} text-white">
+                    <h3>{% if success %}Sincronización Iniciada{% else %}Error de Sincronización{% endif %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-{% if success %}success{% else %}danger{% endif %}">
+                        {{ message }}
+                    </div>
+                    
+                    {% if success %}
+                        <div class="mt-3">
+                            <h5>Detalles de la operación</h5>
+                            <ul>
+                                {% if recalculate_first %}
+                                <li>Se ejecutará primero el recálculo de precios base.</li>
+                                {% endif %}
+                                
+                                {% if check_only %}
+                                <li>Modo: Solo verificación (no se realizarán cambios reales en Loyverse).</li>
+                                {% else %}
+                                <li>Modo: Actualización real de precios en Loyverse.</li>
+                                {% endif %}
+                                
+                                <li>La operación puede tardar varios minutos dependiendo de la cantidad de productos.</li>
+                                <li>Se respetará la limitación de tasa de la API de Loyverse (1 petición por segundo).</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <p>Puedes continuar usando la aplicación normalmente. La sincronización se ejecutará en segundo plano.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'loyverse_integration:sync_dashboard' %}" class="btn btn-primary">Volver al Panel de Control</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

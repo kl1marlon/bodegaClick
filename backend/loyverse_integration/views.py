@@ -214,3 +214,98 @@ def loyverse_callback_view(request: HttpRequest):
         error_message = f"Error al guardar la conexión de Loyverse en la base de datos: {e}"
         logger.error(f"Loyverse DB save error for user {request.user.id}: {error_message}", exc_info=True)
         return render(request, 'error_page.html', {'message': error_message}, status=500)
+
+
+@login_required
+def sync_dashboard(request):
+    """
+    Vista para el panel de control de sincronización de precios con Loyverse.
+    Muestra el estado de la conexión y opciones para iniciar la sincronización.
+    """
+    try:
+        connection = LoyverseUserConnection.objects.get(user=request.user)
+        context = {
+            'loyverse_connected': connection.is_active,
+            'connection': connection,
+            'sync_status': connection.price_sync_status,
+            'last_sync_details': connection.last_price_sync_details,
+            'last_sync_time': connection.last_price_sync_end_time,
+        }
+    except LoyverseUserConnection.DoesNotExist:
+        context = {
+            'loyverse_connected': False,
+            'connection_url': reverse('loyverse_integration:connect_loyverse'),
+        }
+    
+    return render(request, 'loyverse_integration/sync_dashboard.html', context)
+
+
+@login_required
+def start_price_sync(request):
+    """
+    Vista para iniciar la sincronización de precios con Loyverse.
+    Acepta parámetros para configurar el tipo de sincronización.
+    """
+    if request.method != 'POST':
+        return render(request, 'error_page.html', {
+            'message': 'Esta URL solo acepta solicitudes POST.'
+        }, status=405)
+    
+    # Obtener parámetros de la solicitud
+    check_only = request.POST.get('check_only', 'false').lower() == 'true'
+    force_lower_price = request.POST.get('force_lower_price', 'false').lower() == 'true'
+    recalculate_first = request.POST.get('recalculate_first', 'false').lower() == 'true'
+    
+    try:
+        connection = LoyverseUserConnection.objects.get(user=request.user)
+        
+        if not connection.is_active:
+            return render(request, 'loyverse_integration/sync_result.html', {
+                'success': False,
+                'message': 'La conexión con Loyverse no está activa. Por favor reconecta tu cuenta.'
+            })
+        
+        # Verificar si hay una sincronización en curso
+        if connection.price_sync_status == LoyverseUserConnection.SyncStatus.SYNCING or \
+           connection.price_sync_status == LoyverseUserConnection.SyncStatus.QUEUED:
+            return render(request, 'loyverse_integration/sync_result.html', {
+                'success': False,
+                'message': 'Ya hay una sincronización en curso. Por favor espera a que termine.'
+            })
+        
+        from .tasks import recalculate_user_base_prices_task, sync_user_prices_to_loyverse
+        
+        task_ids = {}
+        
+        # Paso 1: Recalcular precios base si se solicita
+        if recalculate_first:
+            recalculate_task = recalculate_user_base_prices_task.delay(request.user.id)
+            task_ids['recalculate'] = recalculate_task.id
+            
+        # Paso 2: Iniciar sincronización con Loyverse
+        sync_task = sync_user_prices_to_loyverse.delay(
+            connection.id,
+            check_only=check_only,
+            force_lower_price=force_lower_price
+        )
+        task_ids['sync'] = sync_task.id
+        
+        return render(request, 'loyverse_integration/sync_result.html', {
+            'success': True,
+            'message': 'Sincronización iniciada correctamente. La operación puede tardar varios minutos.',
+            'recalculate_first': recalculate_first,
+            'check_only': check_only,
+            'task_ids': task_ids
+        })
+        
+    except LoyverseUserConnection.DoesNotExist:
+        return render(request, 'loyverse_integration/sync_result.html', {
+            'success': False,
+            'message': 'No tienes una conexión con Loyverse configurada. Por favor conecta tu cuenta primero.'
+        })
+    except Exception as e:
+        logger.error(f"Error al iniciar sincronización para usuario {request.user.id}: {e}", exc_info=True)
+        return render(request, 'loyverse_integration/sync_result.html', {
+            'success': False,
+            'message': f'Error al iniciar la sincronización: {str(e)}'
+        })

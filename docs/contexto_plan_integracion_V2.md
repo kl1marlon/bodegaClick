@@ -167,4 +167,4 @@ Crear una nueva app de Django llamada `loyverse_integration` para permitir que c
 
 *   Pruebas E2E.
 *   Revisión de logs en Render.
-*   Ajustes de configuración de Celery workers en Render si es necesario.
+*   Ajustes de configuración de Celery workers en Render si es necesario.   

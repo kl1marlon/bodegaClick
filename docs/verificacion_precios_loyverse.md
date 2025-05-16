@@ -116,7 +116,7 @@ Antes de actualizar precios en Loyverse, es recomendable verificar qué producto
 1. Abre una terminal en la raíz del proyecto.
 2. Ejecuta el siguiente comando en modo "solo verificación":
    ```bash
-   python backend/scripts/sync_all_loyverse_prices.py --check-only
+   python backend/scripts/sync_all_loyverse_prices_legacy.py --check-only
    ```
 3. El script:
    - Comparará los precios locales (`precio_base`) con los de Loyverse.
@@ -133,11 +133,11 @@ Cuando estés seguro de que los precios locales son correctos:
 
 - Para actualizar solo productos donde el precio local es igual o mayor que el de Loyverse:
   ```bash
-  python backend/scripts/sync_all_loyverse_prices.py
+  python backend/scripts/sync_all_loyverse_prices_legacy.py
   ```
 - Para forzar la actualización incluso si el precio local es menor:
   ```bash
-  python backend/scripts/sync_all_loyverse_prices.py --force-lower-price
+  python backend/scripts/sync_all_loyverse_prices_legacy.py --force-lower-price
   ```
 
 El script mostrará el progreso, los cambios realizados y un resumen al final.
