@@ -173,6 +173,22 @@ function Layout({ children }) {
             </Button>
           )}
           <Button
+            component={Link}
+            to="/loyverse-dashboard"
+            variant="outlined"
+            color="primary"
+            startIcon={<StorefrontIcon />}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              mr: 2,
+              borderRadius: 1,
+              bgcolor: 'rgba(25, 118, 210, 0.08)'
+            }}
+          >
+            Loyverse
+          </Button>
+          <Button
             onClick={handleLogout}
             color="primary"
             startIcon={<LogoutIcon />}
