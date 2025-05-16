@@ -125,23 +125,27 @@ Crear una nueva app de Django llamada `loyverse_integration` para permitir que c
 
 **Objetivo:** Adaptar el script de sincronización de precios existente para que funcione como una tarea Celery por usuario, utilizando su token OAuth2.
 
-**[PENDIENTE] Tarea C.1: Crear Tarea Celery `sync_user_prices_to_loyverse`**
-*   **Acción:** En `loyverse_integration/tasks.py`, crear `@shared_task(...) sync_user_prices_to_loyverse(loyverse_connection_id, check_only=False, force_lower_price=False)`.
-*   **Lógica Principal:**
-    1.  Obtener `LoyverseUserConnection` y `access_token` válido.
-    2.  Actualizar estado a `SYNCING`.
-    3.  Obtener productos locales del usuario (filtrados por `loyverse_connection.user` de la tabla `facturacion.Producto`).
-    4.  Obtener todos los items de la cuenta Loyverse del usuario.
-    5.  Bucle de comparación y actualización (adaptado de `scripts/sync_all_loyverse_prices.py`):
-        *   Usar `producto_local.precio_base` (que ya debería estar actualizado y redondeado por un proceso previo del usuario en BodegaClick).
-        *   **Implementar `time.sleep(1.05)` antes de cada POST a Loyverse.**
-        *   **Manejar HTTP 429 con reintentos y backoff.**
-    6.  Actualizar estado final y `last_price_sync_details`.
-*   **Instrucción al Editor IA:** "Crea la tarea Celery `sync_user_prices_to_loyverse` en `loyverse_integration/tasks.py` siguiendo la lógica detallada en `CONTEXTO_GLOBAL_Y_PLAN_V3.md` y reutilizando/adaptando el script `sync_all_loyverse_prices.py` proporcionado anteriormente."
+**[COMPLETADA] Tarea C.1: Crear Tarea Celery `sync_user_prices_to_loyverse`**
+*   **Estado:** Completada. La tarea Celery `sync_user_prices_to_loyverse` ha sido implementada en `loyverse_integration/tasks.py`.
+*   **Características implementadas:**
+    1.  Obtiene `LoyverseUserConnection` y `access_token` válido.
+    2.  Actualiza estado a `SYNCING` y registra el inicio de la sincronización.
+    3.  Obtiene productos locales del usuario específico (filtrados por `loyverse_connection.user`).
+    4.  Obtiene todos los items de la cuenta Loyverse del usuario mediante paginación.
+    5.  Implementa un bucle de comparación y actualización con:
+        *   Uso de `producto_local.precio_base` para sincronizar con Loyverse.
+        *   Pausa de 0.5-1 segundo entre peticiones para respetar el límite de la API.
+        *   Manejo de errores HTTP y reintentos.
+    6.  Actualiza estado final y `last_price_sync_details` con estadísticas detalladas.
+*   **Opciones soportadas:** `check_only` (solo verificación) y `force_lower_price` (forzar actualización incluso si el precio local es menor).
 
-**[PENDIENTE] Tarea C.2: (Opcional, pero Recomendado) Tarea Celery `recalculate_user_base_prices_task`**
-*   **Descripción:** Tarea para recalcular `precio_base` en `facturacion.Producto` para un `user_id` dado, usando sus `TasaCambio` y `precio_base_usd`, aplicando redondeo.
-*   **Instrucción al Editor IA:** "Define la tarea Celery `recalculate_user_base_prices_task`."
+**[COMPLETADA] Tarea C.2: Tarea Celery `recalculate_user_base_prices_task`**
+*   **Estado:** Completada. La tarea `recalculate_user_base_prices_task` ha sido implementada.
+*   **Características:**
+    *   Recalcula `precio_base` en `facturacion.Producto` para un `user_id` específico.
+    *   Utiliza las tasas de cambio del usuario (BCV o PARALELO según configuración).
+    *   Aplica la lógica de redondeo especial para precios en bolívares.
+    *   Genera un resumen detallado de la operación con productos actualizados y sin cambios.
 
 ---
 
@@ -149,22 +153,55 @@ Crear una nueva app de Django llamada `loyverse_integration` para permitir que c
 
 **Objetivo:** Permitir a los usuarios gestionar su conexión e iniciar sincronizaciones.
 
-**[PENDIENTE] Tarea D.1: Vista y URL para Iniciar Sincronización con Loyverse**
-*   **Acción:** Crear `trigger_loyverse_price_sync_view` y su URL.
-*   **Instrucción al Editor IA:** "Implementa la vista y URL para `trigger_loyverse_price_sync_view`."
+**[COMPLETADA] Tarea D.1: Vista y URL para Panel de Control e Iniciar Sincronización con Loyverse**
+*   **Estado:** Completada. Se han implementado dos vistas principales:
+    *   `sync_dashboard`: Panel de control que muestra el estado de la conexión y opciones de sincronización.
+    *   `start_price_sync`: Endpoint para iniciar la sincronización con opciones configurables.
+*   **URLs configuradas:**
+    *   `/loyverse/dashboard/`: Acceso al panel de control de sincronización.
+    *   `/loyverse/start-sync/`: Endpoint para iniciar la sincronización.
 
-**[PENDIENTE] Tarea D.2: (Si se implementa C.2) Endpoint API y/o Vista para Recalcular Precios Base Locales del Usuario**
-*   **Acción:** Crear un endpoint o vista que encole `recalculate_user_base_prices_task`.
-*   **Instrucción al Editor IA:** "Define un endpoint API o una vista para iniciar `recalculate_user_base_prices_task`."
+**[COMPLETADA] Tarea D.2: Integración del Recálculo de Precios en el Flujo de Sincronización**
+*   **Estado:** Completada. La vista `start_price_sync` permite opcionalmente ejecutar `recalculate_user_base_prices_task` antes de la sincronización.
+*   **Características:**
+    *   Opción `recalculate_first` que permite al usuario recalcular sus precios base antes de sincronizar.
+    *   Verificación de estado para evitar sincronizaciones simultáneas.
+    *   Manejo de errores y feedback al usuario.
 
-**[PENDIENTE] Tarea D.3: Mostrar Estado al Usuario (Frontend/Plantillas)**
-*   **Acción:** Diseñar cómo el frontend de React (o plantillas Django) mostrará el estado de la conexión y sincronización, y cómo el usuario interactuará con estos flujos.
-*   **Instrucción al Editor IA:** "Proporciona ejemplos o ideas sobre cómo el frontend podría interactuar con estos nuevos flujos y mostrar la información de estado."
+**[COMPLETADA] Tarea D.3: Mostrar Estado al Usuario (Plantillas Django)**
+*   **Estado:** Completada. Se han implementado plantillas Django para mostrar el estado de la conexión y sincronización.
+*   **Plantillas implementadas:**
+    *   `sync_dashboard.html`: Panel de control completo que muestra:
+        *   Estado de la conexión con Loyverse (activa/inactiva)
+        *   Información de la cuenta conectada (nombre, email)
+        *   Estado del token OAuth (válido/expirado)
+        *   Estado de la última sincronización con estadísticas detalladas
+        *   Formulario para iniciar una nueva sincronización con opciones configurables
+    *   `sync_result.html`: Página de resultado que muestra:
+        *   Confirmación de inicio de sincronización
+        *   Detalles de la operación iniciada
+        *   Mensajes de error en caso de problemas
 
 ---
 
 ## Fase E: Pruebas Finales, Refinamiento y Despliegue en Render
 
-*   Pruebas E2E.
-*   Revisión de logs en Render.
-*   Ajustes de configuración de Celery workers en Render si es necesario.   
+**Objetivo:** Verificar el funcionamiento completo del sistema en entorno de producción y realizar ajustes finales.
+
+**[PENDIENTE] Tarea E.1: Pruebas End-to-End del Flujo Completo**
+*   **Acciones:**
+    *   Probar el flujo completo de conexión OAuth2 con Loyverse en entorno de producción.
+    *   Verificar la sincronización de precios con cuentas reales.
+    *   Comprobar el correcto funcionamiento del multi-tenancy con múltiples usuarios.
+
+**[PENDIENTE] Tarea E.2: Monitoreo y Optimización**
+*   **Acciones:**
+    *   Revisar logs detallados en Render/Coolify.
+    *   Optimizar la configuración de Celery workers según la carga observada.
+    *   Implementar alertas para errores críticos en la sincronización.
+
+**[PENDIENTE] Tarea E.3: Documentación para Usuarios Finales**
+*   **Acciones:**
+    *   Crear guía de usuario para el proceso de conexión con Loyverse.
+    *   Documentar el proceso de sincronización de precios y sus opciones.
+    *   Añadir sección de preguntas frecuentes y solución de problemas.
