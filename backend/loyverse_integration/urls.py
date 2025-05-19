@@ -7,7 +7,7 @@ app_name = 'loyverse_integration'
 
 # Configuración del router para la API REST
 router = DefaultRouter()
-router.register(r'api/connections', api_views.LoyverseConnectionViewSet, basename='loyverse-connection')
+router.register(r'connections', api_views.LoyverseConnectionViewSet, basename='loyverse-connection')
 
 urlpatterns = [
     # URLs para vistas del backend
@@ -17,5 +17,5 @@ urlpatterns = [
     path('start-sync/', views.start_price_sync, name='start_price_sync'),
     
     # API REST para frontend
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
 ]

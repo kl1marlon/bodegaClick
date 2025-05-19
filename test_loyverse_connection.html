@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conexión Loyverse</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .warning {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Conexión Loyverse</h1>
+    
+    <div>
+        <h2>1. Verificar estado de conexión Loyverse</h2>
+        <button id="checkConnection">Verificar Conexión</button>
+        <div id="connectionResult"></div>
+    </div>
+    
+    <div>
+        <h2>2. Simular flujo de login</h2>
+        <button id="simulateLogin">Simular Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div>
+        <h2>3. Probar acceso a página protegida</h2>
+        <button id="accessProtected">Acceder a Página Protegida</button>
+        <div id="protectedResult"></div>
+    </div>
+
+    <script>
+        // Función para mostrar resultados
+        function showResult(elementId, status, message, data = null) {
+            const element = document.getElementById(elementId);
+            let html = `<p class="${status}">${message}</p>`;
+            
+            if (data) {
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            element.innerHTML = html;
+        }
+
+        // 1. Verificar estado de conexión
+        document.getElementById('checkConnection').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/check-loyverse-connection/', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('connectionResult', 'success', '✅ Tienes una conexión activa con Loyverse', data);
+                } else {
+                    showResult('connectionResult', 'warning', '⚠️ No tienes conexión activa con Loyverse', data);
+                    
+                    if (data.loyverse_connect_url) {
+                        const connectButton = document.createElement('button');
+                        connectButton.textContent = 'Conectar con Loyverse';
+                        connectButton.addEventListener('click', () => {
+                            window.location.href = data.loyverse_connect_url;
+                        });
+                        document.getElementById('connectionResult').appendChild(connectButton);
+                    }
+                }
+            } catch (error) {
+                showResult('connectionResult', 'error', `❌ Error al verificar conexión: ${error.message}`);
+            }
+        });
+
+        // 2. Simular flujo de login
+        document.getElementById('simulateLogin').addEventListener('click', async () => {
+            try {
+                // Primero obtenemos un token (simulando login)
+                showResult('loginResult', 'warning', 'Simulando login...');
+                
+                // Verificamos conexión después del login
+                const response = await fetch('/api/check-loyverse-connection/', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('loginResult', 'success', '✅ Login exitoso y conexión Loyverse activa', data);
+                } else {
+                    showResult('loginResult', 'warning', '⚠️ Login exitoso pero se requiere conexión Loyverse', data);
+                    
+                    if (data.loyverse_connect_url) {
+                        const connectButton = document.createElement('button');
+                        connectButton.textContent = 'Conectar con Loyverse';
+                        connectButton.addEventListener('click', () => {
+                            window.location.href = data.loyverse_connect_url;
+                        });
+                        document.getElementById('loginResult').appendChild(connectButton);
+                    }
+                }
+            } catch (error) {
+                showResult('loginResult', 'error', `❌ Error en flujo de login: ${error.message}`);
+            }
+        });
+
+        // 3. Acceder a página protegida
+        document.getElementById('accessProtected').addEventListener('click', async () => {
+            try {
+                // Intentamos acceder a una página que requiere conexión Loyverse
+                showResult('protectedResult', 'warning', 'Accediendo a página protegida...');
+                
+                const response = await fetch('/loyverse/dashboard/', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.redirected) {
+                    showResult('protectedResult', 'warning', `⚠️ Redirigido a: ${response.url}`);
+                    
+                    const connectButton = document.createElement('button');
+                    connectButton.textContent = 'Ir a URL de redirección';
+                    connectButton.addEventListener('click', () => {
+                        window.location.href = response.url;
+                    });
+                    document.getElementById('protectedResult').appendChild(connectButton);
+                } else if (response.ok) {
+                    showResult('protectedResult', 'success', '✅ Acceso exitoso a página protegida');
+                } else {
+                    const data = await response.json();
+                    showResult('protectedResult', 'error', '❌ Error al acceder a página protegida', data);
+                }
+            } catch (error) {
+                showResult('protectedResult', 'error', `❌ Error al acceder a página protegida: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

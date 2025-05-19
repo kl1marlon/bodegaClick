@@ -162,11 +162,14 @@ def check_loyverse_connection(request):
     Este endpoint es utilizado por el frontend para redirigir al usuario
     al flujo de OAuth2 si es necesario.
     """
+    # Temporalmente permitimos acceso sin autenticación para depuración
     if not request.user.is_authenticated:
         return Response({
             'error': 'Usuario no autenticado',
-            'login_required': True
-        }, status=status.HTTP_401_UNAUTHORIZED)
+            'login_required': True,
+            'message': 'Necesitas iniciar sesión para verificar la conexión con Loyverse',
+            'login_url': '/accounts/login/'  # URL para iniciar sesión
+        }, status=status.HTTP_200_OK)  # Cambiamos a 200 para depuración
     
     try:
         connection = LoyverseUserConnection.objects.get(user=request.user)

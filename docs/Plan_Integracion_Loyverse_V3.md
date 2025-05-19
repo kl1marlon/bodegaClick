@@ -92,11 +92,16 @@ Este documento constituye la versión V3 del plan de integración entre BodegaCl
 ### 3.2 Componentes Parcialmente Implementados
 
 #### 3.2.1 Multi-Tenancy
-- ⚠️ Los modelos de `facturacion` deben confirmarse para garantizar que incluyen campo `user`
-- ⚠️ Confirmar segmentación completa de datos por usuario
+- ✅ Los modelos de `facturacion` han sido verificados y todos incluyen campo `user`
+- ✅ Se ha implementado middleware para garantizar la segmentación de datos por usuario
 
 #### 3.2.2 Sincronización desde Loyverse a BodegaClick
-- ⚠️ Script inicial para importar productos existe pero debe adaptarse al nuevo flujo
+- ✅ Script mejorado `sync_loyverse_products_oauth.py` implementado con soporte para OAuth2
+- ✅ Preservación de `precio_base_usd` para productos existentes implementada
+
+#### 3.2.3 Flujo de Registro y Autenticación
+- ✅ Implementación de verificación de conexión Loyverse en login
+- ✅ Redirección automática al flujo OAuth2 cuando es necesario
 
 ---
 
@@ -208,29 +213,132 @@ Este documento constituye la versión V3 del plan de integración entre BodegaCl
 
 ---
 
-## 5. Próximos Pasos Inmediatos
+## 5. Implementación Actual y Próximos Pasos
 
-### 5.1 Verificación de Multi-Tenancy
-- Revisar modelos para confirmar campo `user`
-- Validar segmentación de datos en consultas
+### 5.1 Componentes Implementados (Mayo 2025)
 
-### 5.2 Mejora de Sincronización Bidireccional
-- Adaptar script existente para preservar `precio_base_usd`
-- Implementar lógica para cálculo de precios de productos nuevos
+#### 5.1.1 Verificación de Multi-Tenancy
+- ✅ Revisados modelos para confirmar campo `user` en todos los modelos relevantes
+- ✅ Implementado middleware `LoyverseConnectionMiddleware` para validar segmentación de datos
+- ✅ Creado decorador `loyverse_connection_required` para proteger vistas específicas
 
-### 5.3 Flujo de Registro/Login
-- Modificar registro para incluir OAuth2 obligatorio
-- Implementar verificación en login
+#### 5.1.2 Mejora de Sincronización Bidireccional
+- ✅ Creado script `sync_loyverse_products_oauth.py` con soporte para OAuth2
+- ✅ Implementada lógica para preservar `precio_base_usd` en productos existentes
+- ✅ Implementado cálculo de precios para productos nuevos basado en tasa configurable
 
-### 5.4 Pruebas End-to-End
+#### 5.1.3 Flujo de Registro/Login
+- ✅ Implementadas vistas personalizadas `CustomLoginView` y `CustomTokenObtainPairView`
+- ✅ Implementada verificación de conexión Loyverse en login
+- ✅ Implementada redirección automática al flujo OAuth2 cuando es necesario
+
+#### 5.1.4 Frontend
+- ✅ Actualizado componente Login para manejar redirección a Loyverse
+- ✅ Implementado manejo de estados de carga y errores en el proceso de login
+
+### 5.2 Próximos Pasos Inmediatos
+
+#### 5.2.1 Pruebas End-to-End
 - Probar flujo completo con usuarios de prueba
 - Verificar correcta segmentación de datos
+- Validar sincronización bidireccional con preservación de datos
+
+#### 5.2.2 Mejoras en la Experiencia de Usuario
+- Crear página de registro que incluya OAuth2 obligatorio
+- Mejorar mensajes de error y feedback durante el proceso de conexión
+- Implementar indicadores visuales del estado de la conexión
+
+#### 5.2.3 Documentación
+- Actualizar documentación para usuarios finales
+- Crear guía de troubleshooting para problemas comunes
+- Documentar proceso de desarrollo para futuros mantenimientos
 
 ---
 
-## 6. Componentes Frontend
+## 6. Detalles de Implementación
 
-### 6.1 Interfaz de Registro/Login
+Esta sección documenta los detalles técnicos de los componentes implementados como parte del plan de integración Loyverse V3.
+
+### 6.1 Script de Sincronización OAuth2
+
+#### 6.1.1 Archivo: `sync_loyverse_products_oauth.py`
+
+**Ubicación**: `/backend/scripts/sync_loyverse_products_oauth.py`
+
+**Funcionalidad**:
+- Utiliza la conexión OAuth2 del usuario para autenticarse con Loyverse
+- Preserva el valor `precio_base_usd` para productos existentes
+- Calcula `precio_base_usd` para productos nuevos basado en tasa configurable
+- Implementa multi-tenancy asociando productos al usuario correcto
+- Maneja productos eliminados en Loyverse
+
+**Uso**:
+```bash
+python backend/scripts/sync_loyverse_products_oauth.py <user_id> <tasa_cambio> [--force]
+```
+
+### 6.2 Middleware y Decoradores
+
+#### 6.2.1 Middleware: `LoyverseConnectionMiddleware`
+
+**Ubicación**: `/backend/loyverse_integration/middleware.py`
+
+**Funcionalidad**:
+- Verifica que los usuarios autenticados tengan una conexión activa con Loyverse
+- Redirige automáticamente al flujo OAuth2 si no hay conexión o está inactiva
+- Maneja tanto solicitudes normales como AJAX
+- Excluye rutas específicas de la verificación (admin, auth, etc.)
+
+#### 6.2.2 Decorador: `loyverse_connection_required`
+
+**Ubicación**: `/backend/loyverse_integration/decorators.py`
+
+**Funcionalidad**:
+- Protege vistas específicas que requieren conexión Loyverse
+- Complementa al middleware para un control más granular
+- Redirige al flujo OAuth2 si es necesario
+
+### 6.3 Vistas Personalizadas de Autenticación
+
+#### 6.3.1 Vistas: `CustomLoginView`, `CustomTokenObtainPairView`
+
+**Ubicación**: `/backend/loyverse_integration/auth_views.py`
+
+**Funcionalidad**:
+- Extienden las vistas estándar de autenticación de Django
+- Verifican la conexión Loyverse después del login exitoso
+- Redirigen al flujo OAuth2 si es necesario
+- Manejan tokens JWT para autenticación API
+
+### 6.4 API para Verificación de Conexión
+
+#### 6.4.1 Endpoint: `check_loyverse_connection`
+
+**Ubicación**: `/backend/loyverse_integration/api_views.py`
+
+**Funcionalidad**:
+- Verifica si el usuario tiene una conexión activa con Loyverse
+- Devuelve información sobre el estado de la conexión
+- Proporciona URL para iniciar el flujo OAuth2 si es necesario
+- Utilizado por el frontend para manejar redirecciones
+
+### 6.5 Modificaciones en el Frontend
+
+#### 6.5.1 Componente: `Login.js`
+
+**Ubicación**: `/frontend/src/pages/Login.js`
+
+**Funcionalidad**:
+- Maneja la redirección a Loyverse después del login exitoso
+- Muestra estados de carga durante el proceso de autenticación
+- Maneja errores y mensajes para el usuario
+- Utiliza el endpoint `check-loyverse-connection` para verificar el estado
+
+---
+
+## 7. Componentes Frontend
+
+### 7.1 Interfaz de Registro/Login
 - **Flujo de Registro Integrado con OAuth2**:
   - Formulario de registro básico para datos de usuario
   - Redirección automática a OAuth2 de Loyverse tras registro
@@ -242,7 +350,7 @@ Este documento constituye la versión V3 del plan de integración entre BodegaCl
   - Opción para reconectar o actualizar tokens manualmente
   - Visualización de detalles de cuenta Loyverse conectada
 
-### 6.2 Panel de Control de Sincronización
+### 7.2 Panel de Control de Sincronización
 - **Dashboard de Sincronización**:
   - Estado actual de sincronización
   - Historial detallado de sincronizaciones anteriores
