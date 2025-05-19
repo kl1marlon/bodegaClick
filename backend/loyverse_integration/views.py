@@ -200,34 +200,37 @@ def loyverse_callback_view(request: HttpRequest):
                 'loyverse_user_subject': loyverse_user_subject,
                 'access_token': access_token, # El modelo se encarga de cifrarlo
                 'refresh_token': refresh_token, # El modelo se encarga de cifrarlo
+                'token_type': token_data.get('token_type', 'Bearer'),
                 'expires_at': expires_at,
                 'scope': scope_from_response,
                 'loyverse_account_name': loyverse_account_name,
                 'loyverse_email': loyverse_email,
-                # 'loyverse_merchant_id': loyverse_merchant_id, # Si se obtiene
-                'is_active': True,
                 'last_error_message': None, # Limpiar errores previos
-                'price_sync_status': LoyverseUserConnection.SyncStatus.IDLE, # Resetear estado de sync
+                'is_active': True,  # Asegurar que la conexión esté activa
+                'last_token_refresh_time': timezone.now() # Registrar cuándo se actualizó/validó el token
             }
         )
-        logger.info(f"Loyverse connection {'creada' if created else 'actualizada'} para el usuario {request.user.id} con Loyverse subject {loyverse_user_subject}")
-        # Guardar en la sesión que la conexión fue exitosa
-        request.session['loyverse_connection_success'] = True
         
-        # Redirigir a la página principal o al dashboard de sincronización
-        next_url = request.session.pop('loyverse_next_url', None)
-        if next_url:
-            return redirect(next_url)
-        else:
-            return redirect('loyverse_integration:sync_dashboard') # Ajusta el nombre de la URL de tu dashboard
-        # return render(request, 'loyverse_connection_success.html', {
-        #     'message': f"¡Conexión con Loyverse establecida exitosamente para {loyverse_account_name or loyverse_email or 'tu cuenta'}!"
-        # })
+        logger.info(f"Conexión Loyverse {'creada' if created else 'actualizada'} exitosamente para el usuario {request.user.username} (ID Loyverse: {loyverse_user_subject}). Estado activo: {connection.is_active}")
 
     except Exception as e:
-        error_message = f"Error al guardar la conexión de Loyverse en la base de datos: {e}"
+        error_message = f"Error al guardar la conexión Loyverse en la base de datos: {e}"
         logger.error(f"Loyverse DB save error for user {request.user.id}: {error_message}", exc_info=True)
         return render(request, 'error_page.html', {'message': error_message}, status=500)
+
+
+    # Guardar en la sesión que la conexión fue exitosa
+    request.session['loyverse_connection_success'] = True
+    
+    # Redirigir a la página principal o al dashboard de sincronización
+    next_url = request.session.pop('loyverse_next_url', None)
+    if next_url:
+        return redirect(next_url)
+    else:
+        return redirect('loyverse_integration:sync_dashboard') # Ajusta el nombre de la URL de tu dashboard
+    # return render(request, 'loyverse_connection_success.html', {
+    #     'message': f"¡Conexión con Loyverse establecida exitosamente para {loyverse_account_name or loyverse_email or 'tu cuenta'}!"
+    # })
 
 
 @login_required
