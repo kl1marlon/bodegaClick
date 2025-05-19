@@ -7,6 +7,8 @@ import logging
 import sys
 from django.middleware.common import CommonMiddleware
 from django.views.decorators.csrf import csrf_exempt
+from loyverse_integration.auth_views import CustomLoginView, CustomTokenObtainPairView, CustomUserRegistrationView
+from loyverse_integration.api_views import check_loyverse_connection
 
 # Desactivar temporalmente CSRF para el admin
 admin.site.login = csrf_exempt(admin.site.login)
@@ -97,6 +99,12 @@ urlpatterns = [
     path('api/sincronizar-inventario/', SincronizarInventarioView.as_view(), name='sincronizar_inventario'),
     path('sincronizar-inventario/', SincronizarInventarioHtmlView.as_view(), name='sincronizar_inventario_html'),
     path('health/', health_check, name='health_check'),
+    
+    # URLs personalizadas para autenticación con Loyverse
+    path('accounts/login/', CustomLoginView.as_view(), name='login'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/register/', CustomUserRegistrationView.as_view(), name='register'),
+    path('api/check-loyverse-connection/', check_loyverse_connection, name='check_loyverse_connection'),
     
     # URLs de la app de Loyverse Integration
     path('loyverse/', include('loyverse_integration.urls', namespace='loyverse_integration')),

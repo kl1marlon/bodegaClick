@@ -1,13 +1,15 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.urls import reverse
 import logging
 
 from .models import LoyverseUserConnection
 from .serializers import LoyverseConnectionSerializer, SyncOptionsSerializer
 from .tasks import recalculate_user_base_prices_task, sync_user_prices_to_loyverse
+from rest_framework.permissions import IsAuthenticated
 
 logger = logging.getLogger(__name__)
 
@@ -149,3 +151,48 @@ class LoyverseConnectionViewSet(viewsets.GenericViewSet):
         return Response({
             'connect_url': '/loyverse/connect/'
         })
+
+
+@api_view(['GET'])
+def check_loyverse_connection(request):
+    """
+    Endpoint para verificar si el usuario tiene una conexión activa con Loyverse.
+    
+    Si no tiene conexión o está inactiva, devuelve la URL para conectar.
+    Este endpoint es utilizado por el frontend para redirigir al usuario
+    al flujo de OAuth2 si es necesario.
+    """
+    if not request.user.is_authenticated:
+        return Response({
+            'error': 'Usuario no autenticado',
+            'login_required': True
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        connection = LoyverseUserConnection.objects.get(user=request.user)
+        
+        if connection.is_active:
+            # El usuario tiene una conexión activa
+            return Response({
+                'loyverse_connection_required': False,
+                'is_active': True,
+                'account_name': connection.loyverse_account_name,
+                'email': connection.loyverse_email
+            })
+        else:
+            # El usuario tiene una conexión pero no está activa
+            return Response({
+                'loyverse_connection_required': True,
+                'is_active': False,
+                'message': 'Tu conexión con Loyverse no está activa',
+                'loyverse_connect_url': reverse('loyverse_integration:connect_loyverse')
+            }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    except LoyverseUserConnection.DoesNotExist:
+        # El usuario no tiene conexión con Loyverse
+        return Response({
+            'loyverse_connection_required': True,
+            'is_active': False,
+            'message': 'Necesitas conectar tu cuenta con Loyverse',
+            'loyverse_connect_url': reverse('loyverse_integration:connect_loyverse')
+        }, status=status.HTTP_401_UNAUTHORIZED)

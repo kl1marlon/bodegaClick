@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -6,32 +6,73 @@ import {
   Button, 
   Typography, 
   Paper, 
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loyverseRedirectUrl, setLoyverseRedirectUrl] = useState(null);
   const { isAuthenticated, login } = useAuth();
+  const navigate = useNavigate();
 
   // Si ya está autenticado, redirigir a la página principal
   if (isAuthenticated) {
     return <Navigate to="/" />;
   }
+  
+  // Si hay una URL de redirección a Loyverse, redirigir al usuario
+  if (loyverseRedirectUrl) {
+    window.location.href = loyverseRedirectUrl;
+    return <CircularProgress />;
+  }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password) {
       setError('Por favor ingrese la contraseña');
       return;
     }
 
-    const success = login(password);
-    if (!success) {
-      setError('Contraseña incorrecta');
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Intentar hacer login
+      const success = login(password);
+      
+      if (!success) {
+        setError('Contraseña incorrecta');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Si el login fue exitoso, verificar la conexión con Loyverse
+      const response = await axios.get('/api/check-loyverse-connection');
+      
+      // Si la respuesta indica que se necesita conectar con Loyverse
+      if (response.data.loyverse_connection_required) {
+        setLoyverseRedirectUrl(response.data.loyverse_connect_url);
+      } else {
+        // Si no se necesita conexión, redirigir a la página principal
+        navigate('/');
+      }
+    } catch (error) {
+      // Si hay un error 401 con información de redirección a Loyverse
+      if (error.response && error.response.status === 401 && error.response.data.redirect_url) {
+        setLoyverseRedirectUrl(error.response.data.redirect_url);
+      } else {
+        // Otro tipo de error
+        setError('Error al iniciar sesión: ' + (error.response?.data?.message || error.message || 'Error desconocido'));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,8 +138,9 @@ function Login() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={isLoading}
             >
-              Ingresar
+              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Ingresar'}
             </Button>
           </Box>
         </Paper>

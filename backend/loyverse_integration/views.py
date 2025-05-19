@@ -27,8 +27,15 @@ logger = logging.getLogger(__name__)
 def connect_loyverse_view(request: HttpRequest):
     """
     Redirige al usuario a Loyverse para autorizar la conexión de la aplicación.
+    
+    Acepta un parámetro 'next' en la URL para redirigir al usuario después de la conexión.
     """
     try:
+        # Guardar la URL de redirección después de la conexión, si se proporciona
+        next_url = request.GET.get('next')
+        if next_url:
+            request.session['loyverse_next_url'] = next_url
+            
         client_id = os.environ.get('LOYVERSE_APP_CLIENT_ID')
         if not client_id:
             # Considerar loggear este error y mostrar una página de error más amigable
@@ -204,11 +211,18 @@ def loyverse_callback_view(request: HttpRequest):
             }
         )
         logger.info(f"Loyverse connection {'creada' if created else 'actualizada'} para el usuario {request.user.id} con Loyverse subject {loyverse_user_subject}")
-        # Redirigir a una página de éxito, por ejemplo, el dashboard del usuario
-        # return redirect('user_dashboard') # Ajusta el nombre de la URL de tu dashboard
-        return render(request, 'loyverse_connection_success.html', {
-            'message': f"¡Conexión con Loyverse establecida exitosamente para {loyverse_account_name or loyverse_email or 'tu cuenta'}!"
-        })
+        # Guardar en la sesión que la conexión fue exitosa
+        request.session['loyverse_connection_success'] = True
+        
+        # Redirigir a la página principal o al dashboard de sincronización
+        next_url = request.session.pop('loyverse_next_url', None)
+        if next_url:
+            return redirect(next_url)
+        else:
+            return redirect('loyverse_integration:sync_dashboard') # Ajusta el nombre de la URL de tu dashboard
+        # return render(request, 'loyverse_connection_success.html', {
+        #     'message': f"¡Conexión con Loyverse establecida exitosamente para {loyverse_account_name or loyverse_email or 'tu cuenta'}!"
+        # })
 
     except Exception as e:
         error_message = f"Error al guardar la conexión de Loyverse en la base de datos: {e}"
