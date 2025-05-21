@@ -236,19 +236,41 @@ Este documento constituye la versión V3 del plan de integración entre BodegaCl
 - ✅ Actualizado componente Login para manejar redirección a Loyverse
 - ✅ Implementado manejo de estados de carga y errores en el proceso de login
 
-### 5.2 Próximos Pasos Inmediatos
+### 5.2 Progreso Reciente (Mayo 2025)
 
-#### 5.2.1 Pruebas End-to-End
-- Probar flujo completo con usuarios de prueba
-- Verificar correcta segmentación de datos
-- Validar sincronización bidireccional con preservación de datos
+#### 5.2.1 Sistema de Registro de Usuarios
+- ✅ Implementado prototipo de interfaz de registro de usuarios en el frontend
+- ✅ Creada vista `CustomUserRegistrationView` en backend para manejar el registro
+- ✅ Integrado flujo de registro con redirección automática a OAuth2 de Loyverse
+- ✅ Implementada validación de datos de usuario en el formulario de registro
+- ⚠️ Pendiente: Completar la integración con el backend para almacenar usuarios nuevos
 
 #### 5.2.2 Mejoras en la Experiencia de Usuario
-- Crear página de registro que incluya OAuth2 obligatorio
-- Mejorar mensajes de error y feedback durante el proceso de conexión
-- Implementar indicadores visuales del estado de la conexión
+- ✅ Actualizada página de login para incluir enlace a registro de usuarios
+- ✅ Implementados indicadores visuales de progreso durante el proceso de autenticación
+- ✅ Mejorado el manejo de errores en el flujo de autenticación
+- ✅ Implementado sistema de pasos (stepper) para guiar al usuario en el proceso de registro
+- ⚠️ Pendiente: Mejorar el manejo de errores específicos de la API de Loyverse
 
-#### 5.2.3 Documentación
+#### 5.2.3 Adaptación del Sistema de Autenticación
+- ✅ Actualizado `AuthContext` para soportar tokens JWT
+- ✅ Implementada compatibilidad con el sistema de autenticación anterior
+- ✅ Mejorado el manejo de sesiones y persistencia de datos de usuario
+- ⚠️ Pendiente: Implementar refresco automático de tokens JWT
+
+### 5.3 Próximos Pasos Inmediatos
+
+#### 5.3.1 Completar Implementación del Backend
+- Finalizar la implementación de `CustomUserRegistrationView` para almacenar usuarios
+- Implementar endpoints JWT completos para autenticación
+- Mejorar la seguridad en el manejo de tokens y datos sensibles
+
+#### 5.3.2 Pruebas End-to-End
+- Probar flujo completo con usuarios de prueba reales
+- Verificar correcta segmentación de datos entre múltiples usuarios
+- Validar sincronización bidireccional con preservación de datos
+
+#### 5.3.3 Documentación
 - Actualizar documentación para usuarios finales
 - Crear guía de troubleshooting para problemas comunes
 - Documentar proceso de desarrollo para futuros mantenimientos
