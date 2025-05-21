@@ -38,7 +38,7 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Copiar la configuración de nginx
 COPY nginx.conf /etc/nginx/conf.d/
 
-# Configurar variables para Railway
+# Configurar variables para Railway/Coolify
 ENV PORT=80
 EXPOSE 80
 
@@ -52,4 +52,4 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 # Usar el script directamente
-CMD ["/entrypoint.sh"] 
+CMD ["/entrypoint.sh"]
