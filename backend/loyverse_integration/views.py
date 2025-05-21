@@ -6,20 +6,17 @@ from django.http import HttpResponseRedirect, HttpRequest
 import os
 import secrets
 import urllib.parse
-import requests
-import jwt
-from jwt.algorithms import RSAAlgorithm
-from datetime import timedelta
-from django.utils import timezone
 from .models import LoyverseUserConnection
 import logging
 
-# Create your views here.
-
-LOYVERSE_AUTHORIZATION_URL = "https://api.loyverse.com/oauth/authorize"
-LOYVERSE_TOKEN_URL = "https://api.loyverse.com/oauth/token"
-LOYVERSE_JWKS_URL = "https://api.loyverse.com/.well-known/jwks.json"
-LOYVERSE_ISSUER = "https://api.loyverse.com"
+# Importar helper functions y constantes
+from .views_helpers import (
+    loyverse_callback_handler,
+    LOYVERSE_AUTHORIZATION_URL,
+    LOYVERSE_TOKEN_URL,
+    LOYVERSE_JWKS_URL,
+    LOYVERSE_ISSUER
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,156 +78,26 @@ def loyverse_callback_view(request: HttpRequest):
     Intercambia el código de autorización por un token de acceso y un id_token.
     Decodifica el id_token para obtener información del usuario y guarda la conexión.
     """
-    error_message = None
-    code = request.GET.get('code')
-    state_from_response = request.GET.get('state')
-    state_from_session = request.session.pop('loyverse_oauth_state', None)
-    stored_redirect_uri = request.session.pop('loyverse_redirect_uri', None)
-
-    if not code:
-        error_message = "No se recibió el código de autorización de Loyverse."
-        logger.error(f"Loyverse callback error for user {request.user.id}: {error_message}")
-        return render(request, 'error_page.html', {'message': error_message}, status=400)
-
-    if not state_from_session or state_from_response != state_from_session:
-        error_message = "Discrepancia en el estado CSRF. La solicitud podría estar comprometida."
-        logger.error(f"Loyverse callback CSRF error for user {request.user.id}: {error_message}")
-        return render(request, 'error_page.html', {'message': error_message}, status=400)
+    # Utilizar el handler reutilizable
+    result = loyverse_callback_handler(request, for_registration=False)
     
-    if not stored_redirect_uri:
-        # Esto no debería suceder si connect_loyverse_view lo guardó correctamente
-        error_message = "No se encontró la URI de redirección original en la sesión."
-        logger.error(f"Loyverse callback error for user {request.user.id}: {error_message}")
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    client_id = os.environ.get('LOYVERSE_APP_CLIENT_ID')
-    client_secret = os.environ.get('LOYVERSE_APP_CLIENT_SECRET')
-
-    if not client_id or not client_secret:
-        error_message = "Las credenciales de la aplicación Loyverse (ID o Secreto del Cliente) no están configuradas en el servidor."
-        logger.error(f"Loyverse callback config error for user {request.user.id}: {error_message}")
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    token_payload = {
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'redirect_uri': stored_redirect_uri, # Usar la misma redirect_uri que en la solicitud de autorización
-        'code': code,
-        'grant_type': 'authorization_code',
-    }
-    
-    # Log para depuración de redirect_uri
-    logger.info(f"Usando redirect_uri para intercambio de token: {stored_redirect_uri}")
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-    try:
-        response = requests.post(LOYVERSE_TOKEN_URL, data=token_payload, headers=headers)
-        response.raise_for_status()  # Lanza HTTPError para respuestas 4xx/5xx
-        token_data = response.json()
-    except requests.exceptions.RequestException as e:
-        error_message = f"Error al intercambiar el código por token con Loyverse: {e}. Respuesta: {e.response.text if e.response else 'N/A'}"
-        logger.error(f"Loyverse token exchange error for user {request.user.id}: {error_message}", exc_info=True)
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    access_token = token_data.get('access_token')
-    refresh_token = token_data.get('refresh_token')
-    id_token_str = token_data.get('id_token')
-    expires_in = token_data.get('expires_in')
-    scope_from_response = token_data.get('scope')
-
-    if not all([access_token, id_token_str, expires_in]):
-        error_message = "La respuesta del token de Loyverse no contenía todos los campos esperados (access_token, id_token, expires_in)."
-        logger.error(f"Loyverse token response incomplete for user {request.user.id}: {token_data}")
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    try:
-        # Obtener las claves públicas JWKS de Loyverse
-        jwks_response = requests.get(LOYVERSE_JWKS_URL)
-        jwks_response.raise_for_status()
-        jwks = jwks_response.json()
-
-        # Decodificar la cabecera del id_token para obtener el 'kid'
-        id_token_header = jwt.get_unverified_header(id_token_str)
-        kid = id_token_header.get('kid')
-
-        # Encontrar la clave pública correspondiente en JWKS
-        public_key = None
-        for key_dict in jwks.get('keys', []):
-            if key_dict.get('kid') == kid:
-                public_key = RSAAlgorithm.from_jwk(key_dict)
-                break
+    # Si el resultado es una conexión (no una respuesta HTTP de error)
+    if not isinstance(result, HttpResponseRedirect) and not hasattr(result, 'status_code'):
+        # La conexión fue creada exitosamente
+        connection = result
         
-        if not public_key:
-            raise jwt.exceptions.InvalidKeyError("No se encontró la clave pública correspondiente en JWKS para el id_token.")
-
-        # Decodificar y verificar el id_token
-        id_token_payload = jwt.decode(
-            id_token_str,
-            key=public_key,
-            algorithms=['RS256'],
-            audience=client_id,
-            issuer=LOYVERSE_ISSUER
-        )
-
-    except jwt.PyJWTError as e:
-        error_message = f"Error al decodificar o verificar el id_token de Loyverse: {e}"
-        logger.error(f"Loyverse id_token decoding/verification error for user {request.user.id}: {error_message}", exc_info=True)
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-    except requests.exceptions.RequestException as e:
-        error_message = f"Error al obtener JWKS de Loyverse: {e}"
-        logger.error(f"Loyverse JWKS fetch error for user {request.user.id}: {error_message}", exc_info=True)
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    loyverse_user_subject = id_token_payload.get('sub')
-    loyverse_account_name = id_token_payload.get('name')
-    loyverse_email = id_token_payload.get('email')
-    # loyverse_merchant_id = id_token_payload.get('https://schemas.loyverse.com/merchant_id') # Ajusta si Loyverse proporciona esto en el id_token
-
-    if not loyverse_user_subject:
-        error_message = "El id_token de Loyverse no contiene el campo 'sub' (subject/user ID)."
-        logger.error(f"Loyverse id_token missing 'sub' for user {request.user.id}: {id_token_payload}")
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-    expires_at = timezone.now() + timedelta(seconds=expires_in)
-
-    try:
-        connection, created = LoyverseUserConnection.objects.update_or_create(
-            user=request.user,
-            defaults={
-                'loyverse_user_subject': loyverse_user_subject,
-                'access_token': access_token, # El modelo se encarga de cifrarlo
-                'refresh_token': refresh_token, # El modelo se encarga de cifrarlo
-                'token_type': token_data.get('token_type', 'Bearer'),
-                'expires_at': expires_at,
-                'scope': scope_from_response,
-                'loyverse_account_name': loyverse_account_name,
-                'loyverse_email': loyverse_email,
-                'last_error_message': None, # Limpiar errores previos
-                'is_active': True,  # Asegurar que la conexión esté activa
-                'last_token_refresh_time': timezone.now() # Registrar cuándo se actualizó/validó el token
-            }
-        )
+        # Guardar en la sesión que la conexión fue exitosa
+        request.session['loyverse_connection_success'] = True
         
-        logger.info(f"Conexión Loyverse {'creada' if created else 'actualizada'} exitosamente para el usuario {request.user.username} (ID Loyverse: {loyverse_user_subject}). Estado activo: {connection.is_active}")
-
-    except Exception as e:
-        error_message = f"Error al guardar la conexión Loyverse en la base de datos: {e}"
-        logger.error(f"Loyverse DB save error for user {request.user.id}: {error_message}", exc_info=True)
-        return render(request, 'error_page.html', {'message': error_message}, status=500)
-
-
-    # Guardar en la sesión que la conexión fue exitosa
-    request.session['loyverse_connection_success'] = True
-    
-    # Redirigir a la página principal o al dashboard de sincronización
-    next_url = request.session.pop('loyverse_next_url', None)
-    if next_url:
-        return redirect(next_url)
+        # Redirigir a la página principal o al dashboard de sincronización
+        next_url = request.session.pop('loyverse_next_url', None)
+        if next_url:
+            return redirect(next_url)
+        else:
+            return redirect('loyverse_integration:sync_dashboard')
     else:
-        return redirect('loyverse_integration:sync_dashboard') # Ajusta el nombre de la URL de tu dashboard
-    # return render(request, 'loyverse_connection_success.html', {
-    #     'message': f"¡Conexión con Loyverse establecida exitosamente para {loyverse_account_name or loyverse_email or 'tu cuenta'}!"
-    # })
+        # Si hubo un error, el handler ya devolvió una respuesta HTTP
+        return result
 
 
 @login_required

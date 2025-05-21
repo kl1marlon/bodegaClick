@@ -11,9 +11,11 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Link
+  Link,
+  Divider
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
@@ -32,6 +34,13 @@ function Register() {
   
   const { isAuthenticated, register } = useAuth();
   const navigate = useNavigate();
+
+  // Función para iniciar registro directo con Loyverse
+  const handleRegisterWithLoyverse = () => {
+    setIsLoading(true);
+    // Redireccionar al endpoint de registro con Loyverse
+    window.location.href = process.env.REACT_APP_API_URL + '/loyverse/register/';
+  };
 
   // Si ya está autenticado, redirigir a la página principal
   if (isAuthenticated) {
@@ -205,72 +214,94 @@ function Register() {
           )}
           
           {activeStep === 0 && (
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="Nombre de usuario"
-                name="username"
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Correo electrónico"
-                name="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="businessName"
-                label="Nombre del negocio"
-                name="businessName"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Contraseña"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="confirmPassword"
-                label="Confirmar contraseña"
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                disabled={isLoading}
-              >
-                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse'}
-              </Button>
+            <>
+              <Box sx={{ width: '100%', mb: 3 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<StorefrontIcon />}
+                  onClick={handleRegisterWithLoyverse}
+                  disabled={isLoading}
+                  sx={{ py: 1.5 }}
+                >
+                  {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse con Loyverse'}
+                </Button>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                  La manera más rápida de comenzar: conecta directamente con tu cuenta de Loyverse
+                </Typography>
+              </Box>
               
+              <Divider sx={{ width: '100%', mb: 3 }}>
+                <Typography variant="body2" color="text.secondary">o registrarse manualmente</Typography>
+              </Divider>
+              
+              <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Nombre de usuario"
+                  name="username"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="email"
+                  label="Correo electrónico"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="businessName"
+                  label="Nombre del negocio"
+                  name="businessName"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Contraseña"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="confirmPassword"
+                  label="Confirmar contraseña"
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse'}
+                </Button>
+              </Box>
               <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Typography variant="body2">
                   ¿Ya tienes una cuenta?{' '}
@@ -279,7 +310,7 @@ function Register() {
                   </Link>
                 </Typography>
               </Box>
-            </Box>
+            </>
           )}
           
           {activeStep === 1 && (
