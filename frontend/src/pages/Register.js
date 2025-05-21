@@ -36,10 +36,18 @@ function Register() {
   const navigate = useNavigate();
 
   // Función para iniciar registro directo con Loyverse
-  const handleRegisterWithLoyverse = () => {
-    setIsLoading(true);
-    // Redireccionar al endpoint de registro con Loyverse
-    window.location.href = process.env.REACT_APP_API_URL + '/loyverse/register/';
+  const handleRegisterWithLoyverse = async () => {
+    try {
+      setIsLoading(true);
+      // Obtener la URL de registro con Loyverse desde el backend
+      const response = await axios.get(process.env.REACT_APP_API_URL + '/loyverse/register/');
+      // Redirigir a la URL de autorización de Loyverse
+      window.location.href = response.data.authorization_url || response.data.url;
+    } catch (error) {
+      console.error('Error al iniciar registro con Loyverse:', error);
+      setError('No se pudo iniciar el registro con Loyverse. Por favor, inténtalo de nuevo.');
+      setIsLoading(false);
+    }
   };
 
   // Si ya está autenticado, redirigir a la página principal
