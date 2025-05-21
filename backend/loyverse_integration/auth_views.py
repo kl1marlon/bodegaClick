@@ -115,15 +115,43 @@ class CustomUserRegistrationView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request, *args, **kwargs):
-        # Implementar la lógica de registro aquí
-        # (Esto dependerá de cómo esté implementado el registro actualmente)
+        # Validar datos del usuario
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        business_name = request.data.get('business_name')
         
-        # Ejemplo simplificado:
-        from django.contrib.auth.forms import UserCreationForm
+        if not all([username, email, password]):
+            return Response({
+                'error': 'Se requieren nombre de usuario, email y contraseña'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
-        form = UserCreationForm(request.data)
-        if form.is_valid():
-            user = form.save()
+        # Verificar si el usuario ya existe
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'username': ['Este nombre de usuario ya está en uso']
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'email': ['Este email ya está registrado']
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Crear el usuario
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            
+            # Guardar información adicional si es necesario
+            if hasattr(user, 'profile') and business_name:
+                user.profile.business_name = business_name
+                user.profile.save()
+            
+            # Iniciar sesión automáticamente
+            auth_login(request, user)
             
             # Generar tokens JWT
             refresh = RefreshToken.for_user(user)
@@ -137,5 +165,12 @@ class CustomUserRegistrationView(APIView):
                 'loyverse_connection_required': True,
                 'loyverse_connect_url': reverse('loyverse_integration:connect_loyverse')
             }, status=status.HTTP_201_CREATED)
-        
-        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            # Registrar el error
+            logger.error(f"Error al registrar usuario {username}: {str(e)}", exc_info=True)
+            
+            # Devolver respuesta de error
+            return Response({
+                'error': f'Error al crear el usuario: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -12,6 +12,7 @@ import ListaDeFacturas from './pages/ListaDeFacturas';
 import BusquedaProductoHistorial from './pages/BusquedaProductoHistorial';
 import CrearProducto from './pages/CrearProducto';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import LoyverseDashboard from './pages/LoyverseDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -46,8 +47,9 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Routes>
-          {/* Ruta de login */}
+          {/* Rutas de autenticación */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           {/* Rutas protegidas */}
           <Route path="/" element={

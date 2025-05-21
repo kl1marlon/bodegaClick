@@ -1,0 +1,291 @@
+import React, { useState } from 'react';
+import { 
+  Box, 
+  Container, 
+  TextField, 
+  Button, 
+  Typography, 
+  Paper, 
+  Alert,
+  CircularProgress,
+  Stepper,
+  Step,
+  StepLabel,
+  Link
+} from '@mui/material';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { useAuth } from '../context/AuthContext';
+import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
+import axios from 'axios';
+
+function Register() {
+  // Estados para el formulario
+  const [activeStep, setActiveStep] = useState(0);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loyverseRedirectUrl, setLoyverseRedirectUrl] = useState(null);
+  
+  const { isAuthenticated, register } = useAuth();
+  const navigate = useNavigate();
+
+  // Si ya está autenticado, redirigir a la página principal
+  if (isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+  
+  // Si hay una URL de redirección a Loyverse, redirigir al usuario
+  if (loyverseRedirectUrl) {
+    window.location.href = loyverseRedirectUrl;
+    return <CircularProgress />;
+  }
+
+  // Pasos del registro
+  const steps = ['Información de cuenta', 'Conectar con Loyverse'];
+
+  // Validar el formulario
+  const validateForm = () => {
+    if (!username || !email || !password || !confirmPassword || !businessName) {
+      setError('Por favor complete todos los campos');
+      return false;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return false;
+    }
+    
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return false;
+    }
+    
+    // Validación básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Por favor ingrese un email válido');
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Manejar el envío del formulario
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Enviar datos de registro al backend
+      const response = await axios.post('/api/register/', {
+        username,
+        email,
+        password,
+        business_name: businessName
+      });
+      
+      // Si el registro fue exitoso, iniciar sesión automáticamente
+      if (response.data.access) {
+        // Guardar tokens
+        localStorage.setItem('access_token', response.data.access);
+        localStorage.setItem('refresh_token', response.data.refresh);
+        
+        // Registrar en el contexto
+        register(response.data.user_id, response.data.username);
+        
+        // Verificar si se requiere conexión con Loyverse
+        if (response.data.loyverse_connection_required) {
+          setLoyverseRedirectUrl(response.data.loyverse_connect_url);
+          setActiveStep(1);
+        } else {
+          // Si no se necesita conexión, redirigir a la página principal
+          navigate('/');
+        }
+      }
+    } catch (error) {
+      // Manejar errores
+      if (error.response && error.response.data) {
+        if (error.response.data.username) {
+          setError('Este nombre de usuario ya está en uso');
+        } else if (error.response.data.email) {
+          setError('Este email ya está registrado');
+        } else {
+          setError('Error al registrar: ' + JSON.stringify(error.response.data));
+        }
+      } else {
+        setError('Error al registrar: ' + error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container component="main" maxWidth="sm">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <Box 
+            sx={{ 
+              backgroundColor: 'primary.main', 
+              borderRadius: '50%', 
+              p: 1, 
+              mb: 2,
+              color: 'white'
+            }}
+          >
+            <PersonAddIcon />
+          </Box>
+          <Typography component="h1" variant="h5" sx={{ mb: 1 }}>
+            BodegaClick
+          </Typography>
+          <Typography component="h2" variant="h6" sx={{ mb: 3 }}>
+            Crear Cuenta
+          </Typography>
+          
+          <Stepper activeStep={activeStep} sx={{ width: '100%', mb: 4 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          
+          {activeStep === 0 && (
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Nombre de usuario"
+                name="username"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Correo electrónico"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="businessName"
+                label="Nombre del negocio"
+                name="businessName"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Contraseña"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="confirmPassword"
+                label="Confirmar contraseña"
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={isLoading}
+              >
+                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse'}
+              </Button>
+              
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Typography variant="body2">
+                  ¿Ya tienes una cuenta?{' '}
+                  <Link component={RouterLink} to="/login" variant="body2">
+                    Iniciar sesión
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
+          )}
+          
+          {activeStep === 1 && (
+            <Box sx={{ width: '100%', textAlign: 'center' }}>
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                Para completar el registro, necesitas conectar tu cuenta con Loyverse.
+                Serás redirigido a Loyverse para autorizar la conexión.
+              </Typography>
+              
+              <CircularProgress sx={{ mb: 3 }} />
+              
+              <Typography variant="body2" color="text.secondary">
+                Si no eres redirigido automáticamente, haz clic en el botón de abajo.
+              </Typography>
+              
+              <Button
+                variant="contained"
+                sx={{ mt: 3 }}
+                onClick={() => window.location.href = loyverseRedirectUrl}
+              >
+                Conectar con Loyverse
+              </Button>
+            </Box>
+          )}
+        </Paper>
+      </Box>
+    </Container>
+  );
+}
+
+export default Register;

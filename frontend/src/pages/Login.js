@@ -7,19 +7,21 @@ import {
   Typography, 
   Paper, 
   Alert,
-  CircularProgress
+  CircularProgress,
+  Link
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../context/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 
 function Login() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loyverseRedirectUrl, setLoyverseRedirectUrl] = useState(null);
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, loginWithJWT } = useAuth();
   const navigate = useNavigate();
 
   // Si ya está autenticado, redirigir a la página principal
@@ -35,7 +37,15 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!password) {
+    
+    // Validar campos
+    if (!username && !password) {
+      setError('Por favor ingrese nombre de usuario y contraseña');
+      return;
+    } else if (!username) {
+      setError('Por favor ingrese nombre de usuario');
+      return;
+    } else if (!password) {
       setError('Por favor ingrese la contraseña');
       return;
     }
@@ -44,33 +54,68 @@ function Login() {
     setError('');
     
     try {
-      // Intentar hacer login
-      const success = login(password);
-      
-      if (!success) {
-        setError('Contraseña incorrecta');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Si el login fue exitoso, verificar la conexión con Loyverse
-      const response = await axios.get('/api/check-loyverse-connection');
-      
-      // Si la respuesta indica que se necesita conectar con Loyverse
-      if (response.data.loyverse_connection_required) {
-        setLoyverseRedirectUrl(response.data.loyverse_connect_url);
+      // Primero intentar con JWT si hay un nombre de usuario
+      if (username) {
+        const result = await loginWithJWT(username, password);
+        
+        if (result.success) {
+          // Si el login fue exitoso, verificar la conexión con Loyverse
+          try {
+            const response = await axios.get('/api/check-loyverse-connection');
+            
+            // Si la respuesta indica que se necesita conectar con Loyverse
+            if (response.data.loyverse_connection_required) {
+              setLoyverseRedirectUrl(response.data.loyverse_connect_url);
+            } else {
+              // Si no se necesita conexión, redirigir a la página principal
+              navigate('/');
+            }
+          } catch (error) {
+            // Si hay un error 401 con información de redirección a Loyverse
+            if (error.response && error.response.status === 401 && error.response.data.redirect_url) {
+              setLoyverseRedirectUrl(error.response.data.redirect_url);
+            } else {
+              throw error; // Propagar el error para que se maneje abajo
+            }
+          }
+        } else {
+          // Si falla el login con JWT, mostrar el error
+          setError(result.error || 'Credenciales incorrectas');
+        }
       } else {
-        // Si no se necesita conexión, redirigir a la página principal
-        navigate('/');
+        // Intentar con el método antiguo si no hay nombre de usuario
+        const success = await login(password);
+        
+        if (!success) {
+          setError('Contraseña incorrecta');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Si el login fue exitoso, verificar la conexión con Loyverse
+        try {
+          const response = await axios.get('/api/check-loyverse-connection');
+          
+          // Si la respuesta indica que se necesita conectar con Loyverse
+          if (response.data.loyverse_connection_required) {
+            setLoyverseRedirectUrl(response.data.loyverse_connect_url);
+          } else {
+            // Si no se necesita conexión, redirigir a la página principal
+            navigate('/');
+          }
+        } catch (error) {
+          // Si hay un error 401 con información de redirección a Loyverse
+          if (error.response && error.response.status === 401 && error.response.data.redirect_url) {
+            setLoyverseRedirectUrl(error.response.data.redirect_url);
+          } else {
+            throw error; // Propagar el error para que se maneje abajo
+          }
+        }
       }
     } catch (error) {
-      // Si hay un error 401 con información de redirección a Loyverse
-      if (error.response && error.response.status === 401 && error.response.data.redirect_url) {
-        setLoyverseRedirectUrl(error.response.data.redirect_url);
-      } else {
-        // Otro tipo de error
-        setError('Error al iniciar sesión: ' + (error.response?.data?.message || error.message || 'Error desconocido'));
-      }
+      // Manejar cualquier otro error
+      console.error('Error en login:', error);
+      setError('Error al iniciar sesión: ' + (error.response?.data?.message || error.message || 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +170,17 @@ function Login() {
               margin="normal"
               required
               fullWidth
+              id="username"
+              label="Nombre de usuario"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
               name="password"
               label="Contraseña"
               type="password"
@@ -142,6 +198,15 @@ function Login() {
             >
               {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Ingresar'}
             </Button>
+            
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Typography variant="body2">
+                ¿No tienes una cuenta?{' '}
+                <Link component={RouterLink} to="/register" variant="body2">
+                  Regístrate aquí
+                </Link>
+              </Typography>
+            </Box>
           </Box>
         </Paper>
       </Box>
