@@ -47,13 +47,14 @@ def register_with_loyverse(request):
                          status=500)
 
         # Construir la REDIRECT_URI de forma absoluta
-        # En producción, usamos una URL fija para evitar problemas de redirect_uri_mismatch
+        # Usamos la URL de callback existente que ya está configurada en Loyverse
         if os.environ.get('DJANGO_ENVIRONMENT') == 'production':
-            production_domain = os.environ.get('PRODUCTION_DOMAIN', 'bodegaclick.onrender.com')
-            redirect_uri = f"https://{production_domain}/loyverse/register-callback/"
+            # Usar la URL del dominio de producción
+            production_domain = os.environ.get('PRODUCTION_DOMAIN', 'backend1.bodegalicktienda.com')
+            redirect_uri = f"https://{production_domain}/loyverse/callback/"
         else:
-            # Construcción dinámica para desarrollo
-            redirect_uri_path = reverse('loyverse_integration:loyverse_register_callback')
+            # Construcción dinámica para desarrollo, usando la misma ruta de callback
+            redirect_uri_path = reverse('loyverse_integration:loyverse_callback')
             redirect_uri = request.build_absolute_uri(redirect_uri_path)
 
         scopes = "OPENID ITEMS_READ ITEMS_WRITE"
@@ -85,9 +86,10 @@ def loyverse_register_callback(request):
     
     Esta vista recibe la información de Loyverse y muestra un formulario
     para completar el registro con contraseña y otros datos necesarios.
-    """
-    from .views import loyverse_callback_handler
     
+    Nota: Esta función ya no es llamada directamente desde una URL, sino desde
+    loyverse_callback_view cuando detecta el modo de registro.
+    """
     # Verificar si es un modo de registro desde la sesión
     is_registration = request.session.get('loyverse_registration_mode', False)
     
@@ -95,23 +97,24 @@ def loyverse_register_callback(request):
         messages.error(request, "Flujo de registro inválido. Por favor, inténtalo de nuevo.")
         return redirect('inicio')  # Redirigir a la página principal
     
-    # Procesar la respuesta de Loyverse
-    result = loyverse_callback_handler(request, for_registration=True)
+    # Los datos de Loyverse ya han sido procesados por loyverse_callback_view
+    # y almacenados en la sesión
     
-    if isinstance(result, dict) and result.get('success'):
-        # Si el procesamiento fue exitoso, extraer los datos de Loyverse
-        loyverse_data = result.get('loyverse_data', {})
-        
-        # Renderizar formulario para completar el registro
-        return render(request, 'loyverse_integration/complete_registration.html', {
-            'loyverse_data': loyverse_data,
-            'loyverse_user_subject': loyverse_data.get('loyverse_user_subject'),
-            'loyverse_account_name': loyverse_data.get('loyverse_account_name'),
-            'loyverse_email': loyverse_data.get('loyverse_email'),
-        })
-    else:
-        # Si hubo un error, result ya es una respuesta HTTP
-        return result
+    # Obtener los datos de la sesión
+    loyverse_user_subject = request.session.get('loyverse_user_subject')
+    loyverse_account_name = request.session.get('loyverse_account_name')
+    loyverse_email = request.session.get('loyverse_email')
+    
+    if not loyverse_user_subject:
+        messages.error(request, "No se pudo obtener la información de Loyverse. Por favor, inténtalo de nuevo.")
+        return redirect('loyverse_integration:register_with_loyverse')
+    
+    # Renderizar formulario para completar el registro
+    return render(request, 'loyverse_integration/complete_registration.html', {
+        'loyverse_user_subject': loyverse_user_subject,
+        'loyverse_account_name': loyverse_account_name,
+        'loyverse_email': loyverse_email,
+    })
 
 
 @csrf_protect

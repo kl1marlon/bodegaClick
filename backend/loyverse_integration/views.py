@@ -76,13 +76,27 @@ def loyverse_callback_view(request: HttpRequest):
     """
     Maneja el callback de Loyverse después de la autorización del usuario.
     Intercambia el código de autorización por un token de acceso y un id_token.
-    Decodifica el id_token para obtener información del usuario y guarda la conexión.
-    """
-    # Utilizar el handler reutilizable
-    result = loyverse_callback_handler(request, for_registration=False)
     
-    # Si el resultado es una conexión (no una respuesta HTTP de error)
-    if not isinstance(result, HttpResponseRedirect) and not hasattr(result, 'status_code'):
+    Esta vista maneja tanto el flujo de registro como el de conexión normal,
+    distinguiendo entre ellos mediante el flag 'loyverse_registration_mode' en la sesión.
+    """
+    # Verificar si estamos en modo de registro
+    is_registration = request.session.get('loyverse_registration_mode', False)
+    
+    # Utilizar el handler reutilizable con el modo correcto
+    result = loyverse_callback_handler(request, for_registration=is_registration)
+    
+    # Si estamos en modo registro y el resultado fue exitoso
+    if is_registration and isinstance(result, dict) and result.get('success'):
+        # Obtener los datos de Loyverse
+        loyverse_data = result.get('loyverse_data', {})
+        
+        # Renderizar formulario para completar el registro
+        from .register_views import loyverse_register_callback
+        return loyverse_register_callback(request)
+    
+    # Si no es modo registro y el resultado es una conexión (no una respuesta HTTP de error)
+    elif not is_registration and not isinstance(result, HttpResponseRedirect) and not hasattr(result, 'status_code'):
         # La conexión fue creada exitosamente
         connection = result
         

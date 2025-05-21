@@ -19,7 +19,7 @@ urlpatterns = [
     
     # URLs para el flujo de registro con Loyverse
     path('register/', register_views.register_with_loyverse, name='register_with_loyverse'),
-    path('register-callback/', register_views.loyverse_register_callback, name='loyverse_register_callback'),
+    # Ya no necesitamos una ruta separada para register-callback, se usa callback/ para ambos flujos
     path('complete-registration/', register_views.complete_registration, name='complete_registration'),
     
     # API REST para frontend
