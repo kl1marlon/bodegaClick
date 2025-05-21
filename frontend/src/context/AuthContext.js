@@ -60,9 +60,32 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Función para iniciar sesión con JWT
+  // Función para iniciar sesión con JWT (simulada para mantener compatibilidad)
   const loginWithJWT = async (username, password) => {
     try {
+      // Por ahora, usamos el método antiguo de autenticación
+      // hasta que el backend esté listo para JWT
+      if (password === 'bodegaclick123') {
+        // Simular respuesta JWT
+        const user_id = '1'; // ID simulado
+        
+        // Guardar datos de usuario
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('username', username);
+        
+        setIsAuthenticated(true);
+        setUser({ id: user_id, username });
+        
+        return { success: true, data: { user_id, username } };
+      } else {
+        return { 
+          success: false, 
+          error: 'Credenciales incorrectas'
+        };
+      }
+      
+      // Código original comentado para referencia futura
+      /*
       const response = await axios.post('/api/token/', {
         username,
         password
@@ -83,6 +106,7 @@ export const AuthProvider = ({ children }) => {
       setUser({ id: user_id, username });
       
       return { success: true, data: response.data };
+      */
     } catch (error) {
       console.error('Error en login JWT:', error);
       return { 

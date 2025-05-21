@@ -86,6 +86,36 @@ function Register() {
     setError('');
     
     try {
+      // Simulamos un registro exitoso mientras el backend se actualiza
+      // En lugar de enviar datos al backend, usamos la contraseña fija
+      if (password === 'bodegaclick123') {
+        // Simulamos un registro exitoso
+        const user_id = '1'; // ID simulado
+        
+        // Registrar en el contexto
+        register(user_id, username);
+        
+        // Guardar datos para simular un usuario registrado
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('username', username);
+        localStorage.setItem('email', email);
+        localStorage.setItem('business_name', businessName);
+        
+        // Redirigir a la conexión con Loyverse
+        setLoyverseRedirectUrl('/loyverse/connect/');
+        setActiveStep(1);
+        
+        // Esperar un poco para mostrar el progreso
+        setTimeout(() => {
+          window.location.href = '/loyverse/connect/';
+        }, 2000);
+      } else {
+        setError('La contraseña debe ser "bodegaclick123" para este demo');
+        setIsLoading(false);
+        return;
+      }
+      
+      /* Código original comentado para referencia futura
       // Enviar datos de registro al backend
       const response = await axios.post('/api/register/', {
         username,
@@ -112,19 +142,11 @@ function Register() {
           navigate('/');
         }
       }
+      */
     } catch (error) {
       // Manejar errores
-      if (error.response && error.response.data) {
-        if (error.response.data.username) {
-          setError('Este nombre de usuario ya está en uso');
-        } else if (error.response.data.email) {
-          setError('Este email ya está registrado');
-        } else {
-          setError('Error al registrar: ' + JSON.stringify(error.response.data));
-        }
-      } else {
-        setError('Error al registrar: ' + error.message);
-      }
+      console.error('Error en registro:', error);
+      setError('Error al registrar: ' + error.message);
     } finally {
       setIsLoading(false);
     }
