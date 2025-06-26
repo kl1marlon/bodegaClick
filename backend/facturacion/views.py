@@ -2,6 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import FacturaDateFilter
 from .models import Producto, TasaCambio, Factura, Webhook, DetalleFactura
 from .serializers import (
     ProductoSerializer,
@@ -338,6 +340,8 @@ class TasaCambioViewSet(viewsets.ModelViewSet):
 
 class FacturaViewSet(viewsets.ModelViewSet):
     queryset = Factura.objects.all().order_by('-fecha')
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = FacturaDateFilter
     
     def get_serializer_class(self):
         if self.action == 'create':
