@@ -212,9 +212,9 @@ export const fetchFacturasOptimizado = createAsyncThunk(
       
       console.log('Parámetros de filtrado completos:', Object.fromEntries(queryParams.entries()));
       
-      // Usar el nuevo endpoint optimizado
-      const requestUrl = `${API_URL}/facturas/listado_simple/?${queryParams.toString()}`;
-      console.log('Haciendo fetch a URL optimizada:', requestUrl);
+      // Usar el endpoint principal que soporta filtros de fecha
+      const requestUrl = `${API_URL}/facturas/?${queryParams.toString()}`;
+      console.log('Haciendo fetch a URL con filtros:', requestUrl);
       
       // Hacer la solicitud con un timeout más largo
       const response = await axios.get(requestUrl, {
