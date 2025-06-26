@@ -3,6 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { esES } from '@mui/material/locale';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { es } from 'date-fns/locale';
 import Layout from './components/Layout';
 import ListadoFacturas from './pages/ListadoFacturas';
 import DetalleFactura from './pages/DetalleFactura';
@@ -43,7 +46,8 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+          <CssBaseline />
         <Routes>
           {/* Ruta de login */}
           <Route path="/login" element={<Login />} />
@@ -135,6 +139,7 @@ function App() {
             </ProtectedRoute>
           } />
         </Routes>
+          </LocalizationProvider>
       </ThemeProvider>
     </AuthProvider>
   );

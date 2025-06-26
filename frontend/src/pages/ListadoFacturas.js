@@ -412,25 +412,24 @@ const ListadoFacturas = () => {
             </ToggleButtonGroup>
           </Box>
           
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              <Grid item xs={12} md={3}>
-                <DatePicker
-                  label="Fecha desde"
-                  value={filtros.fechaDesde}
-                  onChange={handleFechaDesdeChange}
-                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DatePicker
-                  label="Fecha hasta"
-                  value={filtros.fechaHasta}
-                  onChange={handleFechaHastaChange}
-                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Fecha desde"
+                value={filtros.fechaDesde}
+                onChange={handleFechaDesdeChange}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Fecha hasta"
+                value={filtros.fechaHasta}
+                onChange={handleFechaHastaChange}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 label="Monto mínimo (USD)"
@@ -509,7 +508,6 @@ const ListadoFacturas = () => {
               </Box>
             </Grid>
           </Grid>
-          </LocalizationProvider>
         </Collapse>
       </Paper>
       
