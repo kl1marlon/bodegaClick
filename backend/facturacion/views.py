@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from .filters import FacturaDateFilter
 from .models import Producto, TasaCambio, Factura, Webhook, DetalleFactura
 # Importaciones para generación de PDF
-from datetime import datetime
+from datetime import datetime as dt
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
@@ -482,11 +482,11 @@ class FacturaViewSet(viewsets.ModelViewSet):
         
         # Aplicar filtros si se proporcionaron
         if fecha_desde:
-            fecha_desde_obj = datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+            fecha_desde_obj = dt.strptime(fecha_desde, '%Y-%m-%d').date()
             queryset = queryset.filter(fecha__date__gte=fecha_desde_obj)
             
         if fecha_hasta:
-            fecha_hasta_obj = datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+            fecha_hasta_obj = dt.strptime(fecha_hasta, '%Y-%m-%d').date()
             queryset = queryset.filter(fecha__date__lte=fecha_hasta_obj)
         
         # Crear un buffer para el PDF
@@ -526,7 +526,7 @@ class FacturaViewSet(viewsets.ModelViewSet):
             elements.append(Spacer(1, 12))
         
         # Añadir fecha de generación del reporte
-        elements.append(Paragraph(f'Generado el: {datetime.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
+        elements.append(Paragraph(f'Generado el: {dt.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
         elements.append(Spacer(1, 20))
         
         # Verificar si hay facturas
@@ -578,7 +578,7 @@ class FacturaViewSet(viewsets.ModelViewSet):
         response = HttpResponse(buffer, content_type='application/pdf')
         
         # Configurar el nombre del archivo para descarga
-        fecha_hoy = datetime.now().strftime('%Y%m%d')
+        fecha_hoy = dt.now().strftime('%Y%m%d')
         response['Content-Disposition'] = f'attachment; filename="reporte_facturas_{fecha_hoy}.pdf"'
         
         return response
