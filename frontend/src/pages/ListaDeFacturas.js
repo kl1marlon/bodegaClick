@@ -62,14 +62,26 @@ const ListaDeFacturas = () => {
   });
   const [filtroRapido, setFiltroRapido] = useState(null);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [aplicandoFiltros, setAplicandoFiltros] = useState(false);
+  const [ultimoFiltroAplicado, setUltimoFiltroAplicado] = useState(null);
   
   // Cargar facturas al montar el componente
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
+        setAplicandoFiltros(true);
         console.log('Iniciando carga de facturas optimizada...');
         console.log('Parámetros de paginación:', { page: paginacion.page, pageSize: paginacion.pageSize });
         console.log('Filtros de fecha:', { fechaDesde: filtros.fechaDesde, fechaHasta: filtros.fechaHasta });
+        
+        // Guardamos cuáles filtros se están aplicando para mostrar en UI
+        let filtroAplicado = null;
+        if (filtroRapido) {
+          filtroAplicado = filtroRapido;
+        } else if (filtros.fechaDesde || filtros.fechaHasta) {
+          filtroAplicado = 'personalizado';
+        }
+        setUltimoFiltroAplicado(filtroAplicado);
         
         // Preparamos los parámetros incluyendo los filtros de fecha
         const params = {
@@ -79,19 +91,19 @@ const ListaDeFacturas = () => {
           fechaHasta: filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : null
         };
         
-        console.log('Parámetros de la petición:', params);
+        // Dispatch con el thunk optimizado
+        await dispatch(fetchFacturasOptimizado(params));
+        console.log('Carga optimizada completada');
         
-        const resultado = await dispatch(fetchFacturasOptimizado(params)).unwrap();
-        
-        console.log('Facturas cargadas exitosamente (optimizado):', resultado);
-        console.log('Datos en facturas:', resultado.results);
       } catch (error) {
-        console.error("Error al cargar facturas (optimizado):", error);
+        console.error('Error al obtener facturas:', error);
+      } finally {
+        setAplicandoFiltros(false);
       }
     };
     
     obtenerDatos();
-  }, [dispatch, paginacion.page, paginacion.pageSize, filtros.fechaDesde, filtros.fechaHasta]);
+  }, [dispatch, paginacion.page, paginacion.pageSize, filtros.fechaDesde, filtros.fechaHasta, filtroRapido]);
   
   // Filtrar facturas cuando cambia el término de búsqueda o la lista de facturas
   useEffect(() => {
@@ -302,6 +314,44 @@ const ListaDeFacturas = () => {
           </Button>
         </Box>
         
+        {/* Indicador de filtros activos */}
+        {(filtros.fechaDesde || filtros.fechaHasta) && (
+          <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+              Filtros activos:
+            </Typography>
+            {filtros.fechaDesde && (
+              <Chip 
+                label={`Desde: ${format(filtros.fechaDesde, 'dd/MM/yyyy')}`} 
+                color="primary" 
+                variant="outlined"
+                size="small"
+                onDelete={() => handleFechaDesdeChange(null)}
+              />
+            )}
+            {filtros.fechaHasta && (
+              <Chip 
+                label={`Hasta: ${format(filtros.fechaHasta, 'dd/MM/yyyy')}`} 
+                color="primary" 
+                variant="outlined"
+                size="small"
+                onDelete={() => handleFechaHastaChange(null)}
+              />
+            )}
+            {filtroRapido && (
+              <Chip 
+                label={`Filtro: ${filtroRapido === 'hoy' ? 'Hoy' : 
+                  filtroRapido === 'semana' ? 'Semana Actual' : 
+                  filtroRapido === 'mes' ? 'Mes Actual' : filtroRapido}`} 
+                color="secondary" 
+                variant="outlined"
+                size="small"
+                onDelete={resetearFiltros}
+              />
+            )}
+          </Box>
+        )}
+        
         {/* Filtros rápidos siempre visibles */}
         <Box mb={2}>
           <Typography variant="subtitle2" gutterBottom>Filtros rápidos:</Typography>
@@ -410,6 +460,33 @@ const ListaDeFacturas = () => {
           </Grid>
         </Grid>
       </Paper>
+      
+      {/* Indicadores de estado de carga y filtrado */}
+      {aplicandoFiltros && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          <Typography variant="body2" color="textSecondary">
+            Aplicando filtros de fecha...
+          </Typography>
+        </Box>
+      )}
+      
+      {!aplicandoFiltros && ultimoFiltroAplicado && facturasFiltradas.length > 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <AlertTitle>Filtro aplicado</AlertTitle>
+          {ultimoFiltroAplicado === 'hoy' && 'Mostrando facturas de hoy'}
+          {ultimoFiltroAplicado === 'semana' && 'Mostrando facturas de la semana actual'}
+          {ultimoFiltroAplicado === 'mes' && 'Mostrando facturas del mes actual'}
+          {ultimoFiltroAplicado === 'personalizado' && 'Mostrando facturas según el rango de fechas seleccionado'}
+          {' - '}{facturasFiltradas.length} resultado{facturasFiltradas.length !== 1 ? 's' : ''} encontrado{facturasFiltradas.length !== 1 ? 's' : ''}
+        </Alert>
+      )}
+      
+      {!aplicandoFiltros && facturasFiltradas.length === 0 && (filtros.fechaDesde || filtros.fechaHasta) && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          No se encontraron facturas en el rango de fechas seleccionado.
+        </Alert>
+      )}
       
       {/* Tabla de facturas */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>

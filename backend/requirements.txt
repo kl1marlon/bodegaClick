@@ -11,4 +11,5 @@ whitenoise==6.5.0
 celery==5.4.0
 redis==5.2.1
 django-redis==5.4.0
-django-celery-results==2.5.1 
+django-celery-results==2.5.1
+reportlab==4.0.4 

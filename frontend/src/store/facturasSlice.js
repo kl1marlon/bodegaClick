@@ -192,45 +192,31 @@ export const fetchFacturasOptimizado = createAsyncThunk(
   'facturas/fetchFacturasOptimizado',
   async (params = {}, { rejectWithValue }) => {
     try {
-      // Obtener la URL de la API
-      const API_URL = await getApiUrl();
-      console.log('URL de API usada (optimizado):', API_URL);
+      console.log('Iniciando fetchFacturasOptimizado con parámetros:', params);
       
-      // Construir parámetros de consulta
-      const queryParams = new URLSearchParams();
+      // Usar la función fetchFacturasAPI que ya sabemos que funciona
+      const filtrosParaAPI = {
+        fechaDesde: params.fechaDesde ? new Date(params.fechaDesde) : null,
+        fechaHasta: params.fechaHasta ? new Date(params.fechaHasta) : null
+      };
       
-      // Parámetros de paginación
-      if (params.page) queryParams.append('page', params.page);
-      if (params.pageSize) queryParams.append('page_size', params.pageSize);
+      console.log('Filtros para API:', filtrosParaAPI);
       
-      // Parámetros de filtro por fecha
-      if (params.fechaDesde) queryParams.append('fecha_desde', params.fechaDesde);
-      if (params.fechaHasta) queryParams.append('fecha_hasta', params.fechaHasta);
+      const response = await fetchFacturasAPI(filtrosParaAPI);
       
-      // Añadir timestamp para evitar caché
-      queryParams.append('_', Date.now());
+      console.log('Respuesta de fetchFacturasAPI:', response.data);
       
-      console.log('Parámetros de filtrado completos:', Object.fromEntries(queryParams.entries()));
-      
-      // Usar el endpoint principal que soporta filtros de fecha
-      const requestUrl = `${API_URL}/facturas/?${queryParams.toString()}`;
-      console.log('Haciendo fetch a URL con filtros:', requestUrl);
-      
-      // Hacer la solicitud con un timeout más largo
-      const response = await axios.get(requestUrl, {
-        timeout: 30000 // 30 segundos
-      });
-      
-      console.log('Respuesta optimizada recibida:', response.data);
-      
-      // Verificar la estructura de la respuesta y adaptarla si es necesario
+      // Adaptar la respuesta al formato esperado por el componente
       let processedResponse;
       
       if (Array.isArray(response.data)) {
-        // Si la respuesta es un array, adaptarla al formato esperado
-        console.log('La respuesta es un array, adaptando formato...');
+        // Si la respuesta es un array, adaptarla al formato paginado
+        const startIndex = ((params.page || 1) - 1) * (params.pageSize || 20);
+        const endIndex = startIndex + (params.pageSize || 20);
+        const paginatedResults = response.data.slice(startIndex, endIndex);
+        
         processedResponse = {
-          results: response.data,
+          results: paginatedResults,
           count: response.data.length,
           page: params.page || 1,
           page_size: params.pageSize || 20,
@@ -243,15 +229,15 @@ export const fetchFacturasOptimizado = createAsyncThunk(
         // Si la respuesta tiene otro formato inesperado
         console.error('Estructura de respuesta inesperada:', response.data);
         processedResponse = {
-          results: response.data ? (typeof response.data === 'object' ? [response.data] : []) : [],
-          count: response.data ? 1 : 0,
+          results: [],
+          count: 0,
           page: params.page || 1,
           page_size: params.pageSize || 20,
-          total_pages: response.data ? 1 : 0
+          total_pages: 0
         };
       }
       
-      console.log('Respuesta procesada:', processedResponse);
+      console.log('Respuesta procesada final:', processedResponse);
       return processedResponse;
     } catch (error) {
       console.error('Error en fetchFacturasOptimizado:', error);

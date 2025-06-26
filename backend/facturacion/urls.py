@@ -3,6 +3,7 @@ from . import views
 from . import views_tasks
 from .views_info import DatabaseInfoView
 from .views_actualizar_precios import ActualizarPreciosBaseAPIView
+from .views_pdf import FacturaReportePDFView
 
 urlpatterns = [
     # ... rutas existentes ...
@@ -21,4 +22,7 @@ urlpatterns = [
 
     # Endpoints de información y diagnóstico
     path('info/database/', DatabaseInfoView.as_view(), name='database-info'),
+    
+    # Endpoint para descargar reportes PDF de facturas
+    path('facturas/descargar_reporte_pdf/', FacturaReportePDFView.as_view(), name='facturas-reporte-pdf'),
 ]
