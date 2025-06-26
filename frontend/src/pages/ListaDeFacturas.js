@@ -24,13 +24,20 @@ import {
   Alert,
   AlertTitle,
   Pagination,
-  MenuItem
+  MenuItem,
+  Collapse,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SyncIcon from '@mui/icons-material/Sync';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import moment from 'moment';
 import 'moment/locale/es';
 
@@ -48,17 +55,33 @@ const ListaDeFacturas = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facturasFiltradas, setFacturasFiltradas] = useState([]);
   
+  // Estado para filtros de fecha
+  const [filtros, setFiltros] = useState({
+    fechaDesde: null,
+    fechaHasta: null
+  });
+  const [filtroRapido, setFiltroRapido] = useState(null);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  
   // Cargar facturas al montar el componente
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
         console.log('Iniciando carga de facturas optimizada...');
         console.log('Parámetros de paginación:', { page: paginacion.page, pageSize: paginacion.pageSize });
+        console.log('Filtros de fecha:', { fechaDesde: filtros.fechaDesde, fechaHasta: filtros.fechaHasta });
         
-        const resultado = await dispatch(fetchFacturasOptimizado({
+        // Preparamos los parámetros incluyendo los filtros de fecha
+        const params = {
           page: paginacion.page,
-          pageSize: paginacion.pageSize
-        })).unwrap();
+          pageSize: paginacion.pageSize,
+          fechaDesde: filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : null,
+          fechaHasta: filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : null
+        };
+        
+        console.log('Parámetros de la petición:', params);
+        
+        const resultado = await dispatch(fetchFacturasOptimizado(params)).unwrap();
         
         console.log('Facturas cargadas exitosamente (optimizado):', resultado);
         console.log('Datos en facturas:', resultado.results);
@@ -68,7 +91,7 @@ const ListaDeFacturas = () => {
     };
     
     obtenerDatos();
-  }, [dispatch, paginacion.page, paginacion.pageSize]);
+  }, [dispatch, paginacion.page, paginacion.pageSize, filtros.fechaDesde, filtros.fechaHasta]);
   
   // Filtrar facturas cuando cambia el término de búsqueda o la lista de facturas
   useEffect(() => {
@@ -103,12 +126,78 @@ const ListaDeFacturas = () => {
     dispatch(setPage(1)); // Resetear a la primera página
   };
   
+  // Manejadores de cambio de fechas
+  const handleFechaDesdeChange = (newValue) => {
+    setFiltros(prev => ({
+      ...prev,
+      fechaDesde: newValue
+    }));
+    // Al cambiar fecha manualmente, quitamos el filtro rápido seleccionado
+    setFiltroRapido(null);
+  };
+
+  const handleFechaHastaChange = (newValue) => {
+    setFiltros(prev => ({
+      ...prev,
+      fechaHasta: newValue
+    }));
+    // Al cambiar fecha manualmente, quitamos el filtro rápido seleccionado
+    setFiltroRapido(null);
+  };
+  
+  // Manejador de filtros rápidos
+  const handleFiltroRapido = (event, newValue) => {
+    if (!newValue) {
+      return; // Si se deselecciona, no hacemos nada
+    }
+    
+    const fechaActual = new Date();
+    let desde, hasta;
+    
+    if (newValue === 'hoy') {
+      desde = startOfDay(fechaActual);
+      hasta = endOfDay(fechaActual);
+    } else if (newValue === 'semana') {
+      desde = startOfWeek(fechaActual, { locale: es });
+      hasta = endOfWeek(fechaActual, { locale: es });
+    } else if (newValue === 'mes') {
+      desde = startOfMonth(fechaActual);
+      hasta = endOfMonth(fechaActual);
+    }
+    
+    setFiltroRapido(newValue);
+    setFiltros({
+      fechaDesde: desde,
+      fechaHasta: hasta
+    });
+  };
+  
+  // Función para aplicar filtros
+  const aplicarFiltros = () => {
+    // La recarga se hará automáticamente gracias a las dependencias del useEffect
+    // que detectará cambios en fechaDesde y fechaHasta
+  };
+  
+  // Función para resetear filtros
+  const resetearFiltros = () => {
+    setFiltros({
+      fechaDesde: null,
+      fechaHasta: null
+    });
+    setFiltroRapido(null);
+  };
+  
   // Función para recargar facturas
   const recargarFacturas = () => {
-    dispatch(fetchFacturasOptimizado({
+    // Preparamos los parámetros incluyendo los filtros de fecha
+    const params = {
       page: paginacion.page,
-      pageSize: paginacion.pageSize
-    }))
+      pageSize: paginacion.pageSize,
+      fechaDesde: filtros.fechaDesde ? format(filtros.fechaDesde, 'yyyy-MM-dd') : null,
+      fechaHasta: filtros.fechaHasta ? format(filtros.fechaHasta, 'yyyy-MM-dd') : null
+    };
+    
+    dispatch(fetchFacturasOptimizado(params))
       .unwrap()
       .then(() => {
         console.log('Facturas recargadas exitosamente (optimizado)');
@@ -196,6 +285,82 @@ const ListaDeFacturas = () => {
             <Typography variant="h6">Bs.{stats.gastoTotalBS.toFixed(2)}</Typography>
           </Grid>
         </Grid>
+      </Paper>
+      
+      {/* Panel de filtros avanzados */}
+      <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">
+            Filtros
+          </Typography>
+          <Button
+            size="small"
+            startIcon={<FilterListIcon />}
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          >
+            {mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
+          </Button>
+        </Box>
+        
+        {/* Filtros rápidos siempre visibles */}
+        <Box mb={2}>
+          <Typography variant="subtitle2" gutterBottom>Filtros rápidos:</Typography>
+          <ToggleButtonGroup
+            value={filtroRapido}
+            exclusive
+            onChange={handleFiltroRapido}
+            aria-label="filtros rápidos"
+            size="small"
+          >
+            <ToggleButton value="hoy" aria-label="hoy">
+              Hoy
+            </ToggleButton>
+            <ToggleButton value="semana" aria-label="semana actual">
+              Semana Actual
+            </ToggleButton>
+            <ToggleButton value="mes" aria-label="mes actual">
+              Mes Actual
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+        
+        {/* Filtros avanzados colapsables */}
+        <Collapse in={mostrarFiltros}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Fecha desde"
+                value={filtros.fechaDesde}
+                onChange={handleFechaDesdeChange}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Fecha hasta"
+                value={filtros.fechaHasta}
+                onChange={handleFechaHastaChange}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
+              <Button 
+                variant="outlined" 
+                onClick={resetearFiltros} 
+                sx={{ mr: 1 }}
+              >
+                Limpiar filtros
+              </Button>
+              <Button 
+                variant="contained" 
+                color="primary"
+                onClick={aplicarFiltros}
+              >
+                Aplicar filtros
+              </Button>
+            </Grid>
+          </Grid>
+        </Collapse>
       </Paper>
       
       {/* Barra de búsqueda y acciones */}

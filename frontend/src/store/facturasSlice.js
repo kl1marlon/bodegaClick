@@ -203,8 +203,14 @@ export const fetchFacturasOptimizado = createAsyncThunk(
       if (params.page) queryParams.append('page', params.page);
       if (params.pageSize) queryParams.append('page_size', params.pageSize);
       
+      // Parámetros de filtro por fecha
+      if (params.fechaDesde) queryParams.append('fecha_desde', params.fechaDesde);
+      if (params.fechaHasta) queryParams.append('fecha_hasta', params.fechaHasta);
+      
       // Añadir timestamp para evitar caché
       queryParams.append('_', Date.now());
+      
+      console.log('Parámetros de filtrado completos:', Object.fromEntries(queryParams.entries()));
       
       // Usar el nuevo endpoint optimizado
       const requestUrl = `${API_URL}/facturas/listado_simple/?${queryParams.toString()}`;
