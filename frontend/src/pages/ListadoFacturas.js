@@ -24,8 +24,14 @@ import {
   MenuItem,
   InputAdornment,
   Alert,
-  AlertTitle
+  AlertTitle,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { es } from 'date-fns/locale';
 import DescriptionIcon from '@mui/icons-material/Description';
 import SyncIcon from '@mui/icons-material/Sync';
 import GetAppIcon from '@mui/icons-material/GetApp';
@@ -33,6 +39,10 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import TodayIcon from '@mui/icons-material/Today';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ClearIcon from '@mui/icons-material/Clear';
 import moment from 'moment';
 import 'moment/locale/es';
 import { formatApiError, getSolutionSuggestion, isConnectivityError } from '../utils/errorHandler';
@@ -51,13 +61,14 @@ const ListadoFacturas = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [filtros, setFiltros] = useState({
-    fechaInicio: '',
-    fechaFin: '',
+    fechaDesde: null,
+    fechaHasta: null,
     montoMinUSD: '',
     montoMaxUSD: '',
     sincronizado: 'todos',
     tipoTasa: 'todos'
   });
+  const [filtroRapido, setFiltroRapido] = useState('');
 
   // Estadísticas básicas
   const stats = {
@@ -107,14 +118,108 @@ const ListadoFacturas = () => {
   };
 
   const handleFiltroChange = (event) => {
+    // Si no es un evento de DatePicker
+    if (event && event.target) {
+      setFiltros({
+        ...filtros,
+        [event.target.name]: event.target.value
+      });
+    }
+  };
+  
+  const handleFechaDesdeChange = (newDate) => {
+    setFiltroRapido('');
     setFiltros({
       ...filtros,
-      [event.target.name]: event.target.value
+      fechaDesde: newDate
     });
   };
 
-  const aplicarFiltros = () => {
-    dispatch(fetchFacturas(filtros))
+  const handleFechaHastaChange = (newDate) => {
+    setFiltroRapido('');
+    setFiltros({
+      ...filtros,
+      fechaHasta: newDate
+    });
+  };
+  
+  // Funciones para filtros rápidos de fecha
+  const aplicarFiltroHoy = () => {
+    const hoy = new Date();
+    const nuevosFiltros = {
+      ...filtros,
+      fechaDesde: hoy,
+      fechaHasta: hoy
+    };
+    setFiltros(nuevosFiltros);
+    setFiltroRapido('hoy');
+    aplicarFiltros(nuevosFiltros);
+  };
+
+  const aplicarFiltroSemanaActual = () => {
+    const hoy = new Date();
+    const inicioSemana = new Date(hoy);
+    inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+    const finSemana = new Date(inicioSemana);
+    finSemana.setDate(inicioSemana.getDate() + 6);
+    
+    const nuevosFiltros = {
+      ...filtros,
+      fechaDesde: inicioSemana,
+      fechaHasta: finSemana
+    };
+    setFiltros(nuevosFiltros);
+    setFiltroRapido('semana');
+    aplicarFiltros(nuevosFiltros);
+  };
+
+  const aplicarFiltroMesActual = () => {
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    
+    const nuevosFiltros = {
+      ...filtros,
+      fechaDesde: inicioMes,
+      fechaHasta: finMes
+    };
+    setFiltros(nuevosFiltros);
+    setFiltroRapido('mes');
+    aplicarFiltros(nuevosFiltros);
+  };
+
+  const limpiarFiltrosFechas = () => {
+    const nuevosFiltros = {
+      ...filtros,
+      fechaDesde: null,
+      fechaHasta: null
+    };
+    setFiltros(nuevosFiltros);
+    setFiltroRapido('');
+    aplicarFiltros(nuevosFiltros);
+  };
+  
+  const handleFiltroRapidoChange = (event, newValue) => {
+    if (newValue === null) return;
+    
+    switch(newValue) {
+      case 'hoy':
+        aplicarFiltroHoy();
+        break;
+      case 'semana':
+        aplicarFiltroSemanaActual();
+        break;
+      case 'mes':
+        aplicarFiltroMesActual();
+        break;
+      default:
+        limpiarFiltrosFechas();
+    }
+  };
+  
+  const aplicarFiltros = (filtrosAplicar) => {
+    console.log('Aplicando filtros:', filtrosAplicar);
+    dispatch(fetchFacturas(filtrosAplicar))
       .unwrap()
       .then(result => {
         console.log('Filtros aplicados, facturas cargadas:', result);
@@ -126,13 +231,14 @@ const ListadoFacturas = () => {
 
   const resetearFiltros = () => {
     setFiltros({
-      fechaInicio: '',
-      fechaFin: '',
+      fechaDesde: null,
+      fechaHasta: null,
       montoMinUSD: '',
       montoMaxUSD: '',
       sincronizado: 'todos',
       tipoTasa: 'todos'
     });
+    setFiltroRapido('');
     dispatch(fetchFacturas());
   };
 
@@ -279,34 +385,52 @@ const ListadoFacturas = () => {
         </Box>
         
         <Collapse in={filtrosAbiertos}>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Fecha desde"
-                type="date"
-                name="fechaInicio"
-                value={filtros.fechaInicio}
-                onChange={handleFiltroChange}
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Fecha hasta"
-                type="date"
-                name="fechaFin"
-                value={filtros.fechaFin}
-                onChange={handleFiltroChange}
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
+          {/* Filtros de fecha rápidos */}
+          <Box mb={3}>
+            <Typography variant="subtitle2" gutterBottom>
+              Filtros rápidos de fecha:
+            </Typography>
+            <ToggleButtonGroup
+              value={filtroRapido}
+              exclusive
+              onChange={handleFiltroRapidoChange}
+              aria-label="filtros rápidos de fecha"
+              size="small"
+            >
+              <ToggleButton value="hoy" aria-label="hoy">
+                <TodayIcon fontSize="small" sx={{ mr: 0.5 }} />
+                Hoy
+              </ToggleButton>
+              <ToggleButton value="semana" aria-label="semana actual">
+                <DateRangeIcon fontSize="small" sx={{ mr: 0.5 }} />
+                Semana Actual
+              </ToggleButton>
+              <ToggleButton value="mes" aria-label="mes actual">
+                <CalendarMonthIcon fontSize="small" sx={{ mr: 0.5 }} />
+                Mes Actual
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+          
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} md={3}>
+                <DatePicker
+                  label="Fecha desde"
+                  value={filtros.fechaDesde}
+                  onChange={handleFechaDesdeChange}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DatePicker
+                  label="Fecha hasta"
+                  value={filtros.fechaHasta}
+                  onChange={handleFechaHastaChange}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 label="Monto mínimo (USD)"
@@ -378,13 +502,14 @@ const ListadoFacturas = () => {
                 </Button>
                 <Button 
                   variant="contained" 
-                  onClick={aplicarFiltros}
+                  onClick={() => aplicarFiltros(filtros)}
                 >
                   Aplicar filtros
                 </Button>
               </Box>
             </Grid>
           </Grid>
+          </LocalizationProvider>
         </Collapse>
       </Paper>
       

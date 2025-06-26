@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { fetchFacturasAPI } from '../services/api';
 import { detectApiUrl } from '../utils/apiTest';
 
 // Variable para almacenar la URL del API que funciona
@@ -37,40 +37,24 @@ export const fetchFacturas = createAsyncThunk(
   'facturas/fetchFacturas',
   async (filtros = {}, { rejectWithValue }) => {
     try {
-      // Obtener la URL de la API (ahora asíncrona)
-      const API_URL = await getApiUrl();
-      console.log('URL de API usada:', API_URL);
+      // Normalizar todos los parámetros de filtrado
+      const apiParams = {
+        // Parámetros de fecha (soporta tanto los nuevos como los antiguos nombres)
+        fechaDesde: filtros.fechaDesde || filtros.fechaInicio || null,
+        fechaHasta: filtros.fechaHasta || filtros.fechaFin || null,
+        // Parámetros adicionales si son necesarios en el futuro
+        montoMinUSD: filtros.montoMinUSD || null,
+        montoMaxUSD: filtros.montoMaxUSD || null,
+        sincronizado: filtros.sincronizado && filtros.sincronizado !== 'todos' ? 
+          (filtros.sincronizado === 'si') : null,
+        tipoTasa: filtros.tipoTasa && filtros.tipoTasa !== 'todos' ? 
+          filtros.tipoTasa : null,
+      };
       
-      // Construir params para filtros
-      const params = new URLSearchParams();
+      console.log('Obteniendo facturas con filtros:', apiParams);
       
-      if (filtros.fechaInicio) params.append('fecha_inicio', filtros.fechaInicio);
-      if (filtros.fechaFin) params.append('fecha_fin', filtros.fechaFin);
-      if (filtros.montoMinUSD) params.append('monto_min_usd', filtros.montoMinUSD);
-      if (filtros.montoMaxUSD) params.append('monto_max_usd', filtros.montoMaxUSD);
-      if (filtros.sincronizado && filtros.sincronizado !== 'todos') {
-        params.append('sincronizado', filtros.sincronizado === 'si');
-      }
-      if (filtros.tipoTasa && filtros.tipoTasa !== 'todos') {
-        params.append('tipo_tasa', filtros.tipoTasa);
-      }
-      
-      // Añadir timestamp para evitar caché
-      params.append('_', Date.now());
-      
-      const requestUrl = `${API_URL}/facturas/?${params.toString()}`;
-      console.log('Haciendo fetch a URL:', requestUrl);
-      
-      // Configurar timeout y otros parámetros de la petición
-      // Temporalmente eliminar los encabezados que causan problemas de CORS
-      const response = await axios.get(requestUrl, {
-        timeout: 15000
-        // Encabezados eliminados temporalmente hasta que se actualice la configuración CORS en el backend
-        // headers: {
-        //   'Cache-Control': 'no-cache',
-        //   'Pragma': 'no-cache'
-        // }
-      });
+      // Usar la nueva función API que maneja los parámetros internamente
+      const response = await fetchFacturasAPI(apiParams);
       
       // Verificar si la respuesta contiene datos
       if (!response.data || (Array.isArray(response.data) && response.data.length === 0)) {

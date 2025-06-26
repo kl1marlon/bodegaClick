@@ -24,4 +24,45 @@ export const fetchProductosAPI = () => api.get('/api/productos/');
 export const fetchTasaCambioAPI = (tipo) => api.get(`/api/tasas-cambio/?tipo=${tipo}`);
 export const createFacturaAPI = (data) => api.post('/api/facturas/', data);
 
+// Función para formatear fechas para la API
+const formatFechaParaAPI = (fecha) => {
+  if (!fecha) return null;
+  // Si es un objeto Date, formatearlo a YYYY-MM-DD
+  if (fecha instanceof Date) {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return fecha; // Si ya es string, devolverlo tal cual
+};
+
+/**
+ * Obtiene facturas con filtros opcionales de fecha
+ * @param {Object} filtros - Filtros para las facturas
+ * @param {Date|string|null} filtros.fechaDesde - Fecha desde (opcional)
+ * @param {Date|string|null} filtros.fechaHasta - Fecha hasta (opcional)
+ * @returns {Promise} - Promesa con los datos de las facturas
+ */
+export const fetchFacturasAPI = (filtros = {}) => {
+  const { fechaDesde, fechaHasta } = filtros;
+  
+  // Construir los parámetros de consulta
+  const params = new URLSearchParams();
+  
+  if (fechaDesde) {
+    params.append('fecha_desde', formatFechaParaAPI(fechaDesde));
+  }
+  
+  if (fechaHasta) {
+    params.append('fecha_hasta', formatFechaParaAPI(fechaHasta));
+  }
+  
+  // Construir la URL con los parámetros
+  const queryString = params.toString();
+  const url = queryString ? `/api/facturas/?${queryString}` : '/api/facturas/';
+  
+  return api.get(url);
+};
+
 export default api; 
