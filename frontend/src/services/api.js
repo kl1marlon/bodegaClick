@@ -10,6 +10,9 @@ const getApiBaseUrl = () => {
   return process.env.REACT_APP_API_URL || 'http://localhost:8000';
 };
 
+// NOTA: La baseURL ya incluye el prefijo /api/ en la configuración del backend
+// por lo que no debemos incluirlo nuevamente en las rutas de este archivo.
+
 const api = axios.create({
   baseURL: getApiBaseUrl(),
   headers: {
@@ -20,9 +23,10 @@ const api = axios.create({
 // Para depuración
 console.log('API baseURL:', api.defaults.baseURL);
 
-export const fetchProductosAPI = () => api.get('/api/productos/');
-export const fetchTasaCambioAPI = (tipo) => api.get(`/api/tasas-cambio/?tipo=${tipo}`);
-export const createFacturaAPI = (data) => api.post('/api/facturas/', data);
+// Los endpoints ya tienen el prefijo /api/ en el backend
+export const fetchProductosAPI = () => api.get('/productos/');
+export const fetchTasaCambioAPI = (tipo) => api.get(`/tasas-cambio/?tipo=${tipo}`);
+export const createFacturaAPI = (data) => api.post('/facturas/', data);
 
 // Función para formatear fechas para la API
 const formatFechaParaAPI = (fecha) => {
@@ -60,7 +64,7 @@ export const fetchFacturasAPI = (filtros = {}) => {
   
   // Construir la URL con los parámetros
   const queryString = params.toString();
-  const url = queryString ? `/api/facturas/?${queryString}` : '/api/facturas/';
+  const url = queryString ? `/facturas/?${queryString}` : '/facturas/';
   
   return api.get(url);
 };
