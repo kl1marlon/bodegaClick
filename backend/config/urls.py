@@ -98,6 +98,5 @@ urlpatterns = [
     path('sincronizar-inventario/', SincronizarInventarioHtmlView.as_view(), name='sincronizar_inventario_html'),
     path('health/', health_check, name='health_check'),
     
-    # Incluir las URLs de facturación para tareas asíncronas
-    path('api/', include('facturacion.urls')),
+    path('api/facturacion/', include('facturacion.urls')),
 ] 

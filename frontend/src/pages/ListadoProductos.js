@@ -64,7 +64,11 @@ import DialogoEditarProducto from '../components/factura/DialogoEditarProducto';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 
+import SyncPricesModal from '../components/SyncPricesModal';
+
 const ListadoProductos = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const dispatch = useDispatch();
   const { items: productos, status } = useSelector((state) => state.productos);
   const { items: tasasCambio } = useSelector((state) => state.tasasCambio);
@@ -1231,6 +1235,14 @@ const ListadoProductos = () => {
             </Button>
             <Button
               variant="contained"
+              color="warning"
+              startIcon={<SyncIcon />}
+              onClick={() => setIsModalOpen(true)}
+            >
+              Sincronizar Precios
+            </Button>
+            <Button
+              variant="contained"
               color="success"
               startIcon={<CalculateIcon />}
               onClick={handleActualizarPreciosBase}
@@ -1249,6 +1261,7 @@ const ListadoProductos = () => {
           </ButtonGroup>
         </Box>
       </Box>
+      <SyncPricesModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       
       {/* Panel de estadísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

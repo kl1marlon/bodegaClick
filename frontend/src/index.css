@@ -35,3 +35,45 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: #999;
 } 
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 500px;
+}
+
+.step {
+    margin-bottom: 20px;
+}
+
+.step.active {
+    border: 1px solid #007bff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.error {
+    color: red;
+}
+
+.close-button {
+    margin-top: 20px;
+}
+
+.danger-button {
+    background-color: #dc3545;
+    color: white;
+} 

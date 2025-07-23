@@ -1086,4 +1086,94 @@ class SincronizarInventarioView(APIView):
 class SincronizarInventarioHtmlView(APIView):
     def get(self, request):
         from django.shortcuts import render
-        return render(request, 'sincronizar_inventario.html') 
+
+@staff_member_required
+def get_tasas_actuales(request):
+    try:
+        tasa_bcv = TasaCambio.objects.filter(tipo='BCV').latest('fecha')
+        tasa_paralelo = TasaCambio.objects.filter(tipo='PARALELO').latest('fecha')
+        return JsonResponse({
+            'bcv': str(tasa_bcv.valor),
+            'paralelo': str(tasa_paralelo.valor)
+        })
+    except TasaCambio.DoesNotExist:
+        return JsonResponse({'error': 'No se encontraron tasas de cambio.'}, status=404)
+
+# --- Vistas para Tareas Celery ---
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import TasaCambio
+from .tasks import recalcular_precios_base_locales, sincronizar_precios_con_loyverse
+from django_celery_results.models import TaskResult
+from celery.result import AsyncResult
+import json
+
+@staff_member_required
+@require_POST
+def iniciar_recalculo_precios_base(request):
+    try:
+        data = json.loads(request.body)
+        tasa_bcv = data.get('tasa_bcv')
+        tasa_paralelo = data.get('tasa_paralelo')
+
+        if not all([tasa_bcv, tasa_paralelo]):
+            return JsonResponse({'error': 'Se requieren tasa_bcv and tasa_paralelo.'}, status=400)
+
+        # Validar que las tasas sean números
+        float(tasa_bcv)
+        float(tasa_paralelo)
+
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return JsonResponse({'error': 'Petición inválida o tasas no numéricas.'}, status=400)
+
+    # Guardar las nuevas tasas
+    TasaCambio.objects.create(tipo='BCV', valor=tasa_bcv)
+    TasaCambio.objects.create(tipo='PARALELO', valor=tasa_paralelo)
+
+    # Encolar la tarea Celery
+    task = recalcular_precios_base_locales.delay(str(tasa_bcv), str(tasa_paralelo))
+
+    return JsonResponse({
+        'status': 'accepted',
+        'message': 'El recálculo de precios base ha sido iniciado.',
+        'task_id': task.id
+    }, status=202)
+
+@staff_member_required
+@require_POST
+def iniciar_sincronizacion_loyverse(request):
+    check_only = request.GET.get('check_only', 'false').lower() == 'true'
+    force_lower_price = request.GET.get('force_lower_price', 'false').lower() == 'true'
+    
+    api_token = os.environ.get('LOYVERSE_API_TOKEN')
+    if not api_token:
+        return JsonResponse({'error': 'LOYVERSE_API_TOKEN no configurado en el servidor.'}, status=500)
+
+    task = sincronizar_precios_con_loyverse.delay(api_token, check_only, force_lower_price)
+
+    return JsonResponse({
+        'status': 'accepted',
+        'message': 'La sincronización con Loyverse ha sido iniciada.',
+        'task_id': task.id
+    }, status=202)
+
+@staff_member_required
+def get_task_status(request, task_id):
+    try:
+        task_result = AsyncResult(task_id)
+        
+        response_data = {
+            'task_id': task_id,
+            'status': task_result.status,
+            'result': task_result.result
+        }
+        
+        if task_result.status == 'FAILURE':
+            response_data['result'] = str(task_result.result)
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({'error': 'Tarea no encontrada o error interno.', 'details': str(e)}, status=404) 
