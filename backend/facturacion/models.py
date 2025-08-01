@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Producto(models.Model):
     loyverse_id = models.CharField(max_length=255, unique=True)
@@ -35,6 +36,7 @@ class TasaCambio(models.Model):
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     fecha = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Usuario que creó/modificó la tasa')
 
     def __str__(self):
         return f"{self.tipo} - {self.valor} - {self.fecha.strftime('%Y-%m-%d')}"

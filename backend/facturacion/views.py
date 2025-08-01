@@ -324,6 +324,10 @@ class TasaCambioViewSet(viewsets.ModelViewSet):
     queryset = TasaCambio.objects.all().order_by('-fecha')
     serializer_class = TasaCambioSerializer
     
+    def perform_create(self, serializer):
+        # Asigna el usuario autenticado al crear una tasa
+        serializer.save(user=self.request.user)
+    
     @action(detail=False, methods=['get'])
     def latest(self, request):
         tipo = request.query_params.get('tipo', 'BCV')

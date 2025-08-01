@@ -81,9 +81,48 @@ def obtener_tasas_actuales(conn):
         log_mensaje(f"ERROR al obtener tasas actuales: {e}")
         return {'BCV': Decimal('0.0'), 'PARALELO': Decimal('0.0')}
 
+def obtener_usuario_admin(conn):
+    """Obtiene el ID del primer usuario administrador disponible."""
+    try:
+        cursor = conn.cursor()
+        # Buscar un superusuario (admin)
+        cursor.execute("""
+            SELECT id FROM auth_user 
+            WHERE is_superuser = TRUE
+            ORDER BY id
+            LIMIT 1
+        """)
+        
+        resultado = cursor.fetchone()
+        if resultado:
+            return resultado[0]
+        
+        # Si no hay superusuario, buscar cualquier usuario
+        cursor.execute("""
+            SELECT id FROM auth_user 
+            ORDER BY id
+            LIMIT 1
+        """)
+        
+        resultado = cursor.fetchone()
+        if resultado:
+            return resultado[0]
+        
+        log_mensaje("ADVERTENCIA: No se encontró ningún usuario en el sistema. Se debe crear uno.")
+        return None
+    except Exception as e:
+        log_mensaje(f"ERROR al buscar usuario admin: {e}")
+        return None
+
 def actualizar_tasa(conn, tipo, valor):
     """Actualiza o crea una tasa en la base de datos."""
     try:
+        # Obtener ID de usuario admin para asignar a la tasa
+        user_id = obtener_usuario_admin(conn)
+        if not user_id:
+            log_mensaje("ERROR: No se puede actualizar la tasa sin un usuario válido en el sistema.")
+            return False
+        
         cursor = conn.cursor()
         # Verificar si ya existe una tasa de este tipo
         cursor.execute("""
@@ -107,10 +146,10 @@ def actualizar_tasa(conn, tipo, valor):
         else:
             # Crear una nueva tasa
             cursor.execute("""
-                INSERT INTO facturacion_tasacambio (tipo, valor, fecha)
-                VALUES (%s, %s, NOW())
-            """, (tipo, valor))
-            log_mensaje(f"Nueva tasa {tipo} creada con valor {valor}")
+                INSERT INTO facturacion_tasacambio (tipo, valor, fecha, user_id)
+                VALUES (%s, %s, NOW(), %s)
+            """, (tipo, valor, user_id))
+            log_mensaje(f"Nueva tasa {tipo} creada con valor {valor} (usuario_id: {user_id})")
         
         conn.commit()
         cursor.close()
@@ -322,11 +361,20 @@ def actualizar_precios(conn, tasas):
 
 def main():
     """Función principal del script."""
-    log_mensaje("=== INICIO DE ACTUALIZACIÓN DE PRECIOS BASE ===")
+    log_mensaje("=== INICIANDO ACTUALIZACIÓN DE PRECIOS BASE ===")
     
     # Conectar a la base de datos
     conn = conectar_bd()
-    
+    if not conn:
+        sys.exit(1)
+        
+    # Verificar que existe al menos un usuario en el sistema
+    user_id = obtener_usuario_admin(conn)
+    if not user_id:
+        log_mensaje("ERROR: No hay usuarios en el sistema. Debe crear al menos un usuario antes de ejecutar este script.")
+        log_mensaje("Puede crear un superusuario con: python manage.py createsuperuser")
+        sys.exit(1)
+        
     # Obtener y confirmar las tasas
     tasas = obtener_y_confirmar_tasas(conn)
     

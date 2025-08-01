@@ -7,9 +7,12 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TasaCambioSerializer(serializers.ModelSerializer):
+    user_username = serializers.ReadOnlyField(source='user.username')
+    
     class Meta:
         model = TasaCambio
-        fields = '__all__'
+        fields = ['id', 'tipo', 'valor', 'fecha', 'user', 'user_username']
+        read_only_fields = ['user']
 
 class DetalleFacturaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
