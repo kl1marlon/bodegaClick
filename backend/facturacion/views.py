@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from .models import Producto, TasaCambio, Factura, Webhook, DetalleFactura
 from .serializers import (
     ProductoSerializer,
@@ -323,10 +324,26 @@ class ProductoViewSet(viewsets.ModelViewSet):
 class TasaCambioViewSet(viewsets.ModelViewSet):
     queryset = TasaCambio.objects.all().order_by('-fecha')
     serializer_class = TasaCambioSerializer
+    permission_classes = [AllowAny]  # Permitir acceso sin autenticación por ahora
     
     def perform_create(self, serializer):
         # Asigna el usuario autenticado al crear una tasa
-        serializer.save(user=self.request.user)
+        # Si el usuario no está autenticado, asigna el primer superusuario disponible
+        if self.request.user.is_authenticated:
+            user = self.request.user
+        else:
+            # Buscar el primer superusuario disponible
+            from django.contrib.auth.models import User
+            user = User.objects.filter(is_superuser=True).first()
+            if not user:
+                # Si no hay superusuario, usar el primer usuario disponible
+                user = User.objects.first()
+            if not user:
+                # Si no hay usuarios, crear un error más descriptivo
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError("No hay usuarios en el sistema. Debe crear al menos un usuario.")
+        
+        serializer.save(user=user)
     
     @action(detail=False, methods=['get'])
     def latest(self, request):
